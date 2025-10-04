@@ -11,6 +11,9 @@ rbasic is a "C-leaning BASIC" language that combines traditional BASIC simplicit
 - Strong typing with type annotations
 - Structures and arrays
 - Assignment expressions
+- British spelling conventions (colour, randomise, etc.)
+- Complete function library with 30+ built-in functions
+- Full graphics programming support via SDL2
 
 ## Lexical Elements
 
@@ -248,7 +251,10 @@ The following built-in functions are available in rbasic:
 - `sin(x)`, `cos(x)`, `tan(x)` - Trigonometric functions
 - `floor(x)`, `ceil(x)` - Floor and ceiling
 - `rnd()` - Random number 0-1
-- `randomise()` - Seed random generator
+- `randomise()` - Seed random generator (British spelling)
+- `min(a, b)`, `max(a, b)` - Minimum and maximum
+- `pow(base, exp)` - Power function
+- `pi()` - Pi constant
 
 ### String Functions
 - `len(str)` - String length
@@ -261,10 +267,12 @@ The following built-in functions are available in rbasic:
 ### Graphics Functions (SDL mode)
 - `graphics_mode(width, height)` - Initialise graphics
 - `text_mode()` - Return to text mode
-- `set_colour(r, g, b)` - Set drawing colour
+- `set_colour(r, g, b)` - Set drawing colour (British spelling)
 - `draw_pixel(x, y)` - Draw pixel
 - `draw_line(x1, y1, x2, y2)` - Draw line
 - `draw_rect(x, y, w, h, filled)` - Draw rectangle
+- `draw_circle(x, y, radius, filled)` - Draw circle
+- `draw_text(x, y, text)` - Render text
 - `refresh_screen()` - Update display
 
 ### System Functions

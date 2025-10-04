@@ -15,10 +15,12 @@ The **rbasic** C-leaning BASIC language transpiler is now fully functional and d
 - ✅ **Arrays**: `dim array(size)` and `array[index]` access
 - ✅ **Structures**: `struct Name { fields } end struct` with member access
 - ✅ **User-Defined Functions**: With parameters and return values
+- ✅ **British Spelling**: Consistent use of British English throughout (colour, randomise)
 
 ### Graphics System
 - ✅ **SDL2 Integration**: Automatic linking for graphics programs
-- ✅ **Drawing Primitives**: Pixels, lines, rectangles with colour support
+- ✅ **Drawing Primitives**: Pixels, lines, rectangles, circles with colour support
+- ✅ **Text Rendering**: Full text drawing capabilities with positioning
 - ✅ **Event Processing**: Responsive windows with key/quit detection
 - ✅ **Zero Dependencies**: Non-graphics programs run without SDL
 
@@ -68,8 +70,10 @@ rbasic -c graphics_demo.bas -o demo    # Graphics with auto SDL linking
 1. **Modern BASIC**: C-style syntax familiar to contemporary developers
 2. **Complete Transpiler**: Full lexer → parser → AST → interpreter/codegen pipeline
 3. **Graphics Support**: Professional SDL2 integration with automatic dependency management
-4. **Documentation**: Comprehensive README positioning as C-leaning BASIC transpiler
-5. **Clean Codebase**: All debugging files removed, production-ready state
+4. **British Localisation**: Comprehensive conversion to British English spellings throughout
+5. **Complete Function Library**: All 30+ planned functions implemented and tested
+6. **Documentation**: Comprehensive README and BNF grammar specification
+7. **Clean Codebase**: All debugging files removed, production-ready state
 
 ## 🎓 Target Audience
 

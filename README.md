@@ -7,9 +7,11 @@
 - **C-Style Syntax**: Uses braces `{}`, parentheses for conditions, and function-call I/O
 - **Transpiler Architecture**: Compiles BASIC to optimized C++ executables or runs directly via interpreter
 - **Modern Language Features**: C++ style comments, assignment expressions, structured control flow
-- **Graphics Programming**: Built-in SDL2 graphics support with drawing primitives
+- **Graphics Programming**: Built-in SDL2 graphics support with drawing primitives and text rendering
 - **Zero Dependencies**: Compiled programs run independently (except SDL for graphics)
 - **Dual Execution**: Identical behavior in both interpreted and compiled modes
+- **British English**: Uses British spelling conventions throughout (colour, randomise, etc.)
+- **Complete Function Library**: 30+ built-in functions covering I/O, mathematics, strings, and graphics
 
 ## Language Overview
 
@@ -78,7 +80,9 @@ cmake .. && cmake --build .
 - **Structured Data**: Arrays with `dim array(size)` and `array[index]` access
 - **Structures**: `struct Name { fields } end struct` with member access
 
-### Function Library (30+ Functions)
+### Complete Function Library (30+ Functions)
+
+**Status: ✅ 100% Complete** - All planned functions implemented and tested.
 
 #### I/O and Control
 ```basic
@@ -94,7 +98,9 @@ print(sqrt(16));               // Square root: 4
 print(pow(2, 8));              // Power: 256
 print(sin(pi() / 2));          // Trigonometry: 1
 print(min(5, 10), max(5, 10)); // Min/max: 5, 10
-print(rnd(6));                 // Random 1-6
+randomise();                   // Seed random generator (British spelling)
+print(rnd());                  // Random 0.0-1.0
+print(int(rnd() * 6) + 1);     // Random 1-6
 ```
 
 #### String Manipulation
@@ -104,15 +110,18 @@ print(len(text));              // Length: 11
 print(left(text, 4));          // "Prog"
 print(mid(text, 5, 4));        // "gram"
 print(right(text, 4));         // "ming"
+print(str(42));                // Convert number to string: "42"
+print(val("3.14"));            // Convert string to number: 3.14
 ```
 
 #### Graphics (SDL2-based)
 ```basic
 graphics_mode(800, 600);       // Create window
-set_colour(255, 0, 0);          // Red colour
+set_colour(255, 0, 0);         // Red colour (British spelling)
 draw_pixel(100, 100);          // Single pixel
 draw_line(0, 0, 200, 200);     // Diagonal line
 draw_rect(50, 50, 100, 75, true); // Filled rectangle
+draw_circle(400, 300, 50, true);  // Filled circle
 draw_text(10, 10, "Hello!");   // Text rendering
 refresh_screen();              // Update display
 ```
@@ -196,9 +205,9 @@ rbasic includes a complete graphics programming environment:
 
 ### Drawing Primitives
 - Pixel-level control with `draw_pixel(x, y)`
-- Vector graphics with `draw_line()` and `draw_rect()`
-- Text rendering with `draw_text()`
-- Colour management with `set_colour(r, g, b)`
+- Vector graphics with `draw_line()`, `draw_rect()`, and `draw_circle()`
+- Text rendering with `draw_text(x, y, text)`
+- Colour management with `set_colour(r, g, b)` (British spelling)
 - Double-buffering with `refresh_screen()`
 
 ### Interactive Features
