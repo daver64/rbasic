@@ -1,6 +1,7 @@
 #include "../include/lexer.h"
 #include "../include/parser.h"
 #include "../include/interpreter.h"
+#include "../include/io_handler.h"
 #include <cassert>
 #include <iostream>
 #include <sstream>
@@ -21,7 +22,7 @@ void test_integration() {
         std::ostringstream output;
         std::streambuf* old_cout = std::cout.rdbuf(output.rdbuf());
         
-        Interpreter interpreter;
+        Interpreter interpreter(createIOHandler("console"));
         interpreter.interpret(*program);
         
         // Restore cout
@@ -49,7 +50,7 @@ void test_integration() {
         std::ostringstream output;
         std::streambuf* old_cout = std::cout.rdbuf(output.rdbuf());
         
-        Interpreter interpreter;
+        Interpreter interpreter(createIOHandler("console"));
         interpreter.interpret(*program);
         
         std::cout.rdbuf(old_cout);
@@ -73,7 +74,7 @@ void test_integration() {
         std::ostringstream output;
         std::streambuf* old_cout = std::cout.rdbuf(output.rdbuf());
         
-        Interpreter interpreter;
+        Interpreter interpreter(createIOHandler("console"));
         interpreter.interpret(*program);
         
         std::cout.rdbuf(old_cout);

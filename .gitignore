@@ -5,6 +5,8 @@ build/
 # Executables
 *.exe
 *.out
+*.dll
+*.so
 
 # Object files
 *.o

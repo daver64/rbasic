@@ -1,5 +1,6 @@
 #include "interpreter.h"
 #include "runtime.h"
+#include "io_handler.h"
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
@@ -7,10 +8,17 @@
 
 namespace rbasic {
 
-Interpreter::Interpreter() : hasReturned(false) {
+Interpreter::Interpreter(std::unique_ptr<IOHandler> io) : hasReturned(false) {
     // Initialize boolean constants
     globals["true"] = true;
     globals["false"] = false;
+    
+    // Set up I/O handler (default to console if none provided)
+    if (io) {
+        ioHandler = std::move(io);
+    } else {
+        ioHandler = createIOHandler("console");
+    }
 }
 
 void Interpreter::defineVariable(const std::string& name, const ValueType& value) {
@@ -73,6 +81,10 @@ void Interpreter::interpret(Program& program) {
 ValueType Interpreter::evaluate(Expression& expr) {
     expr.accept(*this);
     return lastValue;
+}
+
+IOHandler* Interpreter::getIOHandler() const {
+    return ioHandler.get();
 }
 
 // Visitor implementations
@@ -163,34 +175,138 @@ void Interpreter::visit(CallExpr& node) {
     if (node.name == "print") {
         for (size_t i = 0; i < node.arguments.size(); i++) {
             ValueType value = evaluate(*node.arguments[i]);
-            std::cout << valueToString(value);
+            ioHandler->print(valueToString(value));
             if (i < node.arguments.size() - 1) {
-                std::cout << " ";
+                ioHandler->print(" ");
             }
         }
-        std::cout << std::endl;
+        ioHandler->newline();
         lastValue = 0; // print returns 0
         return;
     }
     
     if (node.name == "input" && node.arguments.size() == 0) {
-        std::string input;
-        std::getline(std::cin, input);
+        std::string input_text = ioHandler->input();
         
         // Try to parse as number first
         ValueType value;
         try {
-            if (input.find('.') != std::string::npos) {
-                value = std::stod(input);
+            if (input_text.find('.') != std::string::npos) {
+                value = std::stod(input_text);
             } else {
-                value = std::stoi(input);
+                value = std::stoi(input_text);
             }
         } catch (...) {
             // If not a number, store as string
-            value = input;
+            value = input_text;
         }
         
         lastValue = value;
+        return;
+    }
+
+    // Graphics functions
+    if (node.name == "graphics_mode" && node.arguments.size() == 2) {
+        int width = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
+            std::get<int>(evaluate(*node.arguments[0])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
+        int height = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
+            std::get<int>(evaluate(*node.arguments[1])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
+        ioHandler->graphics_mode(width, height);
+        lastValue = 0;
+        return;
+    }
+    
+    if (node.name == "text_mode" && node.arguments.size() == 0) {
+        ioHandler->text_mode();
+        lastValue = 0;
+        return;
+    }
+    
+    if (node.name == "clear_screen" && node.arguments.size() == 0) {
+        ioHandler->clear_screen();
+        lastValue = 0;
+        return;
+    }
+    
+    if (node.name == "set_color" && node.arguments.size() == 3) {
+        int r = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
+            std::get<int>(evaluate(*node.arguments[0])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
+        int g = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
+            std::get<int>(evaluate(*node.arguments[1])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
+        int b = std::holds_alternative<int>(evaluate(*node.arguments[2])) ? 
+            std::get<int>(evaluate(*node.arguments[2])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[2])));
+        ioHandler->set_color(r, g, b);
+        lastValue = 0;
+        return;
+    }
+    
+    if (node.name == "draw_pixel" && node.arguments.size() == 2) {
+        int x = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
+            std::get<int>(evaluate(*node.arguments[0])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
+        int y = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
+            std::get<int>(evaluate(*node.arguments[1])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
+        ioHandler->draw_pixel(x, y);
+        lastValue = 0;
+        return;
+    }
+    
+    if (node.name == "draw_line" && node.arguments.size() == 4) {
+        int x1 = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
+            std::get<int>(evaluate(*node.arguments[0])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
+        int y1 = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
+            std::get<int>(evaluate(*node.arguments[1])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
+        int x2 = std::holds_alternative<int>(evaluate(*node.arguments[2])) ? 
+            std::get<int>(evaluate(*node.arguments[2])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[2])));
+        int y2 = std::holds_alternative<int>(evaluate(*node.arguments[3])) ? 
+            std::get<int>(evaluate(*node.arguments[3])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[3])));
+        ioHandler->draw_line(x1, y1, x2, y2);
+        lastValue = 0;
+        return;
+    }
+    
+    if (node.name == "refresh_screen" && node.arguments.size() == 0) {
+        ioHandler->refresh_screen();
+        lastValue = 0;
+        return;
+    }
+    
+    if (node.name == "key_pressed" && node.arguments.size() == 1) {
+        ValueType keyValue = evaluate(*node.arguments[0]);
+        std::string key = valueToString(keyValue);
+        bool pressed = ioHandler->key_pressed(key);
+        lastValue = pressed;
+        return;
+    }
+    
+    if (node.name == "quit_requested" && node.arguments.size() == 0) {
+        bool quit = ioHandler->quit_requested();
+        lastValue = quit;
+        return;
+    }
+    
+    if (node.name == "sleep_ms" && node.arguments.size() == 1) {
+        int ms = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
+            std::get<int>(evaluate(*node.arguments[0])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
+        ioHandler->sleep_ms(ms);
+        lastValue = 0;
+        return;
+    }
+    
+    if (node.name == "get_ticks" && node.arguments.size() == 0) {
+        int ticks = ioHandler->get_ticks();
+        lastValue = ticks;
         return;
     }
 
@@ -378,31 +494,30 @@ void Interpreter::visit(VarStmt& node) {
 void Interpreter::visit(PrintStmt& node) {
     for (size_t i = 0; i < node.expressions.size(); i++) {
         ValueType value = evaluate(*node.expressions[i]);
-        std::cout << valueToString(value);
+        ioHandler->print(valueToString(value));
         if (i < node.expressions.size() - 1) {
-            std::cout << " ";
+            ioHandler->print(" ");
         }
     }
-    std::cout << std::endl;
+    ioHandler->newline();
 }
 
 void Interpreter::visit(InputStmt& node) {
-    std::string input;
-    std::getline(std::cin, input);
+    std::string input_text = ioHandler->input();
     
     // Try to parse as number first
     ValueType value;
     try {
-        if (input.find('.') != std::string::npos) {
+        if (input_text.find('.') != std::string::npos) {
             // Contains decimal point, parse as double
-            value = std::stod(input);
+            value = std::stod(input_text);
         } else {
             // Try to parse as integer
-            value = std::stoi(input);
+            value = std::stoi(input_text);
         }
     } catch (const std::exception&) {
         // If parsing fails, store as string
-        value = input;
+        value = input_text;
     }
     
     setVariable(node.variable, value);

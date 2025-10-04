@@ -13,6 +13,43 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR})
 # Include directories
 include_directories(include)
 
+# Optional SDL2 support
+option(ENABLE_SDL_SUPPORT "Enable SDL2 graphics support" OFF)
+
+if(ENABLE_SDL_SUPPORT)
+    # Try to find SDL2 using environment variables
+    if(DEFINED ENV{SDL2_ROOT})
+        set(SDL2_DIR "$ENV{SDL2_ROOT}")
+        find_path(SDL2_INCLUDE_DIRS SDL.h PATHS ${SDL2_DIR}/include)
+        find_library(SDL2_LIBRARIES SDL2 PATHS ${SDL2_DIR}/lib/x64)
+        find_library(SDL2_MAIN_LIBRARIES SDL2main PATHS ${SDL2_DIR}/lib/x64)
+        
+        if(SDL2_INCLUDE_DIRS AND SDL2_LIBRARIES)
+            set(SDL2_FOUND TRUE)
+            list(APPEND SOURCES src/sdl_io_handler.cpp)
+            list(APPEND HEADERS include/sdl_io_handler.h)
+            message(STATUS "SDL2 found: ${SDL2_DIR}")
+        else()
+            message(WARNING "SDL2_ROOT is set but SDL2 not found")
+            set(SDL2_FOUND FALSE)
+        endif()
+    else()
+        # Try standard CMake FindSDL2
+        find_package(SDL2 QUIET)
+        if(SDL2_FOUND)
+            list(APPEND SOURCES src/sdl_io_handler.cpp)
+            list(APPEND HEADERS include/sdl_io_handler.h)
+        endif()
+    endif()
+    
+    if(SDL2_FOUND)
+        add_compile_definitions(RBASIC_SDL_SUPPORT)
+        message(STATUS "SDL2 graphics support enabled")
+    else()
+        message(WARNING "SDL2 not found, building without graphics support")
+    endif()
+endif()
+
 # Source files
 set(SOURCES
     src/main.cpp
@@ -23,6 +60,8 @@ set(SOURCES
     src/codegen.cpp
     src/runtime.cpp
     src/common.cpp
+    src/io_handler.cpp
+    src/console_io_handler.cpp
 )
 
 # Header files
@@ -34,10 +73,32 @@ set(HEADERS
     include/codegen.h
     include/runtime.h
     include/common.h
+    include/io_handler.h
+    include/console_io_handler.h
 )
 
 # Create main executable
 add_executable(rbasic ${SOURCES} ${HEADERS})
+
+# Link SDL2 if available
+if(ENABLE_SDL_SUPPORT AND SDL2_FOUND)
+    target_include_directories(rbasic PRIVATE ${SDL2_INCLUDE_DIRS})
+    if(SDL2_MAIN_LIBRARIES)
+        target_link_libraries(rbasic ${SDL2_LIBRARIES} ${SDL2_MAIN_LIBRARIES})
+    else()
+        target_link_libraries(rbasic ${SDL2_LIBRARIES})
+    endif()
+    
+    if(WIN32)
+        # Copy SDL2 DLLs to output directory on Windows
+        if(EXISTS "${SDL2_DIR}/lib/x64/SDL2.dll")
+            add_custom_command(TARGET rbasic POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${SDL2_DIR}/lib/x64/SDL2.dll"
+                $<TARGET_FILE_DIR:rbasic>)
+        endif()
+    endif()
+endif()
 
 # Create runtime library for compiled programs
 add_library(rbasic_runtime STATIC
@@ -74,9 +135,24 @@ add_executable(rbasic_tests
     src/interpreter.cpp
     src/runtime.cpp
     src/common.cpp
+    src/io_handler.cpp
+    src/console_io_handler.cpp
 )
 
 target_include_directories(rbasic_tests PRIVATE include)
+
+# Add SDL2 support to tests if enabled
+if(ENABLE_SDL_SUPPORT AND SDL2_FOUND)
+    target_include_directories(rbasic_tests PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_compile_definitions(rbasic_tests PRIVATE RBASIC_SDL_SUPPORT)
+    list(APPEND TEST_SOURCES src/sdl_io_handler.cpp)
+    target_sources(rbasic_tests PRIVATE ${TEST_SOURCES})
+    if(SDL2_MAIN_LIBRARIES)
+        target_link_libraries(rbasic_tests ${SDL2_LIBRARIES} ${SDL2_MAIN_LIBRARIES})
+    else()
+        target_link_libraries(rbasic_tests ${SDL2_LIBRARIES})
+    endif()
+endif()
 
 # Set MSVC runtime library for all targets after they're defined
 if(MSVC)

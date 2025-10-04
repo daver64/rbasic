@@ -2,8 +2,10 @@
 
 #include "common.h"
 #include "ast.h"
+#include "io_handler.h"
 #include <map>
 #include <stack>
+#include <memory>
 
 namespace rbasic {
 
@@ -16,6 +18,7 @@ private:
     std::map<std::string, std::map<std::string, ValueType>> structInstances;
     ValueType lastValue;
     bool hasReturned;
+    std::unique_ptr<IOHandler> ioHandler;
     
     void defineVariable(const std::string& name, const ValueType& value);
     ValueType getVariable(const std::string& name);
@@ -25,10 +28,13 @@ private:
     void popScope();
     
 public:
-    Interpreter();
+    Interpreter(std::unique_ptr<IOHandler> io = nullptr);
     
     void interpret(Program& program);
     ValueType evaluate(Expression& expr);
+    
+    // Get the IO handler (for external access if needed)
+    IOHandler* getIOHandler() const;
     
     // Visitor methods
     void visit(LiteralExpr& node) override;

@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "interpreter.h"
 #include "codegen.h"
+#include "io_handler.h"
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -12,13 +13,14 @@ using namespace rbasic;
 void printUsage(const std::string& programName) {
     std::cout << "rbasic - BASIC Interpreter and Compiler\n\n";
     std::cout << "Usage:\n";
-    std::cout << "  " << programName << " -i <file.bas>              # Interpret mode\n";
-    std::cout << "  " << programName << " -c <file.bas> [-o <output>] # Compile mode\n";
-    std::cout << "  " << programName << " --help                     # Show this help\n\n";
+    std::cout << "  " << programName << " -i <file.bas> [--io <type>]     # Interpret mode\n";
+    std::cout << "  " << programName << " -c <file.bas> [-o <output>]     # Compile mode\n";
+    std::cout << "  " << programName << " --help                         # Show this help\n\n";
     std::cout << "Options:\n";
     std::cout << "  -i, --interpret    Interpret the BASIC program directly\n";
     std::cout << "  -c, --compile      Compile BASIC program to C++ executable\n";
     std::cout << "  -o, --output       Specify output filename (compile mode only)\n";
+    std::cout << "  --io <type>        I/O handler type: console, sdl (default: console)\n";
     std::cout << "  --help             Show this help message\n";
 }
 
@@ -71,6 +73,7 @@ int main(int argc, char* argv[]) {
         std::string mode;
         std::string inputFile;
         std::string outputFile;
+        std::string ioType = "console";
         
         // Parse command line arguments
         for (int i = 1; i < argc; i++) {
@@ -92,6 +95,10 @@ int main(int argc, char* argv[]) {
             } else if (arg == "-o" || arg == "--output") {
                 if (i + 1 < argc) {
                     outputFile = argv[++i];
+                }
+            } else if (arg == "--io") {
+                if (i + 1 < argc) {
+                    ioType = argv[++i];
                 }
             } else if (inputFile.empty()) {
                 inputFile = arg;
@@ -127,7 +134,11 @@ int main(int argc, char* argv[]) {
         
         if (mode == "interpret") {
             std::cout << "=== Interpreting " << inputFile << " ===\n";
-            Interpreter interpreter;
+            
+            // Create appropriate I/O handler
+            auto ioHandler = createIOHandler(ioType);
+            
+            Interpreter interpreter(std::move(ioHandler));
             interpreter.interpret(*program);
         } else if (mode == "compile") {
             std::cout << "=== Compiling " << inputFile << " ===\n";
