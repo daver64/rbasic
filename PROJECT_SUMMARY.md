@@ -13,6 +13,7 @@ The **rbasic** C-leaning BASIC language transpiler is now fully functional and d
 - ✅ **Modern Comments**: C++ style `//` and `/* */` comments
 - ✅ **Assignment Expressions**: `var y = (x = x + 1) * 2`
 - ✅ **Arrays**: `dim array(size)` and `array[index]` access
+- ✅ **Structures**: `struct Name { fields } end struct` with member access
 - ✅ **User-Defined Functions**: With parameters and return values
 
 ### Graphics System
@@ -43,8 +44,8 @@ rbasic/
 │   ├── fibonacci.bas     # Recursion and functions
 │   ├── graphics_demo.bas # SDL graphics programming
 │   ├── arrays.bas        # Data structures
-│   ├── functions.bas     # User-defined functions
-│   └── structures.bas    # Advanced data types
+│   ├── structures.bas    # Struct definition and usage
+│   └── functions.bas     # User-defined functions
 └── tests/                 # Automated testing
 ```
 

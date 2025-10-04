@@ -276,6 +276,13 @@ std::unique_ptr<Statement> Parser::statement() {
 std::unique_ptr<Statement> Parser::varStatement() {
     auto name = consume(TokenType::IDENTIFIER, "Expected variable name");
     
+    // Check for struct member assignment: var struct.member = value
+    std::string member = "";
+    if (match({TokenType::DOT})) {
+        auto memberToken = consume(TokenType::IDENTIFIER, "Expected member name after '.'");
+        member = memberToken.value;
+    }
+    
     // Check for array assignment: var array[index] = value
     std::unique_ptr<Expression> index = nullptr;
     if (match({TokenType::LEFT_BRACKET})) {
@@ -287,7 +294,7 @@ std::unique_ptr<Statement> Parser::varStatement() {
     auto value = expression();
     consume(TokenType::SEMICOLON, "Expected ';' after variable declaration");
     
-    return std::make_unique<VarStmt>(name.value, std::move(value), std::move(index));
+    return std::make_unique<VarStmt>(name.value, std::move(value), std::move(index), member);
 }
 
 std::unique_ptr<Statement> Parser::ifStatement() {

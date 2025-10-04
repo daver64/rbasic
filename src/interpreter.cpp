@@ -128,8 +128,28 @@ void Interpreter::visit(VariableExpr& node) {
     
     // Handle struct member access
     if (!node.member.empty()) {
-        // TODO: Implement struct member access
-        throw RuntimeError("Struct member access not implemented yet");
+        auto structValue = getVariable(node.name);
+        if (auto structVal = std::get_if<StructValue>(&structValue)) {
+            auto it = structVal->fields.find(node.member);
+            if (it != structVal->fields.end()) {
+                // Convert from struct field variant to ValueType
+                auto& fieldValue = it->second;
+                if (std::holds_alternative<int>(fieldValue)) {
+                    lastValue = std::get<int>(fieldValue);
+                } else if (std::holds_alternative<double>(fieldValue)) {
+                    lastValue = std::get<double>(fieldValue);
+                } else if (std::holds_alternative<std::string>(fieldValue)) {
+                    lastValue = std::get<std::string>(fieldValue);
+                } else if (std::holds_alternative<bool>(fieldValue)) {
+                    lastValue = std::get<bool>(fieldValue);
+                }
+            } else {
+                throw RuntimeError("Struct member '" + node.member + "' not found");
+            }
+        } else {
+            throw RuntimeError("'" + node.name + "' is not a struct");
+        }
+        return;
     }
     
     lastValue = value;
@@ -655,8 +675,30 @@ void Interpreter::visit(ExpressionStmt& node) {
 void Interpreter::visit(VarStmt& node) {
     ValueType value = evaluate(*node.value);
     
+    // Handle struct member assignment
+    if (!node.member.empty()) {
+        ValueType structVar = getVariable(node.variable);
+        if (std::holds_alternative<StructValue>(structVar)) {
+            StructValue structVal = std::get<StructValue>(structVar);
+            
+            // Convert ValueType to simple variant for storage
+            if (std::holds_alternative<int>(value)) {
+                structVal.fields[node.member] = std::get<int>(value);
+            } else if (std::holds_alternative<double>(value)) {
+                structVal.fields[node.member] = std::get<double>(value);
+            } else if (std::holds_alternative<std::string>(value)) {
+                structVal.fields[node.member] = std::get<std::string>(value);
+            } else if (std::holds_alternative<bool>(value)) {
+                structVal.fields[node.member] = std::get<bool>(value);
+            }
+            
+            defineVariable(node.variable, structVal);  // Update the variable
+        } else {
+            throw RuntimeError("Variable '" + node.variable + "' is not a struct");
+        }
+    }
     // Handle array assignment
-    if (node.index) {
+    else if (node.index) {
         ValueType arrayVar = getVariable(node.variable);
         if (std::holds_alternative<ArrayValue>(arrayVar)) {
             ArrayValue array = std::get<ArrayValue>(arrayVar);
@@ -819,8 +861,34 @@ void Interpreter::visit(DimStmt& node) {
         } else if (node.type == "boolean") {
             defineVariable(node.variable, false);
         } else {
-            // Struct or unknown type - initialize to 0 for now
-            defineVariable(node.variable, 0);
+            // Check if it's a defined struct type
+            auto structIt = structs.find(node.type);
+            if (structIt != structs.end()) {
+                StructValue structInstance(node.type);
+                
+                // Initialize struct fields with default values
+                for (size_t i = 0; i < structIt->second->fields.size(); i++) {
+                    const std::string& fieldName = structIt->second->fields[i];
+                    const std::string& fieldType = structIt->second->fieldTypes[i];
+                    
+                    if (fieldType == "integer") {
+                        structInstance.fields[fieldName] = 0;
+                    } else if (fieldType == "double") {
+                        structInstance.fields[fieldName] = 0.0;
+                    } else if (fieldType == "string") {
+                        structInstance.fields[fieldName] = std::string("");
+                    } else if (fieldType == "boolean") {
+                        structInstance.fields[fieldName] = false;
+                    } else {
+                        structInstance.fields[fieldName] = 0; // Default for unknown types
+                    }
+                }
+                
+                defineVariable(node.variable, structInstance);
+            } else {
+                // Unknown type - initialize to 0
+                defineVariable(node.variable, 0);
+            }
         }
     } else {
         // Array declaration - create an empty array

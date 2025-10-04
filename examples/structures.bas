@@ -1,37 +1,44 @@
-// Example showing functions and structures in rbasic
+// Example showing structure functionality in rbasic
 
 // Define a Point structure
-struct Point {
+struct Point
     x as integer;
     y as integer;
-}
+end struct;
 
-// Define a function to calculate distance
-function distance(p1 as Point, p2 as Point) as double {
-    var dx = p1.x - p2.x;
-    var dy = p1.y - p2.y;
-    return sqr(dx * dx + dy * dy);
-}
+// Define a Person structure  
+struct Person
+    name as string;
+    age as integer;
+    height as double;
+end struct;
 
-// Define a function to create a point
-function makePoint(x as integer, y as integer) as Point {
-    dim result as Point;
-    var result.x = x;
-    var result.y = y;
-    return result;
-}
+print("=== rbasic Structure Examples ===");
 
-// Main program
-print("Point and Distance Calculator");
+// Create and use Point structure
+print("\n--- Point Structure ---");
+dim p1 as Point;
+dim p2 as Point;
 
-dim point1 as Point;
-dim point2 as Point;
+var p1.x = 0;
+var p1.y = 0;
+var p2.x = 3;
+var p2.y = 4;
 
-var point1 = makePoint(0, 0);
-var point2 = makePoint(3, 4);
+print("Point 1: (", p1.x, ", ", p1.y, ")");
+print("Point 2: (", p2.x, ", ", p2.y, ")");
 
-print("Point 1: (", point1.x, ", ", point1.y, ")");
-print("Point 2: (", point2.x, ", ", point2.y, ")");
+// Create and use Person structure
+print("\n--- Person Structure ---");
+dim person as Person;
 
-var dist = distance(point1, point2);
-print("Distance: ", dist);
+var person.name = "Alice";
+var person.age = 25;
+var person.height = 5.6;
+
+print("Person Details:");
+print("  Name: ", person.name);
+print("  Age: ", person.age, " years");
+print("  Height: ", person.height, " feet");
+
+print("\n=== Structure examples completed! ===");

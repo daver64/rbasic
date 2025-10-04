@@ -15,6 +15,9 @@ std::string valueToString(const ValueType& value) {
         return std::get<bool>(value) ? "true" : "false";
     } else if (std::holds_alternative<ArrayValue>(value)) {
         return "[Array]";  // Simple representation for now
+    } else if (std::holds_alternative<StructValue>(value)) {
+        const auto& structVal = std::get<StructValue>(value);
+        return "[" + structVal.typeName + " struct]";  // Simple representation for now
     }
     return "";
 }

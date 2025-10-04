@@ -15,8 +15,16 @@ struct ArrayValue {
     std::map<int, std::variant<int, double, std::string, bool>> elements;
 };
 
+struct StructValue {
+    std::string typeName;
+    std::map<std::string, std::variant<int, double, std::string, bool>> fields;
+    
+    StructValue() = default;
+    StructValue(const std::string& type) : typeName(type) {}
+};
+
 // Common types
-using ValueType = std::variant<int, double, std::string, bool, ArrayValue>;
+using ValueType = std::variant<int, double, std::string, bool, ArrayValue, StructValue>;
 
 // Type system
 enum class BasicType {
