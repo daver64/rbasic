@@ -1,4 +1,4 @@
-# rbasic - C-Leaning BASIC Language Transpiler# rbasic - A Modern BASIC Interpreter and Compiler
+# rbasic - C-Leaning BASIC Language Transpiler and Interpreter.
 
 
 
