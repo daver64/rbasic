@@ -11,6 +11,7 @@ private:
     std::ostringstream output;
     std::string functionDeclarations;
     bool usesSDL;
+    bool usesSQLite;
     int indentLevel;
     
     void indent();
@@ -25,6 +26,7 @@ public:
     
     std::string generate(Program& program);
     bool getUsesSDL() const { return usesSDL; }
+    bool getUsesSQLite() const { return usesSQLite; }
     
     // Visitor methods
     void visit(LiteralExpr& node) override;

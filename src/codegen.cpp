@@ -2,7 +2,7 @@
 
 namespace rbasic {
 
-CodeGenerator::CodeGenerator() : indentLevel(0), tempVarCounter(0), usesSDL(false) {}
+CodeGenerator::CodeGenerator() : indentLevel(0), tempVarCounter(0), usesSDL(false), usesSQLite(false) {}
 
 void CodeGenerator::indent() {
     for (int i = 0; i < indentLevel; i++) {
@@ -32,6 +32,7 @@ std::string CodeGenerator::generate(Program& program) {
     output.clear();
     functionDeclarations = "";
     usesSDL = false;
+    usesSQLite = false;
     tempVarCounter = 0;
     indentLevel = 0;
     
@@ -447,6 +448,51 @@ void CodeGenerator::visit(CallExpr& node) {
     if (node.name == "get_ticks" && node.arguments.size() == 0) {
         usesSDL = true;
         write("get_ticks()");
+        return;
+    }
+    
+    // Database functions (SQLite)
+    if (node.name == "db_open" && node.arguments.size() == 1) {
+        usesSQLite = true;
+        write("db_open(to_string(");
+        node.arguments[0]->accept(*this);
+        write("))");
+        return;
+    }
+    
+    if (node.name == "db_close" && node.arguments.size() == 0) {
+        usesSQLite = true;
+        write("db_close()");
+        return;
+    }
+    
+    if (node.name == "db_exec" && node.arguments.size() == 1) {
+        usesSQLite = true;
+        write("db_exec(to_string(");
+        node.arguments[0]->accept(*this);
+        write("))");
+        return;
+    }
+    
+    if (node.name == "db_query" && node.arguments.size() == 1) {
+        usesSQLite = true;
+        write("db_query(to_string(");
+        node.arguments[0]->accept(*this);
+        write("))");
+        return;
+    }
+    
+    if (node.name == "db_error" && node.arguments.size() == 0) {
+        usesSQLite = true;
+        write("db_error()");
+        return;
+    }
+    
+    if (node.name == "db_escape" && node.arguments.size() == 1) {
+        usesSQLite = true;
+        write("db_escape(to_string(");
+        node.arguments[0]->accept(*this);
+        write("))");
         return;
     }
     

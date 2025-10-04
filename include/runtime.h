@@ -18,6 +18,16 @@ public:
     static ValueType basicInt(const std::vector<ValueType>& args);
     static ValueType basicRnd(const std::vector<ValueType>& args);
     
+#ifdef RBASIC_SQLITE_SUPPORT
+    // Database functions
+    static ValueType basicDbOpen(const std::vector<ValueType>& args);
+    static ValueType basicDbClose(const std::vector<ValueType>& args);
+    static ValueType basicDbExec(const std::vector<ValueType>& args);
+    static ValueType basicDbQuery(const std::vector<ValueType>& args);
+    static ValueType basicDbError(const std::vector<ValueType>& args);
+    static ValueType basicDbEscape(const std::vector<ValueType>& args);
+#endif
+    
     // Type conversion functions
     static int toInt(const ValueType& value);
     static double toDouble(const ValueType& value);

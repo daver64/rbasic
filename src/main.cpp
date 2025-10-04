@@ -4,6 +4,11 @@
 #include "interpreter.h"
 #include "codegen.h"
 #include "io_handler.h"
+
+#ifdef RBASIC_SQLITE_SUPPORT
+#include "sqlite_handler.h"
+#endif
+
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -47,22 +52,39 @@ void writeFile(const std::string& filename, const std::string& content) {
     file << content;
 }
 
-bool compileToExecutable(const std::string& cppFile, const std::string& outputFile, bool usesSDL = false) {
+bool compileToExecutable(const std::string& cppFile, const std::string& outputFile, bool usesSDL = false, bool usesSQLite = false) {
     // Use cl compiler directly since it's set up globally
     std::string command = "cl /EHsc /std:c++17 \"" + cppFile + "\" /Fe:\"" + outputFile + "\" runtime\\Release\\rbasic_runtime.lib";
     
-    // Add SDL2 libraries if the program uses graphics
-    if (usesSDL) {
+    // If runtime library was built with SDL support, we must always link SDL libraries
+    // but only add SDL compilation flags if the program actually uses graphics
 #ifdef RBASIC_SDL_SUPPORT
-        // Add SDL2 libraries to the compilation command
-        const char* sdl2_root = std::getenv("SDL2_ROOT");
-        if (sdl2_root) {
+    const char* sdl2_root = std::getenv("SDL2_ROOT");
+    if (sdl2_root) {
+        // Always link SDL libraries (runtime needs them)
+        command += " \"" + std::string(sdl2_root) + "\\lib\\x64\\SDL2.lib\"";
+        
+        // Only add SDL compilation flags and main if program uses graphics
+        if (usesSDL) {
             command += " /I\"" + std::string(sdl2_root) + "\\include\"";
-            command += " \"" + std::string(sdl2_root) + "\\lib\\x64\\SDL2.lib\"";
             command += " \"" + std::string(sdl2_root) + "\\lib\\x64\\SDL2main.lib\"";
+            command += " /DRBASIC_SDL_SUPPORT";
         }
+    }
+#endif
+    
+    // Add SQLite support if the program uses database functions
+    if (usesSQLite) {
+#ifdef RBASIC_SQLITE_SUPPORT
+        // SQLite is compiled directly from source, just add the source file
+        command += " \"3rd_party\\sqlite\\sqlite3.c\"";
+        command += " /I\"3rd_party\\sqlite\"";
+        command += " /DRBASIC_SQLITE_SUPPORT";
 #endif
     }
+    
+    // Add linker flags at the end
+    command += " /link /SUBSYSTEM:CONSOLE kernel32.lib user32.lib";
     
     std::cout << "Compiling with MSVC: " << command << std::endl;
     int result = std::system(command.c_str());
@@ -148,17 +170,28 @@ int main(int argc, char* argv[]) {
         if (mode == "interpret") {
             std::cout << "=== Interpreting " << inputFile << " ===\n";
             
+#ifdef RBASIC_SQLITE_SUPPORT
+            // Initialize SQLite handler for interpreted mode
+            initializeSQLiteHandler();
+#endif
+            
             // Create appropriate I/O handler
             auto ioHandler = createIOHandler(ioType);
             
             Interpreter interpreter(std::move(ioHandler));
             interpreter.interpret(*program);
+            
+#ifdef RBASIC_SQLITE_SUPPORT
+            // Cleanup SQLite handler
+            cleanupSQLiteHandler();
+#endif
         } else if (mode == "compile") {
             std::cout << "=== Compiling " << inputFile << " ===\n";
             
             CodeGenerator generator;
             std::string cppCode = generator.generate(*program);
             bool usesSDL = generator.getUsesSDL();
+            bool usesSQLite = generator.getUsesSQLite();
             
             // Write generated C++ code to temporary file
             std::string tempCppFile = "temp_" + std::filesystem::path(inputFile).stem().string() + ".cpp";
@@ -167,7 +200,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Generated C++ code written to: " << tempCppFile << std::endl;
             
             // Compile to executable
-            if (compileToExecutable(tempCppFile, outputFile, usesSDL)) {
+            if (compileToExecutable(tempCppFile, outputFile, usesSDL, usesSQLite)) {
                 // Clean up temporary file
                 std::filesystem::remove(tempCppFile);
             } else {

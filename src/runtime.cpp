@@ -2,6 +2,10 @@
 #include <cmath>
 #include <sstream>
 
+#ifdef RBASIC_SQLITE_SUPPORT
+#include "sqlite_handler.h"
+#endif
+
 namespace rbasic {
 
 // Built-in functions
@@ -152,5 +156,85 @@ bool Runtime::toBool(const ValueType& value) {
     }
     return false;
 }
+
+#ifdef RBASIC_SQLITE_SUPPORT
+#include "sqlite_handler.h"
+
+ValueType Runtime::basicDbOpen(const std::vector<ValueType>& args) {
+    if (args.empty()) return false;
+    
+    if (!g_sqlite_handler) {
+        initializeSQLiteHandler();
+    }
+    
+    std::string database_path = toString(args[0]);
+    return g_sqlite_handler->open(database_path);
+}
+
+ValueType Runtime::basicDbClose(const std::vector<ValueType>& args) {
+    if (g_sqlite_handler) {
+        g_sqlite_handler->close();
+    }
+    return true;
+}
+
+ValueType Runtime::basicDbExec(const std::vector<ValueType>& args) {
+    if (args.empty() || !g_sqlite_handler) return false;
+    
+    std::string sql = toString(args[0]);
+    return g_sqlite_handler->exec(sql);
+}
+
+ValueType Runtime::basicDbQuery(const std::vector<ValueType>& args) {
+    if (args.empty() || !g_sqlite_handler) return std::string("");
+    
+    std::string sql = toString(args[0]);
+    auto results = g_sqlite_handler->query(sql);
+    
+    // Convert results to string format (tab-separated columns, newline-separated rows)
+    std::ostringstream output;
+    for (size_t i = 0; i < results.size(); i++) {
+        if (i > 0) output << "\n";
+        
+        const auto& row = results[i];
+        for (size_t j = 0; j < row.size(); j++) {
+            if (j > 0) output << "\t";
+            output << row[j];
+        }
+    }
+    
+    return output.str();
+}
+
+ValueType Runtime::basicDbError(const std::vector<ValueType>& args) {
+    if (g_sqlite_handler) {
+        return g_sqlite_handler->getLastError();
+    }
+    return std::string("");
+}
+
+ValueType Runtime::basicDbEscape(const std::vector<ValueType>& args) {
+    if (args.empty()) return std::string("");
+    
+    if (g_sqlite_handler) {
+        return g_sqlite_handler->escapeString(toString(args[0]));
+    }
+    
+    // Fallback escaping if handler not available
+    std::string str = toString(args[0]);
+    std::string escaped;
+    escaped.reserve(str.length() * 2);
+    
+    for (char c : str) {
+        if (c == '\'') {
+            escaped += "''";
+        } else {
+            escaped += c;
+        }
+    }
+    
+    return escaped;
+}
+#endif
 
 } // namespace rbasic

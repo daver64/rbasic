@@ -13,6 +13,10 @@
 #include <SDL.h>
 #endif
 
+#ifdef RBASIC_SQLITE_SUPPORT
+#include <sqlite3.h>
+#endif
+
 // Forward declarations
 struct BasicStruct;
 struct BasicArray;
@@ -166,5 +170,15 @@ bool key_pressed(const std::string& key);
 bool quit_requested();
 void sleep_ms(int ms);
 int get_ticks();
+
+// Database functions (SQLite)
+#ifdef RBASIC_SQLITE_SUPPORT
+BasicValue db_open(const std::string& database_path);
+BasicValue db_close();
+BasicValue db_exec(const std::string& sql);
+BasicValue db_query(const std::string& sql);
+BasicValue db_error();
+BasicValue db_escape(const std::string& str);
+#endif
 
 } // namespace basic_runtime

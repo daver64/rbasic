@@ -599,4 +599,120 @@ void set_array_element(BasicValue& arrayVar, BasicValue index, BasicValue value)
     }
 }
 
+#ifdef RBASIC_SQLITE_SUPPORT
+// SQLite support for compiled programs
+static sqlite3* g_sqlite_db = nullptr;
+static std::string g_sqlite_last_error;
+
+BasicValue db_open(const std::string& database_path) {
+    if (g_sqlite_db) {
+        sqlite3_close(g_sqlite_db);
+        g_sqlite_db = nullptr;
+    }
+    
+    int result = sqlite3_open(database_path.c_str(), &g_sqlite_db);
+    if (result != SQLITE_OK) {
+        g_sqlite_last_error = sqlite3_errmsg(g_sqlite_db);
+        sqlite3_close(g_sqlite_db);
+        g_sqlite_db = nullptr;
+        return false;
+    }
+    
+    g_sqlite_last_error.clear();
+    return true;
+}
+
+BasicValue db_close() {
+    if (g_sqlite_db) {
+        sqlite3_close(g_sqlite_db);
+        g_sqlite_db = nullptr;
+    }
+    g_sqlite_last_error.clear();
+    return true;
+}
+
+BasicValue db_exec(const std::string& sql) {
+    if (!g_sqlite_db) {
+        g_sqlite_last_error = "Database not open";
+        return false;
+    }
+    
+    char* error_msg = nullptr;
+    int result = sqlite3_exec(g_sqlite_db, sql.c_str(), nullptr, nullptr, &error_msg);
+    
+    if (result != SQLITE_OK) {
+        g_sqlite_last_error = error_msg ? error_msg : "Unknown error";
+        if (error_msg) {
+            sqlite3_free(error_msg);
+        }
+        return false;
+    }
+    
+    g_sqlite_last_error.clear();
+    return true;
+}
+
+BasicValue db_query(const std::string& sql) {
+    if (!g_sqlite_db) {
+        g_sqlite_last_error = "Database not open";
+        return std::string("");
+    }
+    
+    sqlite3_stmt* stmt;
+    int result = sqlite3_prepare_v2(g_sqlite_db, sql.c_str(), -1, &stmt, nullptr);
+    
+    if (result != SQLITE_OK) {
+        g_sqlite_last_error = sqlite3_errmsg(g_sqlite_db);
+        return std::string("");
+    }
+    
+    std::ostringstream output;
+    bool first_row = true;
+    
+    while ((result = sqlite3_step(stmt)) == SQLITE_ROW) {
+        if (!first_row) {
+            output << "\n";
+        }
+        first_row = false;
+        
+        int col_count = sqlite3_column_count(stmt);
+        for (int i = 0; i < col_count; i++) {
+            if (i > 0) output << "\t";
+            
+            const char* text = reinterpret_cast<const char*>(sqlite3_column_text(stmt, i));
+            output << (text ? text : "");
+        }
+    }
+    
+    sqlite3_finalize(stmt);
+    
+    if (result != SQLITE_DONE) {
+        g_sqlite_last_error = sqlite3_errmsg(g_sqlite_db);
+        return std::string("");
+    }
+    
+    g_sqlite_last_error.clear();
+    return output.str();
+}
+
+BasicValue db_error() {
+    return g_sqlite_last_error;
+}
+
+BasicValue db_escape(const std::string& str) {
+    std::string escaped;
+    escaped.reserve(str.length() * 2);
+    
+    for (char c : str) {
+        if (c == '\'') {
+            escaped += "''";
+        } else {
+            escaped += c;
+        }
+    }
+    
+    return escaped;
+}
+#endif
+
 } // namespace basic_runtime
