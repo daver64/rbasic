@@ -21,6 +21,12 @@ void init_runtime() {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 }
 
+void init_runtime_sdl() {
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+    // SDL initialization is handled by the IOHandler when needed
+    // This function exists to indicate SDL support is required
+}
+
 void print(const BasicValue& value) {
     if (g_io_handler) {
         g_io_handler->print(to_string(value));
@@ -434,6 +440,28 @@ int get_ticks() {
         return g_io_handler->get_ticks();
     }
     return 0;
+}
+
+// Simple 1D array access helpers
+BasicValue get_array_element(BasicValue& arrayVar, BasicValue index) {
+    if (std::holds_alternative<BasicArray>(arrayVar)) {
+        BasicArray& array = std::get<BasicArray>(arrayVar);
+        int idx = to_int(index);
+        if (idx >= 1 && idx <= static_cast<int>(array.elements.size())) {
+            return array.elements[idx - 1]; // Convert to 0-based indexing
+        }
+    }
+    return BasicValue(0); // Default value
+}
+
+void set_array_element(BasicValue& arrayVar, BasicValue index, BasicValue value) {
+    if (std::holds_alternative<BasicArray>(arrayVar)) {
+        BasicArray& array = std::get<BasicArray>(arrayVar);
+        int idx = to_int(index);
+        if (idx >= 1 && idx <= static_cast<int>(array.elements.size())) {
+            array.elements[idx - 1] = value; // Convert to 0-based indexing
+        }
+    }
 }
 
 } // namespace basic_runtime

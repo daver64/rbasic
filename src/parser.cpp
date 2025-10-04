@@ -275,11 +275,19 @@ std::unique_ptr<Statement> Parser::statement() {
 
 std::unique_ptr<Statement> Parser::varStatement() {
     auto name = consume(TokenType::IDENTIFIER, "Expected variable name");
+    
+    // Check for array assignment: var array[index] = value
+    std::unique_ptr<Expression> index = nullptr;
+    if (match({TokenType::LEFT_BRACKET})) {
+        index = expression();
+        consume(TokenType::RIGHT_BRACKET, "Expected ']' after array index");
+    }
+    
     consume(TokenType::ASSIGN, "Expected '=' after variable name");
     auto value = expression();
     consume(TokenType::SEMICOLON, "Expected ';' after variable declaration");
     
-    return std::make_unique<VarStmt>(name.value, std::move(value));
+    return std::make_unique<VarStmt>(name.value, std::move(value), std::move(index));
 }
 
 std::unique_ptr<Statement> Parser::ifStatement() {
@@ -294,9 +302,15 @@ std::unique_ptr<Statement> Parser::ifStatement() {
     
     std::vector<std::unique_ptr<Statement>> elseBranch;
     if (match({TokenType::ELSE})) {
-        consume(TokenType::LEFT_BRACE, "Expected '{' after 'else'");
-        elseBranch = blockUntil(TokenType::RIGHT_BRACE);
-        consume(TokenType::RIGHT_BRACE, "Expected '}' after else body");
+        if (check(TokenType::IF)) {
+            // Handle else-if as a nested if statement
+            elseBranch.push_back(ifStatement());
+        } else {
+            // Handle regular else with braces
+            consume(TokenType::LEFT_BRACE, "Expected '{' after 'else'");
+            elseBranch = blockUntil(TokenType::RIGHT_BRACE);
+            consume(TokenType::RIGHT_BRACE, "Expected '}' after else body");
+        }
     }
     
     return std::make_unique<IfStmt>(std::move(condition), std::move(thenBranch), std::move(elseBranch));

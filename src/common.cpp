@@ -13,6 +13,8 @@ std::string valueToString(const ValueType& value) {
         return std::to_string(std::get<double>(value));
     } else if (std::holds_alternative<bool>(value)) {
         return std::get<bool>(value) ? "true" : "false";
+    } else if (std::holds_alternative<ArrayValue>(value)) {
+        return "[Array]";  // Simple representation for now
     }
     return "";
 }
@@ -26,6 +28,8 @@ bool isTruthy(const ValueType& value) {
         return std::get<double>(value) != 0.0;
     } else if (std::holds_alternative<std::string>(value)) {
         return !std::get<std::string>(value).empty();
+    } else if (std::holds_alternative<ArrayValue>(value)) {
+        return !std::get<ArrayValue>(value).elements.empty();
     }
     return false;
 }

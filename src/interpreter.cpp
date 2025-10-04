@@ -97,8 +97,33 @@ void Interpreter::visit(VariableExpr& node) {
     
     // Handle array access
     if (node.index) {
-        // TODO: Implement array access
-        throw RuntimeError("Array access not implemented yet");
+        ValueType arrayVar = getVariable(node.name);
+        if (std::holds_alternative<ArrayValue>(arrayVar)) {
+            ArrayValue& array = std::get<ArrayValue>(arrayVar);
+            ValueType indexValue = evaluate(*node.index);
+            int index = std::holds_alternative<int>(indexValue) ? 
+                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            
+            if (array.elements.find(index) != array.elements.end()) {
+                // Convert from simple variant to full ValueType
+                auto& element = array.elements[index];
+                if (std::holds_alternative<int>(element)) {
+                    lastValue = std::get<int>(element);
+                } else if (std::holds_alternative<double>(element)) {
+                    lastValue = std::get<double>(element);
+                } else if (std::holds_alternative<std::string>(element)) {
+                    lastValue = std::get<std::string>(element);
+                } else if (std::holds_alternative<bool>(element)) {
+                    lastValue = std::get<bool>(element);
+                }
+            } else {
+                // Return default value based on context - for now, return 0
+                lastValue = 0;
+            }
+        } else {
+            throw RuntimeError("Variable '" + node.name + "' is not an array");
+        }
+        return;
     }
     
     // Handle struct member access
@@ -123,8 +148,16 @@ void Interpreter::visit(BinaryExpr& node) {
     } else if (node.operator_ == "/") {
         lastValue = divideValues(left, right);
     } else if (node.operator_ == "mod") {
-        // TODO: Implement modulo
-        lastValue = 0;
+        // Implement modulo operation
+        int leftInt = std::holds_alternative<int>(left) ? 
+            std::get<int>(left) : static_cast<int>(std::get<double>(left));
+        int rightInt = std::holds_alternative<int>(right) ? 
+            std::get<int>(right) : static_cast<int>(std::get<double>(right));
+            
+        if (rightInt == 0) {
+            throw RuntimeError("MOD by zero");
+        }
+        lastValue = leftInt % rightInt;
     } else if (node.operator_ == "==" || node.operator_ == "=") {
         lastValue = compareValues(left, right, "==");
     } else if (node.operator_ == "<>" || node.operator_ == "!=") {
@@ -621,7 +654,35 @@ void Interpreter::visit(ExpressionStmt& node) {
 
 void Interpreter::visit(VarStmt& node) {
     ValueType value = evaluate(*node.value);
-    defineVariable(node.variable, value);
+    
+    // Handle array assignment
+    if (node.index) {
+        ValueType arrayVar = getVariable(node.variable);
+        if (std::holds_alternative<ArrayValue>(arrayVar)) {
+            ArrayValue array = std::get<ArrayValue>(arrayVar);
+            ValueType indexValue = evaluate(*node.index);
+            int index = std::holds_alternative<int>(indexValue) ? 
+                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            
+            // Convert ValueType to simple variant for storage
+            if (std::holds_alternative<int>(value)) {
+                array.elements[index] = std::get<int>(value);
+            } else if (std::holds_alternative<double>(value)) {
+                array.elements[index] = std::get<double>(value);
+            } else if (std::holds_alternative<std::string>(value)) {
+                array.elements[index] = std::get<std::string>(value);
+            } else if (std::holds_alternative<bool>(value)) {
+                array.elements[index] = std::get<bool>(value);
+            }
+            
+            defineVariable(node.variable, array);  // Update the variable
+        } else {
+            throw RuntimeError("Variable '" + node.variable + "' is not an array");
+        }
+    } else {
+        // Regular variable assignment
+        defineVariable(node.variable, value);
+    }
 }
 
 void Interpreter::visit(PrintStmt& node) {
@@ -762,8 +823,9 @@ void Interpreter::visit(DimStmt& node) {
             defineVariable(node.variable, 0);
         }
     } else {
-        // Array declaration - TODO: implement arrays
-        defineVariable(node.variable, 0);
+        // Array declaration - create an empty array
+        ArrayValue array;
+        defineVariable(node.variable, array);
     }
 }
 

@@ -60,7 +60,28 @@ The `rbasic` executable will be placed in the project root directory.
 ./rbasic --help
 ```
 
-## Modern rbasic Language Features
+## Language Features Status
+
+### ✅ Fully Implemented
+- **Modern C-Style Syntax**: Control structures with braces `{}`, parentheses for conditions
+- **Variables and I/O**: `var` declarations, `print()`, `input()` 
+- **Control Structures**: `if/else`, `for()`, `while()` with C-style syntax
+- **Arrays**: `dim array(size) as type`, `var array[index] = value`, `array[index]` access
+- **User-Defined Functions**: `function name() { }` with parameters and return values
+- **Built-in Functions**: 30+ math, string, graphics, and system functions
+- **Graphics Support**: SDL2-based graphics with pixel, line, rectangle drawing
+- **Comments**: C++ style `//` and `/* */` comments
+- **Operators**: All arithmetic and comparison operators including `!=`
+
+### 🚧 Partially Implemented  
+- **else-if Chains**: Currently requires nested if-else statements
+- **Structures**: Basic parsing exists but needs implementation
+
+### 📋 Planned Features
+- **Advanced Control Flow**: `break`, `continue` statements, direct `else if` syntax
+- **String Conversion**: `str()` function for explicit string conversion
+- **String Interpolation**: Modern string formatting
+- **File I/O**: Reading and writing files
 
 ### Variables and I/O (Modern Function-Call Style)
 ```basic
@@ -80,22 +101,26 @@ print("You entered:", userInput);
 ```basic
 // Modern for loops with C-style syntax
 for(var i = 1; i <= 10; i = i + 1) {
-    print("Count: " + str(i));
+    print("Count: ", i);
 }
 
 // While loops with braces
 var counter = 5;
 while(counter > 0) {
-    print("Countdown: " + str(counter));
+    print("Countdown: ", counter);
     counter = counter - 1;
 }
 
-// If statements with parentheses and braces
+// If statements with parentheses and braces (nested for multiple conditions)
 var x = 15;
 if (x > 10) {
     print("x is greater than 10");
 } else {
-    print("x is not greater than 10");
+    if (x > 5) {
+        print("x is greater than 5 but not greater than 10");
+    } else {
+        print("x is 5 or less");
+    }
 }
 ```
 
@@ -169,7 +194,24 @@ function factorial(n) {
 }
 
 var result = factorial(5);
-print("5! = " + str(result));
+print("5! = ", result);
+```
+
+### Arrays
+```basic
+// Array declaration
+dim numbers(10) as integer;
+dim names(5) as string;
+
+// Array assignment and access
+var numbers[1] = 42;
+var numbers[2] = numbers[1] * 2;
+
+// Array iteration
+for(var i = 1; i <= 5; i = i + 1) {
+    var numbers[i] = i * i;
+    print("Square of ", i, " is ", numbers[i]);
+}
 ```
 
 ## Complete Function Reference

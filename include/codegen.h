@@ -9,6 +9,8 @@ namespace rbasic {
 class CodeGenerator : public ASTVisitor {
 private:
     std::ostringstream output;
+    std::string functionDeclarations;
+    bool usesSDL;
     int indentLevel;
     
     void indent();

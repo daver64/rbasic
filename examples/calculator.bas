@@ -12,18 +12,20 @@ print("3. Multiplication");
 print("4. Division");
 var choice = input();
 
+var result = 0;  // Declare result variable outside the if blocks
+
 if (choice == 1) {
-    var result = a + b;
+    result = a + b;
     print("Result:", a, "+", b, "=", result);
 } else if (choice == 2) {
-    var result = a - b;
+    result = a - b;
     print("Result:", a, "-", b, "=", result);
 } else if (choice == 3) {
-    var result = a * b;
+    result = a * b;
     print("Result:", a, "*", b, "=", result);
 } else if (choice == 4) {
     if (b != 0) {
-        var result = a / b;
+        result = a / b;
         print("Result:", a, "/", b, "=", result);
     } else {
         print("Error: Division by zero!");

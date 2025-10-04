@@ -113,6 +113,10 @@ BasicArray create_array(const std::vector<int>& dimensions);
 BasicValue get_array_element(const BasicArray& array, const std::vector<int>& indices);
 void set_array_element(BasicArray& array, const std::vector<int>& indices, const BasicValue& value);
 
+// Simple 1D array access helpers
+BasicValue get_array_element(BasicValue& arrayVar, BasicValue index);
+void set_array_element(BasicValue& arrayVar, BasicValue index, BasicValue value);
+
 // Structure functions
 BasicStruct create_struct(const std::string& typeName);
 BasicValue get_struct_field(const BasicStruct& struct_, const std::string& fieldName);
@@ -139,7 +143,9 @@ bool greater_than(const BasicValue& left, const BasicValue& right);
 bool greater_equal(const BasicValue& left, const BasicValue& right);
 
 // Initialization
+// Runtime initialization
 void init_runtime();
+void init_runtime_sdl(); // Initialize with SDL support
 
 // Graphics functions (using IOHandler)
 void graphics_mode(int width, int height);

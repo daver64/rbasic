@@ -30,8 +30,8 @@ dim point2 as Point;
 var point1 = makePoint(0, 0);
 var point2 = makePoint(3, 4);
 
-print("Point 1: (" + str(point1.x) + ", " + str(point1.y) + ")");
-print("Point 2: (" + str(point2.x) + ", " + str(point2.y) + ")");
+print("Point 1: (", point1.x, ", ", point1.y, ")");
+print("Point 2: (", point2.x, ", ", point2.y, ")");
 
 var dist = distance(point1, point2);
-print("Distance: " + str(dist));
+print("Distance: ", dist);

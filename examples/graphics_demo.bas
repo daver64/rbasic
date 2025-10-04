@@ -28,9 +28,10 @@ refresh_screen();
 print("Graphics drawn! Press ESC to exit.");
 
 // Simple game loop
-while(not quit_requested()) {
+var running = true;
+while(not quit_requested() and running) {
     if (key_pressed("ESC")) {
-        break;
+        running = false;
     }
     
     refresh_screen();

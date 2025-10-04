@@ -2,7 +2,7 @@
 
 namespace rbasic {
 
-CodeGenerator::CodeGenerator() : indentLevel(0), tempVarCounter(0) {}
+CodeGenerator::CodeGenerator() : indentLevel(0), tempVarCounter(0), usesSDL(false) {}
 
 void CodeGenerator::indent() {
     for (int i = 0; i < indentLevel; i++) {
@@ -30,13 +30,27 @@ std::string CodeGenerator::generateTempVar() {
 std::string CodeGenerator::generate(Program& program) {
     output.str("");
     output.clear();
+    functionDeclarations = "";
+    usesSDL = false;
     tempVarCounter = 0;
     indentLevel = 0;
     
+    // First pass: collect function declarations and detect SDL usage
+    program.accept(*this);
+    
+    // Clear output after first pass - we only wanted to collect functions and SDL usage
+    output.str("");
+    output.clear();
+    
     generateIncludes();
+    
+    // Output function declarations
+    output << functionDeclarations;
+    
     generateMain();
     
     indentLevel = 1;
+    // Second pass: generate main program
     program.accept(*this);
     indentLevel = 0;
     
@@ -57,7 +71,11 @@ void CodeGenerator::generateIncludes() {
 
 void CodeGenerator::generateMain() {
     writeLine("int main() {");
-    writeLine("    init_runtime();");
+    if (usesSDL) {
+        writeLine("    init_runtime_sdl(); // SDL support detected");
+    } else {
+        writeLine("    init_runtime();");
+    }
     writeLine("    std::map<std::string, BasicValue> variables;");
     writeLine("    ");
     writeLine("    // Initialize boolean constants");
@@ -80,7 +98,15 @@ void CodeGenerator::visit(LiteralExpr& node) {
 }
 
 void CodeGenerator::visit(VariableExpr& node) {
-    write("variables[\"" + node.name + "\"]");
+    if (node.index) {
+        // Array access: array[index]
+        write("get_array_element(variables[\"" + node.name + "\"], ");
+        node.index->accept(*this);
+        write(")");
+    } else {
+        // Regular variable access
+        write("variables[\"" + node.name + "\"]");
+    }
 }
 
 void CodeGenerator::visit(BinaryExpr& node) {
@@ -104,6 +130,12 @@ void CodeGenerator::visit(BinaryExpr& node) {
         write(")");
     } else if (node.operator_ == "/") {
         write("divide(");
+        node.left->accept(*this);
+        write(", ");
+        node.right->accept(*this);
+        write(")");
+    } else if (node.operator_ == "mod") {
+        write("mod_val(");
         node.left->accept(*this);
         write(", ");
         node.right->accept(*this);
@@ -271,15 +303,20 @@ void CodeGenerator::visit(CallExpr& node) {
     // Built-in I/O functions
     if (node.name == "print") {
         write("([&](){");
-        for (size_t i = 0; i < node.arguments.size(); i++) {
-            write("basic_runtime::print(");
-            node.arguments[i]->accept(*this);
-            write(");");
-            if (i < node.arguments.size() - 1) {
-                write("basic_runtime::print(BasicValue(\" \"));");
+        if (node.arguments.size() == 0) {
+            // Handle empty print - just print a newline
+            write("basic_runtime::print_line();return BasicValue(0);})()");
+        } else {
+            for (size_t i = 0; i < node.arguments.size(); i++) {
+                write("basic_runtime::print(");
+                node.arguments[i]->accept(*this);
+                write(");");
+                if (i < node.arguments.size() - 1) {
+                    write("basic_runtime::print(BasicValue(\" \"));");
+                }
             }
+            write("basic_runtime::print_line();return BasicValue(0);})()");
         }
-        write("basic_runtime::print_line();return BasicValue(0);})()");
         return;
     }
     
@@ -288,8 +325,128 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
     
-    // User-defined function calls would go here
-    write("/* Function call: " + node.name + " */");
+    // Graphics functions (SDL)
+    if (node.name == "graphics_mode" && node.arguments.size() == 2) {
+        usesSDL = true;
+        write("graphics_mode(");
+        node.arguments[0]->accept(*this);
+        write(", ");
+        node.arguments[1]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    if (node.name == "text_mode" && node.arguments.size() == 0) {
+        usesSDL = true;
+        write("text_mode()");
+        return;
+    }
+    
+    if (node.name == "clear_screen" && node.arguments.size() == 0) {
+        usesSDL = true;
+        write("clear_screen()");
+        return;
+    }
+    
+    if (node.name == "set_color" && node.arguments.size() == 3) {
+        usesSDL = true;
+        write("set_color(");
+        node.arguments[0]->accept(*this);
+        write(", ");
+        node.arguments[1]->accept(*this);
+        write(", ");
+        node.arguments[2]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    if (node.name == "draw_pixel" && node.arguments.size() == 2) {
+        usesSDL = true;
+        write("draw_pixel(");
+        node.arguments[0]->accept(*this);
+        write(", ");
+        node.arguments[1]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    if (node.name == "draw_line" && node.arguments.size() == 4) {
+        usesSDL = true;
+        write("draw_line(");
+        node.arguments[0]->accept(*this);
+        write(", ");
+        node.arguments[1]->accept(*this);
+        write(", ");
+        node.arguments[2]->accept(*this);
+        write(", ");
+        node.arguments[3]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    if (node.name == "draw_rect" && (node.arguments.size() == 4 || node.arguments.size() == 5)) {
+        usesSDL = true;
+        write("draw_rect(");
+        node.arguments[0]->accept(*this);
+        write(", ");
+        node.arguments[1]->accept(*this);
+        write(", ");
+        node.arguments[2]->accept(*this);
+        write(", ");
+        node.arguments[3]->accept(*this);
+        if (node.arguments.size() == 5) {
+            write(", ");
+            node.arguments[4]->accept(*this);
+        } else {
+            write(", false");
+        }
+        write(")");
+        return;
+    }
+    
+    if (node.name == "refresh_screen" && node.arguments.size() == 0) {
+        usesSDL = true;
+        write("refresh_screen()");
+        return;
+    }
+    
+    if (node.name == "key_pressed" && node.arguments.size() == 1) {
+        usesSDL = true;
+        write("key_pressed(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    if (node.name == "quit_requested" && node.arguments.size() == 0) {
+        usesSDL = true;
+        write("quit_requested()");
+        return;
+    }
+    
+    if (node.name == "sleep_ms" && node.arguments.size() == 1) {
+        usesSDL = true;
+        write("sleep_ms(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    if (node.name == "get_ticks" && node.arguments.size() == 0) {
+        usesSDL = true;
+        write("get_ticks()");
+        return;
+    }
+    
+    // User-defined function calls
+    write("func_" + node.name + "(");
+    for (size_t i = 0; i < node.arguments.size(); i++) {
+        node.arguments[i]->accept(*this);
+        if (i < node.arguments.size() - 1) {
+            write(", ");
+        }
+    }
+    write(")");
 }
 
 void CodeGenerator::visit(ExpressionStmt& node) {
@@ -300,9 +457,19 @@ void CodeGenerator::visit(ExpressionStmt& node) {
 
 void CodeGenerator::visit(VarStmt& node) {
     indent();
-    write("variables[\"" + node.variable + "\"] = ");
-    node.value->accept(*this);
-    write(";\n");
+    if (node.index) {
+        // Array assignment: array[index] = value
+        write("set_array_element(variables[\"" + node.variable + "\"], ");
+        node.index->accept(*this);
+        write(", ");
+        node.value->accept(*this);
+        write(");\n");
+    } else {
+        // Regular variable assignment
+        write("variables[\"" + node.variable + "\"] = ");
+        node.value->accept(*this);
+        write(";\n");
+    }
 }
 
 void CodeGenerator::visit(PrintStmt& node) {
@@ -435,8 +602,75 @@ void CodeGenerator::visit(ReturnStmt& node) {
 }
 
 void CodeGenerator::visit(FunctionDecl& node) {
-    // TODO: Implement function generation
-    writeLine("/* Function: " + node.name + " */");
+    // Generate function declaration outside of main
+    // We need to move this to the beginning of the file
+    functionDeclarations += "BasicValue func_" + node.name + "(";
+    
+    // Parameters
+    for (size_t i = 0; i < node.parameters.size(); i++) {
+        functionDeclarations += "BasicValue " + node.parameters[i];
+        if (i < node.parameters.size() - 1) {
+            functionDeclarations += ", ";
+        }
+    }
+    functionDeclarations += ") {\n";
+    
+    // Create local variable scope for function parameters
+    functionDeclarations += "    std::map<std::string, BasicValue> function_vars;\n";
+    for (const auto& param : node.parameters) {
+        functionDeclarations += "    function_vars[\"" + param + "\"] = " + param + ";\n";
+    }
+    
+    // Save current output to preserve main function generation
+    std::stringstream savedOutput;
+    savedOutput << output.str();
+    output.str("");
+    output.clear();
+    
+    // Generate function body
+    int savedIndent = indentLevel;
+    indentLevel = 1;
+    for (auto& stmt : node.body) {
+        stmt->accept(*this);
+    }
+    indentLevel = savedIndent;
+    
+    // Add function body to function declarations
+    std::string functionBody = output.str();
+    // Replace variable access with function_vars, but handle boolean constants specially
+    size_t pos = 0;
+    while ((pos = functionBody.find("variables[", pos)) != std::string::npos) {
+        size_t endPos = functionBody.find("]", pos);
+        if (endPos != std::string::npos) {
+            std::string varContent = functionBody.substr(pos + 10, endPos - pos - 10);
+            if (varContent == "\"true\"" || varContent == "\"false\"") {
+                // Replace boolean constants with direct BasicValue calls
+                std::string boolValue = (varContent == "\"true\"") ? "BasicValue(true)" : "BasicValue(false)";
+                functionBody.replace(pos, endPos - pos + 1, boolValue);
+                pos += boolValue.length();
+            } else {
+                // Replace regular variables with function_vars
+                functionBody.replace(pos, 10, "function_vars[");
+                pos += 14;
+            }
+        } else {
+            break;
+        }
+    }
+    
+    functionDeclarations += functionBody;
+    
+    // Ensure function has a return statement if none provided
+    if (functionBody.find("return ") == std::string::npos) {
+        functionDeclarations += "    return BasicValue(0);\n";
+    }
+    
+    functionDeclarations += "}\n\n";
+    
+    // Restore output
+    output.str("");
+    output.clear();
+    output << savedOutput.str();
 }
 
 void CodeGenerator::visit(StructDecl& node) {
@@ -446,16 +680,29 @@ void CodeGenerator::visit(StructDecl& node) {
 
 void CodeGenerator::visit(DimStmt& node) {
     indent();
-    if (node.type == "integer") {
-        write("variables[\"" + node.variable + "\"] = BasicValue(0);\n");
-    } else if (node.type == "double") {
-        write("variables[\"" + node.variable + "\"] = BasicValue(0.0);\n");
-    } else if (node.type == "string") {
-        write("variables[\"" + node.variable + "\"] = BasicValue(std::string(\"\"));\n");
-    } else if (node.type == "boolean") {
-        write("variables[\"" + node.variable + "\"] = BasicValue(false);\n");
+    if (!node.dimensions.empty()) {
+        // Array declaration
+        write("variables[\"" + node.variable + "\"] = BasicArray({");
+        for (size_t i = 0; i < node.dimensions.size(); i++) {
+            node.dimensions[i]->accept(*this);
+            if (i < node.dimensions.size() - 1) {
+                write(", ");
+            }
+        }
+        write("});\n");
     } else {
-        write("variables[\"" + node.variable + "\"] = BasicValue(0); // " + node.type + "\n");
+        // Regular variable declaration
+        if (node.type == "integer") {
+            write("variables[\"" + node.variable + "\"] = BasicValue(0);\n");
+        } else if (node.type == "double") {
+            write("variables[\"" + node.variable + "\"] = BasicValue(0.0);\n");
+        } else if (node.type == "string") {
+            write("variables[\"" + node.variable + "\"] = BasicValue(std::string(\"\"));\n");
+        } else if (node.type == "boolean") {
+            write("variables[\"" + node.variable + "\"] = BasicValue(false);\n");
+        } else {
+            write("variables[\"" + node.variable + "\"] = BasicValue(0); // " + node.type + "\n");
+        }
     }
 }
 

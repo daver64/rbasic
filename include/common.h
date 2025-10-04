@@ -10,8 +10,13 @@
 
 namespace rbasic {
 
+// Forward declarations for complex types
+struct ArrayValue {
+    std::map<int, std::variant<int, double, std::string, bool>> elements;
+};
+
 // Common types
-using ValueType = std::variant<int, double, std::string, bool>;
+using ValueType = std::variant<int, double, std::string, bool, ArrayValue>;
 
 // Type system
 enum class BasicType {
