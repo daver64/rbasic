@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+#include <SDL_ttf.h>
 
 namespace rbasic {
 
@@ -24,12 +25,22 @@ bool SDLIOHandler::init_sdl() {
         return false;
     }
     
+    if (TTF_Init() == -1) {
+        std::cerr << "SDL_ttf could not initialize! TTF_Error: " << TTF_GetError() << std::endl;
+        SDL_Quit();
+        return false;
+    }
+    
     start_ticks = SDL_GetTicks();
     initialized = true;
     return true;
 }
 
 void SDLIOHandler::cleanup_sdl() {
+    if (font) {
+        TTF_CloseFont(font);
+        font = nullptr;
+    }
     if (renderer) {
         SDL_DestroyRenderer(renderer);
         renderer = nullptr;
@@ -39,6 +50,7 @@ void SDLIOHandler::cleanup_sdl() {
         window = nullptr;
     }
     if (initialized) {
+        TTF_Quit();
         SDL_Quit();
         initialized = false;
     }
@@ -217,6 +229,24 @@ void SDLIOHandler::graphics_mode(int width, int height) {
         }
     }
     
+    // Load a font for text rendering
+    if (!font) {
+        // Try to load a system font (Windows)
+        font = TTF_OpenFont("C:/Windows/Fonts/consola.ttf", 16);
+        if (!font) {
+            // Fallback to courier
+            font = TTF_OpenFont("C:/Windows/Fonts/cour.ttf", 16);
+        }
+        if (!font) {
+            // Another fallback
+            font = TTF_OpenFont("C:/Windows/Fonts/arial.ttf", 16);
+        }
+        if (!font) {
+            std::cerr << "Could not load font! TTF_Error: " << TTF_GetError() << std::endl;
+            // Continue without font - will disable text rendering
+        }
+    }
+    
     graphics_mode_active = true;
     
     // Enable text input
@@ -290,17 +320,35 @@ void SDLIOHandler::draw_circle(int x, int y, int radius, bool filled) {
 }
 
 void SDLIOHandler::print_at(int x, int y, const std::string& text) {
-    // Simple text rendering placeholder
-    // Real implementation would use SDL_ttf
-    if (!renderer) return;
+    if (!renderer || !font || text.empty()) return;
     
-    SDL_SetRenderDrawColor(renderer, current_color.r, current_color.g, current_color.b, current_color.a);
-    
-    // Draw simple character rectangles as placeholder
-    for (size_t i = 0; i < text.length(); i++) {
-        SDL_Rect charRect = {x + static_cast<int>(i) * 8, y, 6, 12};
-        SDL_RenderDrawRect(renderer, &charRect);
+    // Create text surface
+    SDL_Color textColor = current_color;
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
+    if (!textSurface) {
+        std::cerr << "Unable to render text surface! TTF_Error: " << TTF_GetError() << std::endl;
+        return;
     }
+    
+    // Create texture from surface
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    if (!textTexture) {
+        std::cerr << "Unable to create texture from rendered text! SDL_Error: " << SDL_GetError() << std::endl;
+        SDL_FreeSurface(textSurface);
+        return;
+    }
+    
+    // Get text dimensions
+    int textWidth = textSurface->w;
+    int textHeight = textSurface->h;
+    SDL_FreeSurface(textSurface);
+    
+    // Render the text
+    SDL_Rect destRect = {x, y, textWidth, textHeight};
+    SDL_RenderCopy(renderer, textTexture, nullptr, &destRect);
+    
+    // Clean up
+    SDL_DestroyTexture(textTexture);
 }
 
 void SDLIOHandler::refresh_screen() {

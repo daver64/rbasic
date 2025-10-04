@@ -275,6 +275,31 @@ void Interpreter::visit(CallExpr& node) {
         return;
     }
     
+    if (node.name == "draw_rect" && (node.arguments.size() == 4 || node.arguments.size() == 5)) {
+        int x = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
+            std::get<int>(evaluate(*node.arguments[0])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
+        int y = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
+            std::get<int>(evaluate(*node.arguments[1])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
+        int width = std::holds_alternative<int>(evaluate(*node.arguments[2])) ? 
+            std::get<int>(evaluate(*node.arguments[2])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[2])));
+        int height = std::holds_alternative<int>(evaluate(*node.arguments[3])) ? 
+            std::get<int>(evaluate(*node.arguments[3])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[3])));
+        bool filled = false;
+        if (node.arguments.size() == 5) {
+            ValueType filledValue = evaluate(*node.arguments[4]);
+            filled = std::holds_alternative<bool>(filledValue) ? std::get<bool>(filledValue) : 
+                     (std::holds_alternative<int>(filledValue) ? std::get<int>(filledValue) != 0 : 
+                      std::get<double>(filledValue) != 0.0);
+        }
+        ioHandler->draw_rect(x, y, width, height, filled);
+        lastValue = 0;
+        return;
+    }
+    
     if (node.name == "refresh_screen" && node.arguments.size() == 0) {
         ioHandler->refresh_screen();
         lastValue = 0;

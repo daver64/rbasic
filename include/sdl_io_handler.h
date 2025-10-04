@@ -4,6 +4,7 @@
 
 #ifdef RBASIC_SDL_SUPPORT
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include <vector>
 #include <string>
 #include <queue>
@@ -15,6 +16,7 @@ class SDLIOHandler : public IOHandler {
 private:
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
+    TTF_Font* font = nullptr;
     bool initialized = false;
     bool graphics_mode_active = false;
     bool should_quit = false;

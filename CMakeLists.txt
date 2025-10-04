@@ -23,23 +23,18 @@ if(ENABLE_SDL_SUPPORT)
         find_path(SDL2_INCLUDE_DIRS SDL.h PATHS ${SDL2_DIR}/include)
         find_library(SDL2_LIBRARIES SDL2 PATHS ${SDL2_DIR}/lib/x64)
         find_library(SDL2_MAIN_LIBRARIES SDL2main PATHS ${SDL2_DIR}/lib/x64)
+        find_library(SDL2_TTF_LIBRARIES SDL2_ttf PATHS ${SDL2_DIR}/lib/x64)
         
-        if(SDL2_INCLUDE_DIRS AND SDL2_LIBRARIES)
+        if(SDL2_INCLUDE_DIRS AND SDL2_LIBRARIES AND SDL2_TTF_LIBRARIES)
             set(SDL2_FOUND TRUE)
-            list(APPEND SOURCES src/sdl_io_handler.cpp)
-            list(APPEND HEADERS include/sdl_io_handler.h)
             message(STATUS "SDL2 found: ${SDL2_DIR}")
         else()
-            message(WARNING "SDL2_ROOT is set but SDL2 not found")
+            message(WARNING "SDL2_ROOT is set but SDL2 or SDL2_ttf not found")
             set(SDL2_FOUND FALSE)
         endif()
     else()
         # Try standard CMake FindSDL2
         find_package(SDL2 QUIET)
-        if(SDL2_FOUND)
-            list(APPEND SOURCES src/sdl_io_handler.cpp)
-            list(APPEND HEADERS include/sdl_io_handler.h)
-        endif()
     endif()
     
     if(SDL2_FOUND)
@@ -77,14 +72,20 @@ set(HEADERS
     include/console_io_handler.h
 )
 
+# Add SDL2 sources if enabled
+if(ENABLE_SDL_SUPPORT AND SDL2_FOUND)
+    list(APPEND SOURCES src/sdl_io_handler.cpp)
+    list(APPEND HEADERS include/sdl_io_handler.h)
+endif()
+
 # Create main executable
 add_executable(rbasic ${SOURCES} ${HEADERS})
 
 # Link SDL2 if available
 if(ENABLE_SDL_SUPPORT AND SDL2_FOUND)
     target_include_directories(rbasic PRIVATE ${SDL2_INCLUDE_DIRS})
-    if(SDL2_MAIN_LIBRARIES)
-        target_link_libraries(rbasic ${SDL2_LIBRARIES} ${SDL2_MAIN_LIBRARIES})
+    if(SDL2_MAIN_LIBRARIES AND SDL2_TTF_LIBRARIES)
+        target_link_libraries(rbasic ${SDL2_LIBRARIES} ${SDL2_MAIN_LIBRARIES} ${SDL2_TTF_LIBRARIES})
     else()
         target_link_libraries(rbasic ${SDL2_LIBRARIES})
     endif()
@@ -95,6 +96,12 @@ if(ENABLE_SDL_SUPPORT AND SDL2_FOUND)
             add_custom_command(TARGET rbasic POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 "${SDL2_DIR}/lib/x64/SDL2.dll"
+                $<TARGET_FILE_DIR:rbasic>)
+        endif()
+        if(EXISTS "${SDL2_DIR}/lib/x64/SDL2_ttf.dll")
+            add_custom_command(TARGET rbasic POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${SDL2_DIR}/lib/x64/SDL2_ttf.dll"
                 $<TARGET_FILE_DIR:rbasic>)
         endif()
     endif()
@@ -147,8 +154,8 @@ if(ENABLE_SDL_SUPPORT AND SDL2_FOUND)
     target_compile_definitions(rbasic_tests PRIVATE RBASIC_SDL_SUPPORT)
     list(APPEND TEST_SOURCES src/sdl_io_handler.cpp)
     target_sources(rbasic_tests PRIVATE ${TEST_SOURCES})
-    if(SDL2_MAIN_LIBRARIES)
-        target_link_libraries(rbasic_tests ${SDL2_LIBRARIES} ${SDL2_MAIN_LIBRARIES})
+    if(SDL2_MAIN_LIBRARIES AND SDL2_TTF_LIBRARIES)
+        target_link_libraries(rbasic_tests ${SDL2_LIBRARIES} ${SDL2_MAIN_LIBRARIES} ${SDL2_TTF_LIBRARIES})
     else()
         target_link_libraries(rbasic_tests ${SDL2_LIBRARIES})
     endif()

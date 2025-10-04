@@ -64,10 +64,17 @@ struct BasicArray {
     }
 };
 
+// Forward declaration for IOHandler
+namespace rbasic {
+    class IOHandler;
+}
+
 // Runtime functions for compiled BASIC programs
 namespace basic_runtime {
 
-// I/O functions
+// I/O functions (now using IOHandler)
+void init_io_handler(rbasic::IOHandler* handler);
+rbasic::IOHandler* get_io_handler();
 void print(const BasicValue& value);
 void print_line();
 BasicValue input();
@@ -133,5 +140,21 @@ bool greater_equal(const BasicValue& left, const BasicValue& right);
 
 // Initialization
 void init_runtime();
+
+// Graphics functions (using IOHandler)
+void graphics_mode(int width, int height);
+void text_mode();
+void clear_screen();
+void set_color(int r, int g, int b);
+void draw_pixel(int x, int y);
+void draw_line(int x1, int y1, int x2, int y2);
+void draw_rect(int x, int y, int width, int height, bool filled = false);
+void refresh_screen();
+
+// Input functions
+bool key_pressed(const std::string& key);
+bool quit_requested();
+void sleep_ms(int ms);
+int get_ticks();
 
 } // namespace basic_runtime

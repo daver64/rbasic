@@ -1,25 +1,49 @@
 #include "basic_runtime.h"
+#include "../include/io_handler.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
 
 namespace basic_runtime {
 
+// Global IOHandler for compiled programs
+static rbasic::IOHandler* g_io_handler = nullptr;
+
+void init_io_handler(rbasic::IOHandler* handler) {
+    g_io_handler = handler;
+}
+
+rbasic::IOHandler* get_io_handler() {
+    return g_io_handler;
+}
+
 void init_runtime() {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 }
 
 void print(const BasicValue& value) {
-    std::cout << to_string(value);
+    if (g_io_handler) {
+        g_io_handler->print(to_string(value));
+    } else {
+        std::cout << to_string(value);
+    }
 }
 
 void print_line() {
-    std::cout << std::endl;
+    if (g_io_handler) {
+        g_io_handler->newline();
+    } else {
+        std::cout << std::endl;
+    }
 }
 
 BasicValue input() {
     std::string line;
-    std::getline(std::cin, line);
+    if (g_io_handler) {
+        line = g_io_handler->input();
+    } else {
+        std::getline(std::cin, line);
+    }
     
     // Try to parse as number
     try {
@@ -334,6 +358,82 @@ bool greater_than(const BasicValue& left, const BasicValue& right) {
 
 bool greater_equal(const BasicValue& left, const BasicValue& right) {
     return !less_than(left, right);
+}
+
+// Graphics functions
+void graphics_mode(int width, int height) {
+    if (g_io_handler) {
+        g_io_handler->graphics_mode(width, height);
+    }
+}
+
+void text_mode() {
+    if (g_io_handler) {
+        g_io_handler->text_mode();
+    }
+}
+
+void clear_screen() {
+    if (g_io_handler) {
+        g_io_handler->clear_screen();
+    }
+}
+
+void set_color(int r, int g, int b) {
+    if (g_io_handler) {
+        g_io_handler->set_color(r, g, b);
+    }
+}
+
+void draw_pixel(int x, int y) {
+    if (g_io_handler) {
+        g_io_handler->draw_pixel(x, y);
+    }
+}
+
+void draw_line(int x1, int y1, int x2, int y2) {
+    if (g_io_handler) {
+        g_io_handler->draw_line(x1, y1, x2, y2);
+    }
+}
+
+void draw_rect(int x, int y, int width, int height, bool filled) {
+    if (g_io_handler) {
+        g_io_handler->draw_rect(x, y, width, height, filled);
+    }
+}
+
+void refresh_screen() {
+    if (g_io_handler) {
+        g_io_handler->refresh_screen();
+    }
+}
+
+bool key_pressed(const std::string& key) {
+    if (g_io_handler) {
+        return g_io_handler->key_pressed(key);
+    }
+    return false;
+}
+
+bool quit_requested() {
+    if (g_io_handler) {
+        return g_io_handler->quit_requested();
+    }
+    return false;
+}
+
+void sleep_ms(int ms) {
+    if (g_io_handler) {
+        g_io_handler->sleep_ms(ms);
+    }
+}
+
+int get_ticks() {
+    if (g_io_handler) {
+        return g_io_handler->get_ticks();
+    }
+    return 0;
 }
 
 } // namespace basic_runtime
