@@ -417,6 +417,18 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
     
+    if (node.name == "draw_text" && node.arguments.size() == 3) {
+        usesSDL = true;
+        write("draw_text(to_int(");
+        node.arguments[0]->accept(*this);
+        write("), to_int(");
+        node.arguments[1]->accept(*this);
+        write("), to_string(");
+        node.arguments[2]->accept(*this);
+        write("))");
+        return;
+    }
+    
     if (node.name == "refresh_screen" && node.arguments.size() == 0) {
         usesSDL = true;
         write("refresh_screen()");

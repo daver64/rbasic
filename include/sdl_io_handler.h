@@ -69,6 +69,7 @@ public:
     void draw_line(int x1, int y1, int x2, int y2) override;
     void draw_rect(int x, int y, int width, int height, bool filled = false) override;
     void draw_circle(int x, int y, int radius, bool filled = false) override;
+    void draw_text(int x, int y, const std::string& text) override;
     void print_at(int x, int y, const std::string& text) override;
     void refresh_screen() override;
     

@@ -88,6 +88,11 @@ void ConsoleIOHandler::print_at(int x, int y, const std::string& text) {
     std::cout << "[Text at (" << x << "," << y << "): " << text << "]";
 }
 
+void ConsoleIOHandler::draw_text(int x, int y, const std::string& text) {
+    // draw_text is just an alias for print_at in console mode
+    print_at(x, y, text);
+}
+
 void ConsoleIOHandler::refresh_screen() {
     std::cout.flush();
 }

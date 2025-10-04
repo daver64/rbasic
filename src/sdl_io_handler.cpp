@@ -351,6 +351,11 @@ void SDLIOHandler::print_at(int x, int y, const std::string& text) {
     SDL_DestroyTexture(textTexture);
 }
 
+void SDLIOHandler::draw_text(int x, int y, const std::string& text) {
+    // draw_text is just an alias for print_at for direct text rendering
+    print_at(x, y, text);
+}
+
 void SDLIOHandler::refresh_screen() {
     if (!renderer) return;
     

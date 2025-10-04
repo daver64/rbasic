@@ -353,6 +353,19 @@ void Interpreter::visit(CallExpr& node) {
         return;
     }
     
+    if (node.name == "draw_text" && node.arguments.size() == 3) {
+        int x = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
+            std::get<int>(evaluate(*node.arguments[0])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
+        int y = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
+            std::get<int>(evaluate(*node.arguments[1])) : 
+            static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
+        std::string text = valueToString(evaluate(*node.arguments[2]));
+        ioHandler->draw_text(x, y, text);
+        lastValue = 0;
+        return;
+    }
+    
     if (node.name == "refresh_screen" && node.arguments.size() == 0) {
         ioHandler->refresh_screen();
         lastValue = 0;
@@ -591,6 +604,24 @@ void Interpreter::visit(CallExpr& node) {
             std::string str = valueToString(evaluate(*node.arguments[0]));
             lastValue = static_cast<int>(str.length());
             return;
+        } else if (node.name == "str") {
+            // Convert number to string
+            ValueType value = evaluate(*node.arguments[0]);
+            lastValue = valueToString(value);
+            return;
+        } else if (node.name == "val") {
+            // Convert string to number
+            std::string str = valueToString(evaluate(*node.arguments[0]));
+            try {
+                if (str.find('.') != std::string::npos) {
+                    lastValue = std::stod(str);
+                } else {
+                    lastValue = std::stoi(str);
+                }
+            } catch (const std::exception&) {
+                lastValue = 0; // Default to 0 if conversion fails
+            }
+            return;
         } else if (node.name == "rnd" || node.name == "random") {
             ValueType arg = evaluate(*node.arguments[0]);
             int maxVal = 1;
@@ -609,6 +640,10 @@ void Interpreter::visit(CallExpr& node) {
     if (node.arguments.size() == 0) {
         if (node.name == "rnd" || node.name == "random") {
             lastValue = static_cast<double>(std::rand()) / RAND_MAX;
+            return;
+        } else if (node.name == "randomize") {
+            std::srand(static_cast<unsigned>(std::time(nullptr)));
+            lastValue = 0; // randomize doesn't return a value
             return;
         } else if (node.name == "pi") {
             lastValue = 3.141592653589793;

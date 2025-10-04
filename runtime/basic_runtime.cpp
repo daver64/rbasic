@@ -512,6 +512,18 @@ void draw_rect(int x, int y, int width, int height, bool filled) {
     }
 }
 
+void draw_text(int x, int y, const std::string& text) {
+    if (g_io_handler) {
+        g_io_handler->draw_text(x, y, text);
+    } else {
+#ifdef RBASIC_SDL_SUPPORT
+        // For compiled programs without IOHandler, we'd need to implement direct SDL text rendering
+        // For now, this is a placeholder - most graphics programs will use the IOHandler path
+        std::cout << "[Text at (" << x << "," << y << "): " << text << "]" << std::endl;
+#endif
+    }
+}
+
 void refresh_screen() {
     if (g_io_handler) {
         g_io_handler->refresh_screen();

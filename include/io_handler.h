@@ -29,6 +29,7 @@ public:
     virtual void draw_line(int x1, int y1, int x2, int y2) = 0;
     virtual void draw_rect(int x, int y, int width, int height, bool filled = false) = 0;
     virtual void draw_circle(int x, int y, int radius, bool filled = false) = 0;
+    virtual void draw_text(int x, int y, const std::string& text) = 0;
     virtual void print_at(int x, int y, const std::string& text) = 0;
     virtual void refresh_screen() = 0;
     

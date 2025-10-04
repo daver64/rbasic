@@ -163,6 +163,7 @@ void set_color(int r, int g, int b);
 void draw_pixel(int x, int y);
 void draw_line(int x1, int y1, int x2, int y2);
 void draw_rect(int x, int y, int width, int height, bool filled = false);
+void draw_text(int x, int y, const std::string& text);
 void refresh_screen();
 
 // Input functions
