@@ -308,7 +308,20 @@ void Interpreter::visit(CallExpr& node) {
     
     if (node.name == "key_pressed" && node.arguments.size() == 1) {
         ValueType keyValue = evaluate(*node.arguments[0]);
-        std::string key = valueToString(keyValue);
+        std::string key;
+        
+        // Handle numeric key codes (ASCII values)
+        if (std::holds_alternative<int>(keyValue)) {
+            int keyCode = std::get<int>(keyValue);
+            if (keyCode >= 32 && keyCode <= 126) { // Printable ASCII range
+                key = std::string(1, static_cast<char>(keyCode));
+            } else {
+                key = std::to_string(keyCode); // Non-printable, keep as string
+            }
+        } else {
+            key = valueToString(keyValue);
+        }
+        
         bool pressed = ioHandler->key_pressed(key);
         lastValue = pressed;
         return;
@@ -336,7 +349,13 @@ void Interpreter::visit(CallExpr& node) {
     }
 
     // Built-in math functions
-    if (node.arguments.size() == 1) {
+    if (node.arguments.size() == 1 && 
+        (node.name == "sqr" || node.name == "sqrt" || node.name == "abs" || 
+         node.name == "sin" || node.name == "cos" || node.name == "tan" ||
+         node.name == "asin" || node.name == "acos" || node.name == "atan" ||
+         node.name == "log" || node.name == "log10" || node.name == "exp" ||
+         node.name == "floor" || node.name == "ceil" || node.name == "round" ||
+         node.name == "int")) {
         ValueType arg = evaluate(*node.arguments[0]);
         double numArg = 0.0;
         
@@ -403,8 +422,8 @@ void Interpreter::visit(CallExpr& node) {
         }
     }
     
-    // Two-argument functions
-    if (node.arguments.size() == 2) {
+    // Two-argument functions and mid (which can have 2 or 3 arguments)
+    if (node.arguments.size() == 2 || (node.name == "mid" && (node.arguments.size() == 2 || node.arguments.size() == 3))) {
         if (node.name == "pow") {
             ValueType base = evaluate(*node.arguments[0]);
             ValueType exp = evaluate(*node.arguments[1]);
@@ -440,6 +459,95 @@ void Interpreter::visit(CallExpr& node) {
                 throw RuntimeError("MOD by zero");
             }
             lastValue = leftInt % rightInt;
+            return;
+        } else if (node.name == "min") {
+            ValueType left = evaluate(*node.arguments[0]);
+            ValueType right = evaluate(*node.arguments[1]);
+            
+            double leftNum = std::holds_alternative<int>(left) ? 
+                static_cast<double>(std::get<int>(left)) : std::get<double>(left);
+            double rightNum = std::holds_alternative<int>(right) ? 
+                static_cast<double>(std::get<int>(right)) : std::get<double>(right);
+                
+            lastValue = std::min(leftNum, rightNum);
+            return;
+        } else if (node.name == "max") {
+            ValueType left = evaluate(*node.arguments[0]);
+            ValueType right = evaluate(*node.arguments[1]);
+            
+            double leftNum = std::holds_alternative<int>(left) ? 
+                static_cast<double>(std::get<int>(left)) : std::get<double>(left);
+            double rightNum = std::holds_alternative<int>(right) ? 
+                static_cast<double>(std::get<int>(right)) : std::get<double>(right);
+                
+            lastValue = std::max(leftNum, rightNum);
+            return;
+        } else if (node.name == "mid") {
+            if (node.arguments.size() < 2 || node.arguments.size() > 3) {
+                throw RuntimeError("MID requires 2 or 3 arguments");
+            }
+            
+            std::string str = valueToString(evaluate(*node.arguments[0]));
+            int start = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
+                std::get<int>(evaluate(*node.arguments[1])) : 
+                static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
+            
+            start = std::max(1, start) - 1; // Convert from 1-based to 0-based
+            
+            if (node.arguments.size() == 3) {
+                int length = std::holds_alternative<int>(evaluate(*node.arguments[2])) ? 
+                    std::get<int>(evaluate(*node.arguments[2])) : 
+                    static_cast<int>(std::get<double>(evaluate(*node.arguments[2])));
+                    
+                if (start >= static_cast<int>(str.length())) {
+                    lastValue = std::string("");
+                } else {
+                    lastValue = str.substr(start, length);
+                }
+            } else {
+                if (start >= static_cast<int>(str.length())) {
+                    lastValue = std::string("");
+                } else {
+                    lastValue = str.substr(start);
+                }
+            }
+            return;
+        } else if (node.name == "left") {
+            std::string str = valueToString(evaluate(*node.arguments[0]));
+            int length = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
+                std::get<int>(evaluate(*node.arguments[1])) : 
+                static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
+                
+            lastValue = str.substr(0, std::max(0, length));
+            return;
+        } else if (node.name == "right") {
+            std::string str = valueToString(evaluate(*node.arguments[0]));
+            int length = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
+                std::get<int>(evaluate(*node.arguments[1])) : 
+                static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
+                
+            int start = std::max(0, static_cast<int>(str.length()) - length);
+            lastValue = str.substr(start);
+            return;
+        }
+    }
+    
+    // Single-argument functions
+    if (node.arguments.size() == 1) {
+        if (node.name == "len") {
+            std::string str = valueToString(evaluate(*node.arguments[0]));
+            lastValue = static_cast<int>(str.length());
+            return;
+        } else if (node.name == "rnd" || node.name == "random") {
+            ValueType arg = evaluate(*node.arguments[0]);
+            int maxVal = 1;
+            if (std::holds_alternative<int>(arg)) {
+                maxVal = std::get<int>(arg);
+            } else if (std::holds_alternative<double>(arg)) {
+                maxVal = static_cast<int>(std::get<double>(arg));
+            }
+            if (maxVal <= 0) maxVal = 1;
+            lastValue = (std::rand() % maxVal) + 1;  // 1 to maxVal
             return;
         }
     }

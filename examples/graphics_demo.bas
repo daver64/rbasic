@@ -10,9 +10,9 @@ graphics_mode(800, 600);
 set_color(255, 0, 0);
 
 // Draw some pixels
-for(var x = 100; x <= 200; x = x + 1)
+for(var x = 100; x <= 200; x = x + 1) {
     draw_pixel(x, 100);
-end;
+}
 
 // Set color to green and draw a line
 set_color(0, 255, 0);
@@ -28,14 +28,14 @@ refresh_screen();
 print("Graphics drawn! Press ESC to exit.");
 
 // Simple game loop
-while(not quit_requested())
-    if key_pressed("ESC") then
+while(not quit_requested()) {
+    if (key_pressed("ESC")) {
         break;
-    end if;
+    }
     
     refresh_screen();
     sleep_ms(16); // ~60 FPS
-wend;
+}
 
 text_mode();
 print("Graphics demo completed.");

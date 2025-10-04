@@ -283,19 +283,21 @@ std::unique_ptr<Statement> Parser::varStatement() {
 }
 
 std::unique_ptr<Statement> Parser::ifStatement() {
+    consume(TokenType::LEFT_PAREN, "Expected '(' after 'if'");
     auto condition = expression();
-    consume(TokenType::THEN, "Expected 'then' after if condition");
+    consume(TokenType::RIGHT_PAREN, "Expected ')' after if condition");
     
-    auto thenBranch = blockUntil(TokenType::ELSE);
+    // C-style braces: if (condition) { statements }
+    consume(TokenType::LEFT_BRACE, "Expected '{' after if condition");
+    auto thenBranch = blockUntil(TokenType::RIGHT_BRACE);
+    consume(TokenType::RIGHT_BRACE, "Expected '}' after if body");
+    
     std::vector<std::unique_ptr<Statement>> elseBranch;
-    
     if (match({TokenType::ELSE})) {
-        elseBranch = blockUntil(TokenType::END);
+        consume(TokenType::LEFT_BRACE, "Expected '{' after 'else'");
+        elseBranch = blockUntil(TokenType::RIGHT_BRACE);
+        consume(TokenType::RIGHT_BRACE, "Expected '}' after else body");
     }
-    
-    consume(TokenType::END, "Expected 'end' after if statement");
-    consume(TokenType::IF, "Expected 'if' after 'end'");
-    consume(TokenType::SEMICOLON, "Expected ';' after end if");
     
     return std::make_unique<IfStmt>(std::move(condition), std::move(thenBranch), std::move(elseBranch));
 }
@@ -318,9 +320,10 @@ std::unique_ptr<Statement> Parser::forStatement() {
     auto increment = expression();
     consume(TokenType::RIGHT_PAREN, "Expected ')' after for increment");
     
-    auto body = blockUntil(TokenType::END);
-    consume(TokenType::END, "Expected 'end' after for body");
-    consume(TokenType::SEMICOLON, "Expected ';' after end statement");
+    // C-style braces only: for(...) { statements }
+    consume(TokenType::LEFT_BRACE, "Expected '{' after for statement");
+    auto body = blockUntil(TokenType::RIGHT_BRACE);
+    consume(TokenType::RIGHT_BRACE, "Expected '}' after for body");
     
     return std::make_unique<ModernForStmt>(variable.value, std::move(initialization), 
                                           std::move(condition), std::move(increment), 
@@ -331,9 +334,11 @@ std::unique_ptr<Statement> Parser::whileStatement() {
     consume(TokenType::LEFT_PAREN, "Expected '(' after 'while'");
     auto condition = expression();
     consume(TokenType::RIGHT_PAREN, "Expected ')' after while condition");
-    auto body = blockUntil(TokenType::WEND);
-    consume(TokenType::WEND, "Expected 'wend' after while body");
-    consume(TokenType::SEMICOLON, "Expected ';' after wend");
+    
+    // C-style braces only: while(condition) { statements }
+    consume(TokenType::LEFT_BRACE, "Expected '{' after while condition");
+    auto body = blockUntil(TokenType::RIGHT_BRACE);
+    consume(TokenType::RIGHT_BRACE, "Expected '}' after while body");
     
     return std::make_unique<WhileStmt>(std::move(condition), std::move(body));
 }
@@ -378,10 +383,10 @@ std::unique_ptr<Statement> Parser::functionDeclaration() {
         returnType = type.value;
     }
     
-    auto body = blockUntil(TokenType::END);
-    consume(TokenType::END, "Expected 'end' after function body");
-    consume(TokenType::FUNCTION, "Expected 'function' after 'end'");
-    consume(TokenType::SEMICOLON, "Expected ';' after function declaration");
+    // C-style braces: function name() { statements }
+    consume(TokenType::LEFT_BRACE, "Expected '{' after function signature");
+    auto body = blockUntil(TokenType::RIGHT_BRACE);
+    consume(TokenType::RIGHT_BRACE, "Expected '}' after function body");
     
     return std::make_unique<FunctionDecl>(name.value, std::move(parameters), std::move(paramTypes), returnType, std::move(body));
 }

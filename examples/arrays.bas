@@ -5,13 +5,13 @@ dim numbers(10) as integer;
 dim names(5) as string;
 
 // Initialize array with numbers
-print "Initializing array with squares:";
-for i = 1 to 10
+print("Initializing array with squares:");
+for(var i = 1; i <= 10; i = i + 1) {
     var numbers(i) = i * i;
-    print "numbers("; i; ") = "; numbers(i);
-next i;
+    print("numbers(" + str(i) + ") = " + str(numbers(i)));
+}
 
-print;
+print("");
 
 // Initialize string array
 var names(1) = "Alice";
@@ -20,29 +20,29 @@ var names(3) = "Charlie";
 var names(4) = "Diana";
 var names(5) = "Eve";
 
-print "Names in the array:";
-for i = 1 to 5
-    print i; ": "; names(i);
-next i;
+print("Names in the array:");
+for(var i = 1; i <= 5; i = i + 1) {
+    print(str(i) + ": " + names(i));
+}
 
-print;
+print("");
 
 // Find sum and average
 var sum = 0;
-for i = 1 to 10
+for(var i = 1; i <= 10; i = i + 1) {
     var sum = sum + numbers(i);
-next i;
+}
 
 var average = sum / 10;
-print "Sum of squares: "; sum;
-print "Average: "; average;
+print("Sum of squares: " + str(sum));
+print("Average: " + str(average));
 
 // Find maximum
 var max = numbers(1);
-for i = 2 to 10
-    if numbers(i) > max then
+for(var i = 2; i <= 10; i = i + 1) {
+    if (numbers(i) > max) {
         var max = numbers(i);
-    end if;
-next i;
+    }
+}
 
-print "Maximum value: "; max;
+print("Maximum value: " + str(max));

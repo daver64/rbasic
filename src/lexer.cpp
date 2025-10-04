@@ -247,6 +247,12 @@ Token Lexer::nextToken() {
                 return Token(TokenType::GREATER_EQUAL, ">=", startLine, startColumn);
             }
             return Token(TokenType::GREATER_THAN, ">", startLine, startColumn);
+        case '!':
+            if (peek() == '=') {
+                advance();
+                return Token(TokenType::NOT_EQUAL, "!=", startLine, startColumn);
+            }
+            return Token(TokenType::INVALID, "!", startLine, startColumn);
     }
     
     return Token(TokenType::INVALID, std::string(1, c), startLine, startColumn);

@@ -1,18 +1,18 @@
-// Fibonacci sequence calculator
-print "Fibonacci Sequence Calculator";
-print "Enter the number of terms:";
-input n;
+// Fibonacci sequence calculator with modern C-style syntax
+print("Fibonacci Sequence Calculator");
+print("Enter the number of terms:");
+var n = input();
 
 var a = 0;
 var b = 1;
 
-print "Fibonacci sequence:";
-print a;
-print b;
+print("Fibonacci sequence:");
+print(a);
+print(b);
 
-for i = 3 to n
+for(var i = 3; i <= n; i = i + 1) {
     var c = a + b;
-    print c;
-    var a = b;
-    var b = c;
-next i;
+    print(c);
+    a = b;
+    b = c;
+}
