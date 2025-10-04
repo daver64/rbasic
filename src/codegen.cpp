@@ -140,6 +140,18 @@ void CodeGenerator::visit(BinaryExpr& node) {
         write(", ");
         node.right->accept(*this);
         write(")");
+    } else if (node.operator_ == "and") {
+        write("(to_bool(");
+        node.left->accept(*this);
+        write(") && to_bool(");
+        node.right->accept(*this);
+        write("))");
+    } else if (node.operator_ == "or") {
+        write("(to_bool(");
+        node.left->accept(*this);
+        write(") || to_bool(");
+        node.right->accept(*this);
+        write("))");
     } else {
         // For comparison operators, generate boolean result
         write("(");
@@ -328,11 +340,11 @@ void CodeGenerator::visit(CallExpr& node) {
     // Graphics functions (SDL)
     if (node.name == "graphics_mode" && node.arguments.size() == 2) {
         usesSDL = true;
-        write("graphics_mode(");
+        write("graphics_mode(to_int(");
         node.arguments[0]->accept(*this);
-        write(", ");
+        write("), to_int(");
         node.arguments[1]->accept(*this);
-        write(")");
+        write("))");
         return;
     }
     
@@ -350,57 +362,57 @@ void CodeGenerator::visit(CallExpr& node) {
     
     if (node.name == "set_color" && node.arguments.size() == 3) {
         usesSDL = true;
-        write("set_color(");
+        write("set_color(to_int(");
         node.arguments[0]->accept(*this);
-        write(", ");
+        write("), to_int(");
         node.arguments[1]->accept(*this);
-        write(", ");
+        write("), to_int(");
         node.arguments[2]->accept(*this);
-        write(")");
+        write("))");
         return;
     }
     
     if (node.name == "draw_pixel" && node.arguments.size() == 2) {
         usesSDL = true;
-        write("draw_pixel(");
+        write("draw_pixel(to_int(");
         node.arguments[0]->accept(*this);
-        write(", ");
+        write("), to_int(");
         node.arguments[1]->accept(*this);
-        write(")");
+        write("))");
         return;
     }
     
     if (node.name == "draw_line" && node.arguments.size() == 4) {
         usesSDL = true;
-        write("draw_line(");
+        write("draw_line(to_int(");
         node.arguments[0]->accept(*this);
-        write(", ");
+        write("), to_int(");
         node.arguments[1]->accept(*this);
-        write(", ");
+        write("), to_int(");
         node.arguments[2]->accept(*this);
-        write(", ");
+        write("), to_int(");
         node.arguments[3]->accept(*this);
-        write(")");
+        write("))");
         return;
     }
     
     if (node.name == "draw_rect" && (node.arguments.size() == 4 || node.arguments.size() == 5)) {
         usesSDL = true;
-        write("draw_rect(");
+        write("draw_rect(to_int(");
         node.arguments[0]->accept(*this);
-        write(", ");
+        write("), to_int(");
         node.arguments[1]->accept(*this);
-        write(", ");
+        write("), to_int(");
         node.arguments[2]->accept(*this);
-        write(", ");
+        write("), to_int(");
         node.arguments[3]->accept(*this);
         if (node.arguments.size() == 5) {
-            write(", ");
+            write("), to_bool(");
             node.arguments[4]->accept(*this);
+            write("))");
         } else {
-            write(", false");
+            write("), false)");
         }
-        write(")");
         return;
     }
     
@@ -426,9 +438,9 @@ void CodeGenerator::visit(CallExpr& node) {
     
     if (node.name == "sleep_ms" && node.arguments.size() == 1) {
         usesSDL = true;
-        write("sleep_ms(");
+        write("sleep_ms(to_int(");
         node.arguments[0]->accept(*this);
-        write(")");
+        write("))");
         return;
     }
     

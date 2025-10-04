@@ -113,6 +113,13 @@ add_library(rbasic_runtime STATIC
     runtime/basic_runtime.h
 )
 
+# Add SDL2 support to runtime library if enabled
+if(ENABLE_SDL_SUPPORT AND SDL2_FOUND)
+    target_include_directories(rbasic_runtime PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_compile_definitions(rbasic_runtime PRIVATE RBASIC_SDL_SUPPORT)
+    # Note: SDL2 libraries will be linked by the final executable, not the static library
+endif()
+
 # Set runtime library output to runtime directory
 set_target_properties(rbasic_runtime PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/runtime

@@ -47,9 +47,22 @@ void writeFile(const std::string& filename, const std::string& content) {
     file << content;
 }
 
-bool compileToExecutable(const std::string& cppFile, const std::string& outputFile) {
+bool compileToExecutable(const std::string& cppFile, const std::string& outputFile, bool usesSDL = false) {
     // Use cl compiler directly since it's set up globally
     std::string command = "cl /EHsc /std:c++17 \"" + cppFile + "\" /Fe:\"" + outputFile + "\" runtime\\Release\\rbasic_runtime.lib";
+    
+    // Add SDL2 libraries if the program uses graphics
+    if (usesSDL) {
+#ifdef RBASIC_SDL_SUPPORT
+        // Add SDL2 libraries to the compilation command
+        const char* sdl2_root = std::getenv("SDL2_ROOT");
+        if (sdl2_root) {
+            command += " /I\"" + std::string(sdl2_root) + "\\include\"";
+            command += " \"" + std::string(sdl2_root) + "\\lib\\x64\\SDL2.lib\"";
+            command += " \"" + std::string(sdl2_root) + "\\lib\\x64\\SDL2main.lib\"";
+        }
+#endif
+    }
     
     std::cout << "Compiling with MSVC: " << command << std::endl;
     int result = std::system(command.c_str());
@@ -145,6 +158,7 @@ int main(int argc, char* argv[]) {
             
             CodeGenerator generator;
             std::string cppCode = generator.generate(*program);
+            bool usesSDL = generator.getUsesSDL();
             
             // Write generated C++ code to temporary file
             std::string tempCppFile = "temp_" + std::filesystem::path(inputFile).stem().string() + ".cpp";
@@ -153,7 +167,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Generated C++ code written to: " << tempCppFile << std::endl;
             
             // Compile to executable
-            if (compileToExecutable(tempCppFile, outputFile)) {
+            if (compileToExecutable(tempCppFile, outputFile, usesSDL)) {
                 // Clean up temporary file
                 std::filesystem::remove(tempCppFile);
             } else {

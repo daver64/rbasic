@@ -9,6 +9,10 @@
 #include <cstdlib>
 #include <ctime>
 
+#ifdef RBASIC_SDL_SUPPORT
+#include <SDL.h>
+#endif
+
 // Forward declarations
 struct BasicStruct;
 struct BasicArray;

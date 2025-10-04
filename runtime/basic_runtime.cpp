@@ -4,6 +4,43 @@
 #include <sstream>
 #include <algorithm>
 
+#ifdef RBASIC_SDL_SUPPORT
+// Simple SDL state for compiled programs
+static SDL_Window* g_sdl_window = nullptr;
+static SDL_Renderer* g_sdl_renderer = nullptr;
+static bool g_sdl_initialized = false;
+static int g_sdl_r = 255, g_sdl_g = 255, g_sdl_b = 255;
+static bool g_quit_requested = false;
+
+void init_sdl_if_needed() {
+    if (!g_sdl_initialized) {
+        if (SDL_Init(SDL_INIT_VIDEO) == 0) {
+            g_sdl_window = SDL_CreateWindow("RBASIC Graphics", 
+                SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
+                800, 600, SDL_WINDOW_SHOWN);
+            if (g_sdl_window) {
+                g_sdl_renderer = SDL_CreateRenderer(g_sdl_window, -1, SDL_RENDERER_ACCELERATED);
+                if (g_sdl_renderer) {
+                    SDL_SetRenderDrawColor(g_sdl_renderer, 0, 0, 0, 255);
+                    SDL_RenderClear(g_sdl_renderer);
+                    SDL_RenderPresent(g_sdl_renderer);
+                }
+            }
+        }
+        g_sdl_initialized = true;
+    }
+}
+
+void process_sdl_events() {
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT) {
+            g_quit_requested = true;
+        }
+    }
+}
+#endif
+
 namespace basic_runtime {
 
 // Global IOHandler for compiled programs
@@ -23,8 +60,10 @@ void init_runtime() {
 
 void init_runtime_sdl() {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
-    // SDL initialization is handled by the IOHandler when needed
-    // This function exists to indicate SDL support is required
+    
+#ifdef RBASIC_SDL_SUPPORT
+    init_sdl_if_needed();
+#endif
 }
 
 void print(const BasicValue& value) {
@@ -370,54 +409,140 @@ bool greater_equal(const BasicValue& left, const BasicValue& right) {
 void graphics_mode(int width, int height) {
     if (g_io_handler) {
         g_io_handler->graphics_mode(width, height);
+    } else {
+#ifdef RBASIC_SDL_SUPPORT
+        init_sdl_if_needed();
+        if (g_sdl_window) {
+            SDL_SetWindowSize(g_sdl_window, width, height);
+            SDL_SetWindowPosition(g_sdl_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+        }
+#endif
     }
 }
 
 void text_mode() {
     if (g_io_handler) {
         g_io_handler->text_mode();
+    } else {
+#ifdef RBASIC_SDL_SUPPORT
+        // Clean up SDL resources
+        if (g_sdl_renderer) {
+            SDL_DestroyRenderer(g_sdl_renderer);
+            g_sdl_renderer = nullptr;
+        }
+        if (g_sdl_window) {
+            SDL_DestroyWindow(g_sdl_window);
+            g_sdl_window = nullptr;
+        }
+        if (g_sdl_initialized) {
+            SDL_Quit();
+            g_sdl_initialized = false;
+        }
+#endif
     }
 }
 
 void clear_screen() {
     if (g_io_handler) {
         g_io_handler->clear_screen();
+    } else {
+#ifdef RBASIC_SDL_SUPPORT
+        if (g_sdl_renderer) {
+            SDL_SetRenderDrawColor(g_sdl_renderer, 0, 0, 0, 255);
+            SDL_RenderClear(g_sdl_renderer);
+        }
+#endif
     }
 }
 
 void set_color(int r, int g, int b) {
     if (g_io_handler) {
         g_io_handler->set_color(r, g, b);
+    } else {
+#ifdef RBASIC_SDL_SUPPORT
+        g_sdl_r = r;
+        g_sdl_g = g;
+        g_sdl_b = b;
+#endif
     }
 }
 
 void draw_pixel(int x, int y) {
     if (g_io_handler) {
         g_io_handler->draw_pixel(x, y);
+    } else {
+#ifdef RBASIC_SDL_SUPPORT
+        if (g_sdl_renderer) {
+            SDL_SetRenderDrawColor(g_sdl_renderer, g_sdl_r, g_sdl_g, g_sdl_b, 255);
+            SDL_RenderDrawPoint(g_sdl_renderer, x, y);
+        }
+#endif
     }
 }
 
 void draw_line(int x1, int y1, int x2, int y2) {
     if (g_io_handler) {
         g_io_handler->draw_line(x1, y1, x2, y2);
+    } else {
+#ifdef RBASIC_SDL_SUPPORT
+        if (g_sdl_renderer) {
+            SDL_SetRenderDrawColor(g_sdl_renderer, g_sdl_r, g_sdl_g, g_sdl_b, 255);
+            SDL_RenderDrawLine(g_sdl_renderer, x1, y1, x2, y2);
+        }
+#endif
     }
 }
 
 void draw_rect(int x, int y, int width, int height, bool filled) {
     if (g_io_handler) {
         g_io_handler->draw_rect(x, y, width, height, filled);
+    } else {
+#ifdef RBASIC_SDL_SUPPORT
+        if (g_sdl_renderer) {
+            SDL_SetRenderDrawColor(g_sdl_renderer, g_sdl_r, g_sdl_g, g_sdl_b, 255);
+            if (filled) {
+                SDL_Rect rect = {x, y, width, height};
+                SDL_RenderFillRect(g_sdl_renderer, &rect);
+            } else {
+                SDL_Rect rect = {x, y, width, height};
+                SDL_RenderDrawRect(g_sdl_renderer, &rect);
+            }
+        }
+#endif
     }
 }
 
 void refresh_screen() {
     if (g_io_handler) {
         g_io_handler->refresh_screen();
+    } else {
+#ifdef RBASIC_SDL_SUPPORT
+        if (g_sdl_renderer) {
+            SDL_RenderPresent(g_sdl_renderer);
+        }
+#endif
     }
 }
 
 bool key_pressed(const std::string& key) {
     if (g_io_handler) {
         return g_io_handler->key_pressed(key);
+    } else {
+#ifdef RBASIC_SDL_SUPPORT
+        process_sdl_events();  // Process events first
+        SDL_Event e;
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_KEYDOWN) {
+                if (key == "ESC" && e.key.keysym.sym == SDLK_ESCAPE) {
+                    return true;
+                }
+                // Add more key mappings as needed
+            }
+            if (e.type == SDL_QUIT) {
+                g_quit_requested = true;
+            }
+        }
+#endif
     }
     return false;
 }
@@ -425,6 +550,11 @@ bool key_pressed(const std::string& key) {
 bool quit_requested() {
     if (g_io_handler) {
         return g_io_handler->quit_requested();
+    } else {
+#ifdef RBASIC_SDL_SUPPORT
+        process_sdl_events();  // Process events first
+        return g_quit_requested;
+#endif
     }
     return false;
 }
@@ -432,6 +562,11 @@ bool quit_requested() {
 void sleep_ms(int ms) {
     if (g_io_handler) {
         g_io_handler->sleep_ms(ms);
+    } else {
+#ifdef RBASIC_SDL_SUPPORT
+        process_sdl_events();  // Process events before sleeping
+        SDL_Delay(ms);
+#endif
     }
 }
 

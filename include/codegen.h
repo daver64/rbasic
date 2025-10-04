@@ -24,6 +24,7 @@ public:
     CodeGenerator();
     
     std::string generate(Program& program);
+    bool getUsesSDL() const { return usesSDL; }
     
     // Visitor methods
     void visit(LiteralExpr& node) override;
