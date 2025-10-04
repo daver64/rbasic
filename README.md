@@ -6,6 +6,9 @@
 
 
 
+# 🚀 What Makes rbasic Different
+**rbasic** is a modern BASIC language transpiler that bridges traditional BASIC with contemporary C-style programming. It features familiar C-style syntax while maintaining BASIC's simplicity, making it accessible to developers from C/C++/JavaScript backgrounds who want the rapid development benefits of BASIC.rbasic is a hybrid BASIC interpreter and compiler written in C++. It features modern C-style syntax that bridges traditional BASIC with contemporary programming languages, making it familiar to developers from C/C++/JavaScript backgrounds while maintaining BASIC's simplicity.
+
 
 
 - **C-Style Syntax**: Uses braces `{}`, parentheses for conditions, and function-call I/O
