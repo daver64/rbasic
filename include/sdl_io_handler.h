@@ -28,7 +28,7 @@ private:
     std::queue<std::string> input_queue;
     
     // Graphics state
-    SDL_Color current_color = {255, 255, 255, 255}; // White
+    SDL_Color current_colour = {255, 255, 255, 255}; // White
     int window_width = 800;
     int window_height = 600;
     
@@ -64,7 +64,7 @@ public:
     void graphics_mode(int width, int height) override;
     void text_mode() override;
     void clear_screen() override;
-    void set_color(int r, int g, int b) override;
+    void set_colour(int r, int g, int b) override;
     void draw_pixel(int x, int y) override;
     void draw_line(int x1, int y1, int x2, int y2) override;
     void draw_rect(int x, int y, int width, int height, bool filled = false) override;

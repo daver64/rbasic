@@ -171,8 +171,8 @@ int main(int argc, char* argv[]) {
             std::cout << "=== Interpreting " << inputFile << " ===\n";
             
 #ifdef RBASIC_SQLITE_SUPPORT
-            // Initialize SQLite handler for interpreted mode
-            initializeSQLiteHandler();
+            // Initialise SQLite handler for interpreted mode
+            initialiseSQLiteHandler();
 #endif
             
             // Create appropriate I/O handler

@@ -109,7 +109,7 @@ print(right(text, 4));         // "ming"
 #### Graphics (SDL2-based)
 ```basic
 graphics_mode(800, 600);       // Create window
-set_color(255, 0, 0);          // Red color
+set_colour(255, 0, 0);          // Red colour
 draw_pixel(100, 100);          // Single pixel
 draw_line(0, 0, 200, 200);     // Diagonal line
 draw_rect(50, 50, 100, 75, true); // Filled rectangle
@@ -198,7 +198,7 @@ rbasic includes a complete graphics programming environment:
 - Pixel-level control with `draw_pixel(x, y)`
 - Vector graphics with `draw_line()` and `draw_rect()`
 - Text rendering with `draw_text()`
-- Color management with `set_color(r, g, b)`
+- Colour management with `set_colour(r, g, b)`
 - Double-buffering with `refresh_screen()`
 
 ### Interactive Features

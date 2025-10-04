@@ -455,9 +455,9 @@ void clear_screen() {
     }
 }
 
-void set_color(int r, int g, int b) {
+void set_colour(int r, int g, int b) {
     if (g_io_handler) {
-        g_io_handler->set_color(r, g, b);
+        g_io_handler->set_colour(r, g, b);
     } else {
 #ifdef RBASIC_SDL_SUPPORT
         g_sdl_r = r;

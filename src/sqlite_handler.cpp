@@ -136,7 +136,7 @@ int SQLiteHandler::queryCallback(void* data, int argc, char** argv, char** col_n
     return 0;
 }
 
-void initializeSQLiteHandler() {
+void initialiseSQLiteHandler() {
     g_sqlite_handler = std::make_unique<SQLiteHandler>();
 }
 

@@ -361,9 +361,9 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
     
-    if (node.name == "set_color" && node.arguments.size() == 3) {
+    if (node.name == "set_colour" && node.arguments.size() == 3) {
         usesSDL = true;
-        write("set_color(to_int(");
+        write("set_colour(to_int(");
         node.arguments[0]->accept(*this);
         write("), to_int(");
         node.arguments[1]->accept(*this);

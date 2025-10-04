@@ -18,7 +18,7 @@ The **rbasic** C-leaning BASIC language transpiler is now fully functional and d
 
 ### Graphics System
 - ✅ **SDL2 Integration**: Automatic linking for graphics programs
-- ✅ **Drawing Primitives**: Pixels, lines, rectangles with color support
+- ✅ **Drawing Primitives**: Pixels, lines, rectangles with colour support
 - ✅ **Event Processing**: Responsive windows with key/quit detection
 - ✅ **Zero Dependencies**: Non-graphics programs run without SDL
 

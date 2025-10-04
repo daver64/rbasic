@@ -164,7 +164,7 @@ ValueType Runtime::basicDbOpen(const std::vector<ValueType>& args) {
     if (args.empty()) return false;
     
     if (!g_sqlite_handler) {
-        initializeSQLiteHandler();
+        initialiseSQLiteHandler();
     }
     
     std::string database_path = toString(args[0]);

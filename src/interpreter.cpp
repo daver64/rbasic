@@ -283,7 +283,7 @@ void Interpreter::visit(CallExpr& node) {
         return;
     }
     
-    if (node.name == "set_color" && node.arguments.size() == 3) {
+    if (node.name == "set_colour" && node.arguments.size() == 3) {
         int r = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
             std::get<int>(evaluate(*node.arguments[0])) : 
             static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
@@ -293,7 +293,7 @@ void Interpreter::visit(CallExpr& node) {
         int b = std::holds_alternative<int>(evaluate(*node.arguments[2])) ? 
             std::get<int>(evaluate(*node.arguments[2])) : 
             static_cast<int>(std::get<double>(evaluate(*node.arguments[2])));
-        ioHandler->set_color(r, g, b);
+        ioHandler->set_colour(r, g, b);
         lastValue = 0;
         return;
     }
@@ -641,9 +641,9 @@ void Interpreter::visit(CallExpr& node) {
         if (node.name == "rnd" || node.name == "random") {
             lastValue = static_cast<double>(std::rand()) / RAND_MAX;
             return;
-        } else if (node.name == "randomize") {
+        } else if (node.name == "randomise") {
             std::srand(static_cast<unsigned>(std::time(nullptr)));
-            lastValue = 0; // randomize doesn't return a value
+            lastValue = 0; // randomise doesn't return a value
             return;
         } else if (node.name == "pi") {
             lastValue = 3.141592653589793;

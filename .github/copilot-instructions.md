@@ -47,6 +47,6 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 - Interpreted mode uses SDL IOHandler for immediate visual feedback
 - Compiled mode links SDL libraries automatically for standalone graphics programs
 - Non-graphics programs have zero SDL dependencies
-- Complete drawing API: pixels, lines, rectangles, text, colors, animation
+- Complete drawing API: pixels, lines, rectangles, text, colours, animation
 
 The project is designed as a transpiler where both interpreter and compiled output produce identical results by sharing the same AST representation and runtime function implementations. This enables rapid prototyping in interpreted mode and high-performance deployment via compilation.

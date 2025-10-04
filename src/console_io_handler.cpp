@@ -61,9 +61,9 @@ void ConsoleIOHandler::clear_screen() {
 #endif
 }
 
-void ConsoleIOHandler::set_color(int r, int g, int b) {
-    // Console color support is limited, could use ANSI codes
-    std::cout << "[Color: RGB(" << r << "," << g << "," << b << ")]";
+void ConsoleIOHandler::set_colour(int r, int g, int b) {
+    // Console colour support is limited, could use ANSI codes
+    std::cout << "[Colour: RGB(" << r << "," << g << "," << b << ")]";
 }
 
 void ConsoleIOHandler::draw_pixel(int x, int y) {

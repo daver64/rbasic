@@ -153,13 +153,13 @@ bool greater_equal(const BasicValue& left, const BasicValue& right);
 // Initialization
 // Runtime initialization
 void init_runtime();
-void init_runtime_sdl(); // Initialize with SDL support
+void init_runtime_sdl(); // Initialise with SDL support
 
 // Graphics functions (using IOHandler)
 void graphics_mode(int width, int height);
 void text_mode();
 void clear_screen();
-void set_color(int r, int g, int b);
+void set_colour(int r, int g, int b);
 void draw_pixel(int x, int y);
 void draw_line(int x1, int y1, int x2, int y2);
 void draw_rect(int x, int y, int width, int height, bool filled = false);

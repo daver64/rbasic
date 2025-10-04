@@ -43,8 +43,8 @@ private:
 // Global SQLite handler instance
 extern std::unique_ptr<SQLiteHandler> g_sqlite_handler;
 
-// Initialize/cleanup functions
-void initializeSQLiteHandler();
+// Initialise/cleanup functions
+void initialiseSQLiteHandler();
 void cleanupSQLiteHandler();
 
 } // namespace rbasic

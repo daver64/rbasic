@@ -248,7 +248,7 @@ The following built-in functions are available in rbasic:
 - `sin(x)`, `cos(x)`, `tan(x)` - Trigonometric functions
 - `floor(x)`, `ceil(x)` - Floor and ceiling
 - `rnd()` - Random number 0-1
-- `randomize()` - Seed random generator
+- `randomise()` - Seed random generator
 
 ### String Functions
 - `len(str)` - String length
@@ -259,9 +259,9 @@ The following built-in functions are available in rbasic:
 - `val(str)` - Convert string to number
 
 ### Graphics Functions (SDL mode)
-- `graphics_mode(width, height)` - Initialize graphics
+- `graphics_mode(width, height)` - Initialise graphics
 - `text_mode()` - Return to text mode
-- `set_color(r, g, b)` - Set drawing color
+- `set_colour(r, g, b)` - Set drawing colour
 - `draw_pixel(x, y)` - Draw pixel
 - `draw_line(x1, y1, x2, y2)` - Draw line
 - `draw_rect(x, y, w, h, filled)` - Draw rectangle

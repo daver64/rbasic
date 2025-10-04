@@ -9,7 +9,7 @@
 namespace rbasic {
 
 SDLIOHandler::SDLIOHandler() : start_ticks(0) {
-    // Initialize SDL but don't create window yet
+    // Initialise SDL but don't create window yet
     // Window creation happens in graphics_mode()
 }
 
@@ -21,12 +21,12 @@ bool SDLIOHandler::init_sdl() {
     if (initialized) return true;
     
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
-        std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
+        std::cerr << "SDL could not initialise! SDL_Error: " << SDL_GetError() << std::endl;
         return false;
     }
     
     if (TTF_Init() == -1) {
-        std::cerr << "SDL_ttf could not initialize! TTF_Error: " << TTF_GetError() << std::endl;
+        std::cerr << "SDL_ttf could not initialise! TTF_Error: " << TTF_GetError() << std::endl;
         SDL_Quit();
         return false;
     }
@@ -113,7 +113,7 @@ void SDLIOHandler::handle_events() {
 void SDLIOHandler::render_console() {
     if (!graphics_mode_active || !renderer) return;
     
-    // Set text color (white)
+    // Set text colour (white)
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     
     // Simple text rendering (would need SDL_ttf for proper fonts)
@@ -268,8 +268,8 @@ void SDLIOHandler::clear_screen() {
     SDL_RenderClear(renderer);
 }
 
-void SDLIOHandler::set_color(int r, int g, int b) {
-    current_color = {static_cast<Uint8>(r), static_cast<Uint8>(g), static_cast<Uint8>(b), 255};
+void SDLIOHandler::set_colour(int r, int g, int b) {
+    current_colour = {static_cast<Uint8>(r), static_cast<Uint8>(g), static_cast<Uint8>(b), 255};
     if (renderer) {
         SDL_SetRenderDrawColor(renderer, r, g, b, 255);
     }
@@ -277,13 +277,13 @@ void SDLIOHandler::set_color(int r, int g, int b) {
 
 void SDLIOHandler::draw_pixel(int x, int y) {
     if (!renderer) return;
-    SDL_SetRenderDrawColor(renderer, current_color.r, current_color.g, current_color.b, current_color.a);
+    SDL_SetRenderDrawColor(renderer, current_colour.r, current_colour.g, current_colour.b, current_colour.a);
     SDL_RenderDrawPoint(renderer, x, y);
 }
 
 void SDLIOHandler::draw_line(int x1, int y1, int x2, int y2) {
     if (!renderer) return;
-    SDL_SetRenderDrawColor(renderer, current_color.r, current_color.g, current_color.b, current_color.a);
+    SDL_SetRenderDrawColor(renderer, current_colour.r, current_colour.g, current_colour.b, current_colour.a);
     SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
 }
 
@@ -291,7 +291,7 @@ void SDLIOHandler::draw_rect(int x, int y, int width, int height, bool filled) {
     if (!renderer) return;
     
     SDL_Rect rect = {x, y, width, height};
-    SDL_SetRenderDrawColor(renderer, current_color.r, current_color.g, current_color.b, current_color.a);
+    SDL_SetRenderDrawColor(renderer, current_colour.r, current_colour.g, current_colour.b, current_colour.a);
     
     if (filled) {
         SDL_RenderFillRect(renderer, &rect);
@@ -303,7 +303,7 @@ void SDLIOHandler::draw_rect(int x, int y, int width, int height, bool filled) {
 void SDLIOHandler::draw_circle(int x, int y, int radius, bool filled) {
     if (!renderer) return;
     
-    SDL_SetRenderDrawColor(renderer, current_color.r, current_color.g, current_color.b, current_color.a);
+    SDL_SetRenderDrawColor(renderer, current_colour.r, current_colour.g, current_colour.b, current_colour.a);
     
     // Simple circle drawing algorithm
     for (int w = 0; w < radius * 2; w++) {
@@ -323,7 +323,7 @@ void SDLIOHandler::print_at(int x, int y, const std::string& text) {
     if (!renderer || !font || text.empty()) return;
     
     // Create text surface
-    SDL_Color textColor = current_color;
+    SDL_Color textColor = current_colour;
     SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
     if (!textSurface) {
         std::cerr << "Unable to render text surface! TTF_Error: " << TTF_GetError() << std::endl;
