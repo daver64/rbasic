@@ -249,6 +249,11 @@ BasicByteArray byte_array(const std::vector<int>& dimensions);
 BasicIntArray int_array(const std::vector<int>& dimensions);
 BasicDoubleArray double_array(const std::vector<int>& dimensions);
 
+// Array initialization functions with parallelization
+BasicIntArray int_array_fill(const std::vector<int>& dimensions, int value);
+BasicDoubleArray double_array_fill(const std::vector<int>& dimensions, double value);
+BasicIntArray int_array_range(int start, int end);
+
 // Typed array element access
 uint8_t get_byte_array_element(const BasicByteArray& array, const std::vector<int>& indices);
 void set_byte_array_element(BasicByteArray& array, const std::vector<int>& indices, uint8_t value);
@@ -410,5 +415,12 @@ BasicValue db_query(const std::string& sql);
 BasicValue db_error();
 BasicValue db_escape(const std::string& str);
 #endif
+
+// Parallel array operations
+void parallel_fill_array(BasicArray& array, const BasicValue& value);
+void parallel_fill_int_array(BasicIntArray& array, int value);
+void parallel_fill_double_array(BasicDoubleArray& array, double value);
+void parallel_array_add(BasicDoubleArray& result, const BasicDoubleArray& a, const BasicDoubleArray& b);
+void parallel_array_multiply_scalar(BasicDoubleArray& array, double scalar);
 
 } // namespace basic_runtime

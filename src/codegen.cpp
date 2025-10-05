@@ -700,9 +700,11 @@ void CodeGenerator::visit(DimStmt& node) {
     indent();
     if (!node.dimensions.empty()) {
         // Array declaration
-        write("variables[\"" + node.variable + "\"] = BasicArray({");
+        write("variables[\"" + node.variable + "\"] = BasicArray(std::vector<int>{");
         for (size_t i = 0; i < node.dimensions.size(); i++) {
+            write("to_int(");
             node.dimensions[i]->accept(*this);
+            write(")");
             if (i < node.dimensions.size() - 1) {
                 write(", ");
             }
@@ -731,6 +733,58 @@ void CodeGenerator::visit(Program& node) {
     
     writeLine("");
     writeLine("return 0;");
+}
+
+bool CodeGenerator::isParallelizable(ModernForStmt& node) {
+    // Conservative parallelization analysis
+    // For initial implementation, we'll use simple heuristics
+    
+    // Check 1: Loop variable must be simple (integer-like)
+    // For now, we assume all for loops use integer variables
+    
+    // Check 2: Look for potential data dependencies
+    // This is a simplified analysis - we'll be conservative
+    
+    // Check 3: Must have simple increment pattern
+    // Check if increment is just i = i + 1 or similar
+    if (auto assignment = dynamic_cast<AssignExpr*>(node.increment.get())) {
+        if (assignment->variable != node.variable) {
+            return false; // Increment must modify the loop variable
+        }
+    } else {
+        return false; // Only simple assignments for now
+    }
+    
+    // Check 4: Body should not contain complex control flow
+    // Avoid parallelizing loops with return statements
+    for (auto& stmt : node.body) {
+        // For initial implementation, be conservative about what we parallelize
+        if (dynamic_cast<ReturnStmt*>(stmt.get())) {
+            return false; // Conservative: avoid returns in parallel loops
+        }
+        // Note: We'll allow function calls for now, but this could be refined
+    }
+    
+    // Check 5: Estimate iteration count heuristic
+    // Only parallelize if likely to have enough iterations to overcome overhead
+    // This is a rough heuristic based on the condition
+    if (auto binaryExpr = dynamic_cast<BinaryExpr*>(node.condition.get())) {
+        if (binaryExpr->operator_ == "<" || binaryExpr->operator_ == "<=" || 
+            binaryExpr->operator_ == ">" || binaryExpr->operator_ == ">=") {
+            // If condition involves literal numbers, check if iteration count is large enough
+            if (auto literal = dynamic_cast<LiteralExpr*>(binaryExpr->right.get())) {
+                if (std::holds_alternative<int>(literal->value)) {
+                    int limit = std::get<int>(literal->value);
+                    if (limit < 1000) {
+                        return false; // Too few iterations for parallelism to be beneficial
+                    }
+                }
+            }
+        }
+    }
+    
+    // If we made it here, the loop seems safe to parallelize
+    return true;
 }
 
 } // namespace rbasic

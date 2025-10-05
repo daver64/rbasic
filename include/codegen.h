@@ -19,6 +19,7 @@ private:
     std::string generateVariableName(const std::string& basicName);
     std::string generateTempVar();
     std::string escapeString(const std::string& str);
+    bool isParallelizable(ModernForStmt& node);  // Analyze if loop can be parallelized
     int tempVarCounter;
     
 public:

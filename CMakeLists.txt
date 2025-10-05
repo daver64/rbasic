@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
 project(rbasic VERSION 1.0.0 LANGUAGES CXX C)
 
+# Find OpenMP
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    message(STATUS "OpenMP found - enabling parallel array operations")
+else()
+    message(STATUS "OpenMP not found - using serial array operations")
+endif()
+
 # Require C++17 as a minimum
 if(CMAKE_CXX_STANDARD LESS 17)
     message(FATAL_ERROR "C++17 or higher is required")
@@ -81,6 +89,11 @@ set_target_properties(rbasic_runtime PROPERTIES
 )
 
 # Link with required libraries
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(rbasic OpenMP::OpenMP_CXX)
+    target_link_libraries(rbasic_runtime OpenMP::OpenMP_CXX)
+endif()
+
 if(NOT WIN32)
     # On Linux/Unix, link with stdc++fs for filesystem support (GCC < 9)
     target_link_libraries(rbasic stdc++fs)
@@ -113,8 +126,19 @@ add_executable(rbasic_tests
 target_include_directories(rbasic_tests PRIVATE include)
 
 # Link rbasic_tests with required libraries
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(rbasic_tests OpenMP::OpenMP_CXX)
+endif()
+
 if(NOT WIN32)
     target_link_libraries(rbasic_tests stdc++fs)
+endif()
+
+# Add OpenMP compile definitions
+if(OpenMP_CXX_FOUND)
+    target_compile_definitions(rbasic PRIVATE _OPENMP)
+    target_compile_definitions(rbasic_runtime PRIVATE _OPENMP)
+    target_compile_definitions(rbasic_tests PRIVATE _OPENMP)
 endif()
 
 # Compiler-specific options (set after all targets are defined)

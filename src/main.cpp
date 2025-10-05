@@ -72,34 +72,34 @@ bool compileToExecutable(const std::string& cppFile, const std::string& outputFi
             // Use bundled MinGW64 compiler
             std::string mingwCompiler = mingwPath.string();
             builder.compiler(mingwCompiler)
-                   .compileFlags({"-std=c++17", "-O2", "-static-libgcc", "-static-libstdc++", "-mconsole"})
+                   .compileFlags({"-std=c++17", "-O2", "-static-libgcc", "-static-libstdc++", "-mconsole", "-fopenmp"})
                    .input(cppFile)
                    .output(outputFile + ".exe")
                    .library("runtime\\librbasic_runtime.a")
-                   .linkFlags({"-Wl,--subsystem,console", "-lkernel32", "-luser32"});
+                   .linkFlags({"-Wl,--subsystem,console", "-lkernel32", "-luser32", "-lgomp"});
             
-            std::cout << "Compiling with bundled MinGW64..." << std::endl;
+            std::cout << "Compiling with bundled MinGW64 (OpenMP enabled)..." << std::endl;
         } else {
             // Fallback to Microsoft Visual C++ compiler
             builder.compiler("cl")
-                   .compileFlags({"/EHsc", "/std:c++17"})
+                   .compileFlags({"/EHsc", "/std:c++17", "/openmp"})
                    .input(cppFile)
                    .output(outputFile)
                    .library("runtime\\Release\\rbasic_runtime.lib")
                    .linkFlags({"/SUBSYSTEM:CONSOLE", "kernel32.lib", "user32.lib"});
             
-            std::cout << "Compiling with MSVC..." << std::endl;
+            std::cout << "Compiling with MSVC (OpenMP enabled)..." << std::endl;
         }
 #else
         // Linux/Unix: Use g++ compiler
         builder.compiler("g++")
-               .compileFlags({"-std=c++17", "-O2"})
+               .compileFlags({"-std=c++17", "-O2", "-fopenmp"})
                .input(cppFile)
                .output(outputFile)
                .library("runtime/librbasic_runtime.a")
-               .linkFlags({"-lstdc++fs"});  // Link with filesystem library
+               .linkFlags({"-lstdc++fs", "-lgomp"});  // Link with filesystem and OpenMP libraries
         
-        std::cout << "Compiling with g++..." << std::endl;
+        std::cout << "Compiling with g++ (OpenMP enabled)..." << std::endl;
 #endif
         
         int result = builder.execute();

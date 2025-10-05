@@ -10,6 +10,10 @@
 #include <vector>
 #include <cstdlib>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #ifdef RBASIC_SDL_SUPPORT
 // Simple SDL state for compiled programs
 static SDL_Window* g_sdl_window = nullptr;
@@ -48,6 +52,102 @@ void process_sdl_events() {
 #endif
 
 namespace basic_runtime {
+
+// Array parallelization helpers
+void parallel_fill_array(BasicArray& array, const BasicValue& value) {
+    int size = static_cast<int>(array.elements.size());
+#ifdef _OPENMP
+    if (size > 1000) { // Only parallelize large arrays
+        #pragma omp parallel for
+        for (int i = 0; i < size; ++i) {
+            array.elements[i] = value;
+        }
+    } else {
+#endif
+        // Use serial loop for small arrays or when OpenMP not available
+        for (int i = 0; i < size; ++i) {
+            array.elements[i] = value;
+        }
+#ifdef _OPENMP
+    }
+#endif
+}
+
+void parallel_fill_int_array(BasicIntArray& array, int value) {
+    int size = static_cast<int>(array.elements.size());
+#ifdef _OPENMP
+    if (size > 1000) { // Only parallelize large arrays
+        #pragma omp parallel for
+        for (int i = 0; i < size; ++i) {
+            array.elements[i] = value;
+        }
+    } else {
+#endif
+        // Use serial loop for small arrays or when OpenMP not available
+        for (int i = 0; i < size; ++i) {
+            array.elements[i] = value;
+        }
+#ifdef _OPENMP
+    }
+#endif
+}
+
+void parallel_fill_double_array(BasicDoubleArray& array, double value) {
+    int size = static_cast<int>(array.elements.size());
+#ifdef _OPENMP
+    if (size > 1000) { // Only parallelize large arrays
+        #pragma omp parallel for
+        for (int i = 0; i < size; ++i) {
+            array.elements[i] = value;
+        }
+    } else {
+#endif
+        // Use serial loop for small arrays or when OpenMP not available
+        for (int i = 0; i < size; ++i) {
+            array.elements[i] = value;
+        }
+#ifdef _OPENMP
+    }
+#endif
+}
+
+void parallel_array_add(BasicDoubleArray& result, const BasicDoubleArray& a, const BasicDoubleArray& b) {
+    int size = static_cast<int>(std::min(a.elements.size(), b.elements.size()));
+    result.elements.resize(size);
+    
+#ifdef _OPENMP
+    if (size > 1000) { // Only parallelize large arrays
+        #pragma omp parallel for
+        for (int i = 0; i < size; ++i) {
+            result.elements[i] = a.elements[i] + b.elements[i];
+        }
+    } else {
+#endif
+        for (int i = 0; i < size; ++i) {
+            result.elements[i] = a.elements[i] + b.elements[i];
+        }
+#ifdef _OPENMP
+    }
+#endif
+}
+
+void parallel_array_multiply_scalar(BasicDoubleArray& array, double scalar) {
+    int size = static_cast<int>(array.elements.size());
+#ifdef _OPENMP
+    if (size > 1000) { // Only parallelize large arrays
+        #pragma omp parallel for
+        for (int i = 0; i < size; ++i) {
+            array.elements[i] = array.elements[i] * scalar;
+        }
+    } else {
+#endif
+        for (int i = 0; i < size; ++i) {
+            array.elements[i] = array.elements[i] * scalar;
+        }
+#ifdef _OPENMP
+    }
+#endif
+}
 
 // Global IOHandler for compiled programs
 static rbasic::IOHandler* g_io_handler = nullptr;
@@ -289,6 +389,42 @@ BasicIntArray int_array(const std::vector<int>& dimensions) {
 
 BasicDoubleArray double_array(const std::vector<int>& dimensions) {
     return BasicDoubleArray(dimensions);
+}
+
+// Array initialization functions with parallelization
+BasicIntArray int_array_fill(const std::vector<int>& dimensions, int value) {
+    BasicIntArray arr(dimensions);
+    parallel_fill_int_array(arr, value);
+    return arr;
+}
+
+BasicDoubleArray double_array_fill(const std::vector<int>& dimensions, double value) {
+    BasicDoubleArray arr(dimensions);
+    parallel_fill_double_array(arr, value);
+    return arr;
+}
+
+BasicIntArray int_array_range(int start, int end) {
+    std::vector<int> dims = {end - start};
+    BasicIntArray arr(dims);
+    
+    int size = static_cast<int>(arr.elements.size());
+#ifdef _OPENMP
+    if (size > 1000) { // Only parallelize large arrays
+        #pragma omp parallel for
+        for (int i = 0; i < size; ++i) {
+            arr.elements[i] = start + i;
+        }
+    } else {
+#endif
+        for (int i = 0; i < size; ++i) {
+            arr.elements[i] = start + i;
+        }
+#ifdef _OPENMP
+    }
+#endif
+    
+    return arr;
 }
 
 // Typed array element access
