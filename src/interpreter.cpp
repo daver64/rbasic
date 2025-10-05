@@ -711,42 +711,7 @@ void Interpreter::visit(CallExpr& node) {
         return;
     }
     
-#ifdef RBASIC_SQLITE_SUPPORT
-    // Database functions
-    if (node.name == "db_open" && node.arguments.size() == 1) {
-        std::string path = valueToString(evaluate(*node.arguments[0]));
-        lastValue = Runtime::basicDbOpen({path});
-        return;
-    }
-    
-    if (node.name == "db_close" && node.arguments.size() == 0) {
-        lastValue = Runtime::basicDbClose({});
-        return;
-    }
-    
-    if (node.name == "db_exec" && node.arguments.size() == 1) {
-        std::string sql = valueToString(evaluate(*node.arguments[0]));
-        lastValue = Runtime::basicDbExec({sql});
-        return;
-    }
-    
-    if (node.name == "db_query" && node.arguments.size() == 1) {
-        std::string sql = valueToString(evaluate(*node.arguments[0]));
-        lastValue = Runtime::basicDbQuery({sql});
-        return;
-    }
-    
-    if (node.name == "db_error" && node.arguments.size() == 0) {
-        lastValue = Runtime::basicDbError({});
-        return;
-    }
-    
-    if (node.name == "db_escape" && node.arguments.size() == 1) {
-        std::string str = valueToString(evaluate(*node.arguments[0]));
-        lastValue = Runtime::basicDbEscape({str});
-        return;
-    }
-#endif
+    // Note: External functions (graphics, database, etc.) will be handled via FFI
     
     // User-defined functions
     if (functions.find(node.name) != functions.end()) {

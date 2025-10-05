@@ -222,22 +222,26 @@ cmake ..
 cmake --build build
 ```
 
-### With Experimental Features
+### Platform Notes
+- **Windows**: Uses MSVC compiler, use `build.bat` for convenience builds
+- **Linux**: Use `./build.sh` for convenience builds
+- **macOS**: Standard CMake build process
+
+### Convenience Build Scripts
 ```bash
-# Enable experimental SDL2 graphics support
-cmake -DENABLE_SDL_SUPPORT=ON ..
+# Windows (Release build)
+build.bat
 
-# Enable experimental SQLite database support
-cmake -DENABLE_SQLITE_SUPPORT=ON ..
-
-# Enable both experimental features
-cmake -DENABLE_SDL_SUPPORT=ON -DENABLE_SQLITE_SUPPORT=ON ..
+# Linux (with options)
+./build.sh                    # Release build
+./build.sh debug             # Debug build
+./build.sh clean             # Clean build
+./build.sh --jobs 8          # Parallel build with 8 threads
+./build.sh --help            # Show all options
 ```
 
-### Platform Notes
-- **Windows**: Uses MSVC compiler
-- **Linux**: Requires development packages for experimental features
-- **macOS**: Install dependencies via Homebrew for experimental features
+### Future: Foreign Function Interface (FFI)
+External functionality like graphics, databases, and system integration will be provided through a Foreign Function Interface system, similar to Lisp's approach. This will allow clean separation of core language features from external libraries.
 
 ## Performance and Use Cases
 

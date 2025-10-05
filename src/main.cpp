@@ -5,9 +5,7 @@
 #include "codegen.h"
 #include "io_handler.h"
 
-#ifdef RBASIC_SQLITE_SUPPORT
-#include "sqlite_handler.h"
-#endif
+// Future: FFI support will be added here
 
 #include <iostream>
 #include <fstream>
@@ -25,7 +23,7 @@ void printUsage(const std::string& programName) {
     std::cout << "  -i, --interpret    Interpret the BASIC program directly\n";
     std::cout << "  -c, --compile      Compile BASIC program to C++ executable\n";
     std::cout << "  -o, --output       Specify output filename (compile mode only)\n";
-    std::cout << "  --io <type>        I/O handler type: console, sdl (default: console)\n";
+    std::cout << "  --io <type>        I/O handler type: console (default: console)\n";
     std::cout << "  --keep-cpp         Keep generated C++ file (compile mode only)\n";
     std::cout << "  --help             Show this help message\n";
 }
@@ -53,36 +51,9 @@ void writeFile(const std::string& filename, const std::string& content) {
     file << content;
 }
 
-bool compileToExecutable(const std::string& cppFile, const std::string& outputFile, bool usesSDL = false, bool usesSQLite = false) {
+bool compileToExecutable(const std::string& cppFile, const std::string& outputFile) {
     // Use cl compiler directly since it's set up globally
     std::string command = "cl /EHsc /std:c++17 \"" + cppFile + "\" /Fe:\"" + outputFile + "\" runtime\\Release\\rbasic_runtime.lib";
-    
-    // If runtime library was built with SDL support, we must always link SDL libraries
-    // but only add SDL compilation flags if the program actually uses graphics
-#ifdef RBASIC_SDL_SUPPORT
-    const char* sdl2_root = std::getenv("SDL2_ROOT");
-    if (sdl2_root) {
-        // Always link SDL libraries (runtime needs them)
-        command += " \"" + std::string(sdl2_root) + "\\lib\\x64\\SDL2.lib\"";
-        
-        // Only add SDL compilation flags and main if program uses graphics
-        if (usesSDL) {
-            command += " /I\"" + std::string(sdl2_root) + "\\include\"";
-            command += " \"" + std::string(sdl2_root) + "\\lib\\x64\\SDL2main.lib\"";
-            command += " /DRBASIC_SDL_SUPPORT";
-        }
-    }
-#endif
-    
-    // Add SQLite support if the program uses database functions
-    if (usesSQLite) {
-#ifdef RBASIC_SQLITE_SUPPORT
-        // SQLite is compiled directly from source, just add the source file
-        command += " \"3rd_party\\sqlite\\sqlite3.c\"";
-        command += " /I\"3rd_party\\sqlite\"";
-        command += " /DRBASIC_SQLITE_SUPPORT";
-#endif
-    }
     
     // Add linker flags at the end
     command += " /link /SUBSYSTEM:CONSOLE kernel32.lib user32.lib";
@@ -174,28 +145,16 @@ int main(int argc, char* argv[]) {
         if (mode == "interpret") {
             std::cout << "=== Interpreting " << inputFile << " ===\n";
             
-#ifdef RBASIC_SQLITE_SUPPORT
-            // Initialise SQLite handler for interpreted mode
-            initialiseSQLiteHandler();
-#endif
-            
             // Create appropriate I/O handler
             auto ioHandler = createIOHandler(ioType);
             
             Interpreter interpreter(std::move(ioHandler));
             interpreter.interpret(*program);
-            
-#ifdef RBASIC_SQLITE_SUPPORT
-            // Cleanup SQLite handler
-            cleanupSQLiteHandler();
-#endif
         } else if (mode == "compile") {
             std::cout << "=== Compiling " << inputFile << " ===\n";
             
             CodeGenerator generator;
             std::string cppCode = generator.generate(*program);
-            bool usesSDL = generator.getUsesSDL();
-            bool usesSQLite = generator.getUsesSQLite();
             
             // Write generated C++ code to temporary file
             std::string tempCppFile = "temp_" + std::filesystem::path(inputFile).stem().string() + ".cpp";
@@ -204,7 +163,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Generated C++ code written to: " << tempCppFile << std::endl;
             
             // Compile to executable
-            if (compileToExecutable(tempCppFile, outputFile, usesSDL, usesSQLite)) {
+            if (compileToExecutable(tempCppFile, outputFile)) {
                 // Clean up temporary file unless user wants to keep it
                 if (!keepCppFile) {
                     std::filesystem::remove(tempCppFile);

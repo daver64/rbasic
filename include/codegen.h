@@ -10,8 +10,6 @@ class CodeGenerator : public ASTVisitor {
 private:
     std::ostringstream output;
     std::string functionDeclarations;
-    bool usesSDL;
-    bool usesSQLite;
     int indentLevel;
     std::map<std::string, std::unique_ptr<StructDecl>> structs; // Store struct declarations
     
@@ -27,8 +25,6 @@ public:
     CodeGenerator();
     
     std::string generate(Program& program);
-    bool getUsesSDL() const { return usesSDL; }
-    bool getUsesSQLite() const { return usesSQLite; }
     
     // Visitor methods
     void visit(LiteralExpr& node) override;

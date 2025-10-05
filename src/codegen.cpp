@@ -2,7 +2,7 @@
 
 namespace rbasic {
 
-CodeGenerator::CodeGenerator() : indentLevel(0), tempVarCounter(0), usesSDL(false), usesSQLite(false) {}
+CodeGenerator::CodeGenerator() : indentLevel(0), tempVarCounter(0) {}
 
 void CodeGenerator::indent() {
     for (int i = 0; i < indentLevel; i++) {
@@ -46,15 +46,13 @@ std::string CodeGenerator::generate(Program& program) {
     output.str("");
     output.clear();
     functionDeclarations = "";
-    usesSDL = false;
-    usesSQLite = false;
     tempVarCounter = 0;
     indentLevel = 0;
     
-    // First pass: collect function declarations and detect SDL usage
+    // First pass: collect function declarations
     program.accept(*this);
     
-    // Clear output after first pass - we only wanted to collect functions and SDL usage
+    // Clear output after first pass - we only wanted to collect functions
     output.str("");
     output.clear();
     
@@ -87,11 +85,7 @@ void CodeGenerator::generateIncludes() {
 
 void CodeGenerator::generateMain() {
     writeLine("int main() {");
-    if (usesSDL) {
-        writeLine("    init_runtime_sdl(); // SDL support detected");
-    } else {
-        writeLine("    init_runtime();");
-    }
+    writeLine("    init_runtime();");
     writeLine("    std::map<std::string, BasicValue> variables;");
     writeLine("    ");
     writeLine("    // Initialize boolean constants");
@@ -381,176 +375,8 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
     
-    // Graphics functions (SDL)
-    if (node.name == "graphics_mode" && node.arguments.size() == 2) {
-        usesSDL = true;
-        write("graphics_mode(to_int(");
-        node.arguments[0]->accept(*this);
-        write("), to_int(");
-        node.arguments[1]->accept(*this);
-        write("))");
-        return;
-    }
+    // Note: External functions (graphics, database, etc.) will be handled via FFI
     
-    if (node.name == "text_mode" && node.arguments.size() == 0) {
-        usesSDL = true;
-        write("text_mode()");
-        return;
-    }
-    
-    if (node.name == "clear_screen" && node.arguments.size() == 0) {
-        usesSDL = true;
-        write("clear_screen()");
-        return;
-    }
-    
-    if (node.name == "set_colour" && node.arguments.size() == 3) {
-        usesSDL = true;
-        write("set_colour(to_int(");
-        node.arguments[0]->accept(*this);
-        write("), to_int(");
-        node.arguments[1]->accept(*this);
-        write("), to_int(");
-        node.arguments[2]->accept(*this);
-        write("))");
-        return;
-    }
-    
-    if (node.name == "draw_pixel" && node.arguments.size() == 2) {
-        usesSDL = true;
-        write("draw_pixel(to_int(");
-        node.arguments[0]->accept(*this);
-        write("), to_int(");
-        node.arguments[1]->accept(*this);
-        write("))");
-        return;
-    }
-    
-    if (node.name == "draw_line" && node.arguments.size() == 4) {
-        usesSDL = true;
-        write("draw_line(to_int(");
-        node.arguments[0]->accept(*this);
-        write("), to_int(");
-        node.arguments[1]->accept(*this);
-        write("), to_int(");
-        node.arguments[2]->accept(*this);
-        write("), to_int(");
-        node.arguments[3]->accept(*this);
-        write("))");
-        return;
-    }
-    
-    if (node.name == "draw_rect" && (node.arguments.size() == 4 || node.arguments.size() == 5)) {
-        usesSDL = true;
-        write("draw_rect(to_int(");
-        node.arguments[0]->accept(*this);
-        write("), to_int(");
-        node.arguments[1]->accept(*this);
-        write("), to_int(");
-        node.arguments[2]->accept(*this);
-        write("), to_int(");
-        node.arguments[3]->accept(*this);
-        if (node.arguments.size() == 5) {
-            write("), to_bool(");
-            node.arguments[4]->accept(*this);
-            write("))");
-        } else {
-            write("), false)");
-        }
-        return;
-    }
-    
-    if (node.name == "draw_text" && node.arguments.size() == 3) {
-        usesSDL = true;
-        write("draw_text(to_int(");
-        node.arguments[0]->accept(*this);
-        write("), to_int(");
-        node.arguments[1]->accept(*this);
-        write("), to_string(");
-        node.arguments[2]->accept(*this);
-        write("))");
-        return;
-    }
-    
-    if (node.name == "refresh_screen" && node.arguments.size() == 0) {
-        usesSDL = true;
-        write("refresh_screen()");
-        return;
-    }
-    
-    if (node.name == "key_pressed" && node.arguments.size() == 1) {
-        usesSDL = true;
-        write("key_pressed(");
-        node.arguments[0]->accept(*this);
-        write(")");
-        return;
-    }
-    
-    if (node.name == "quit_requested" && node.arguments.size() == 0) {
-        usesSDL = true;
-        write("quit_requested()");
-        return;
-    }
-    
-    if (node.name == "sleep_ms" && node.arguments.size() == 1) {
-        usesSDL = true;
-        write("sleep_ms(to_int(");
-        node.arguments[0]->accept(*this);
-        write("))");
-        return;
-    }
-    
-    if (node.name == "get_ticks" && node.arguments.size() == 0) {
-        usesSDL = true;
-        write("get_ticks()");
-        return;
-    }
-    
-    // Database functions (SQLite)
-    if (node.name == "db_open" && node.arguments.size() == 1) {
-        usesSQLite = true;
-        write("db_open(to_string(");
-        node.arguments[0]->accept(*this);
-        write("))");
-        return;
-    }
-    
-    if (node.name == "db_close" && node.arguments.size() == 0) {
-        usesSQLite = true;
-        write("db_close()");
-        return;
-    }
-    
-    if (node.name == "db_exec" && node.arguments.size() == 1) {
-        usesSQLite = true;
-        write("db_exec(to_string(");
-        node.arguments[0]->accept(*this);
-        write("))");
-        return;
-    }
-    
-    if (node.name == "db_query" && node.arguments.size() == 1) {
-        usesSQLite = true;
-        write("db_query(to_string(");
-        node.arguments[0]->accept(*this);
-        write("))");
-        return;
-    }
-    
-    if (node.name == "db_error" && node.arguments.size() == 0) {
-        usesSQLite = true;
-        write("db_error()");
-        return;
-    }
-    
-    if (node.name == "db_escape" && node.arguments.size() == 1) {
-        usesSQLite = true;
-        write("db_escape(to_string(");
-        node.arguments[0]->accept(*this);
-        write("))");
-        return;
-    }
-
     // String conversion functions
     if (node.name == "str" && node.arguments.size() == 1) {
         write("to_string(");
