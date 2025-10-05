@@ -35,6 +35,8 @@ for (var i = 0; i <= limit; i = i + 1) {
 
 📖 **[Complete Language Grammar (BNF)](BNF.md)** - Detailed syntax specification and language reference
 
+📚 **[User Manual](MANUAL.md)** - Comprehensive guide with examples and tutorials
+
 ## Installation and Usage
 
 ### Prerequisites
@@ -186,6 +188,7 @@ The transpiler is suitable for educational use, prototyping, and experimenting w
 rbasic/
 ├── CMakeLists.txt         # Build configuration
 ├── README.md              # This documentation
+├── [MANUAL.md](MANUAL.md) # User manual and reference
 ├── [BNF.md](BNF.md)       # Complete language grammar
 ├── include/               # Header files
 ├── src/                   # Implementation
@@ -250,6 +253,7 @@ The project welcomes contributions, bug reports, and suggestions for improving t
 
 ## Documentation
 
+- **[User Manual](MANUAL.md)** - Complete guide to using rbasic
 - **[Language Grammar (BNF)](BNF.md)** - Complete syntax specification and built-in functions
 - **[Examples](examples/)** - Sample programs demonstrating language features
 - **[VS Code Extension](vscode-extension/)** - Syntax highlighting and editor support
