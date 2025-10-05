@@ -102,7 +102,7 @@ print("\n7. Verifying data integrity...");
 var report_size = 0;
 var binary_size = 0;
 
-if (file_exists("analysis_report.txt") && file_exists("sensor_data.bin")) {
+if (file_exists("analysis_report.txt") and file_exists("sensor_data.bin")) {
     report_size = file_size("analysis_report.txt");
     binary_size = file_size("sensor_data.bin");
     

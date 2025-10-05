@@ -1188,21 +1188,33 @@ void Interpreter::visit(IfStmt& node) {
     ValueType condition = evaluate(*node.condition);
     
     if (isTruthy(condition)) {
-        // Execute then branch without creating new scope for now
+        // Create new scope for the then branch
+        pushScope();
+        
         for (auto& stmt : node.thenBranch) {
             stmt->accept(*this);
             if (hasReturned) {
+                popScope();
                 return;
             }
         }
+        
+        // Pop the then branch scope
+        popScope();
     } else {
-        // Execute else branch without creating new scope for now
+        // Create new scope for the else branch
+        pushScope();
+        
         for (auto& stmt : node.elseBranch) {
             stmt->accept(*this);
             if (hasReturned) {
+                popScope();
                 return;
             }
         }
+        
+        // Pop the else branch scope
+        popScope();
     }
 }
 

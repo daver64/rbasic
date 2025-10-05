@@ -7,6 +7,7 @@ This manual provides comprehensive documentation for using the rbasic programmin
 - [Getting Started](#getting-started)
 - [Command Line Usage](#command-line-usage)
 - [Language Syntax](#language-syntax)
+- [Variable Scope](#variable-scope)
 - [Keywords Reference](#keywords-reference)
 - [Built-in Functions](#built-in-functions)
 - [Data Types](#data-types)
@@ -117,6 +118,69 @@ if (x > 5) { print("Greater"); }
 
 - Keywords are **case-sensitive** and **lowercase**: `var`, `if`, `function`
 - Variable names are **case-sensitive**: `myVar` ≠ `MyVar`
+
+## Variable Scope
+
+rbasic follows C-style block scoping rules. Variables declared with `var` inside a block (between `{` and `}`) are only accessible within that block.
+
+### Block Scope
+
+Variables declared inside control structures have block scope:
+
+```basic
+var x = 10;  // Global scope
+
+if (x > 5) {
+    var y = 20;  // Block scope - only accessible inside this if block
+    print("x =", x);  // Can access outer scope variables
+    print("y =", y);  // Can access block scope variables
+}
+
+// print("y =", y);  // ERROR: y is not accessible here
+```
+
+### Nested Blocks
+
+Inner blocks can access variables from outer blocks:
+
+```basic
+var outer = 1;
+
+if (outer == 1) {
+    var middle = 2;
+    
+    for (var i = 0; i < 3; i = i + 1) {
+        var inner = 3;
+        print("outer:", outer);   // ✓ Accessible
+        print("middle:", middle); // ✓ Accessible  
+        print("inner:", inner);   // ✓ Accessible
+        print("i:", i);           // ✓ Accessible
+    }
+    
+    // print("inner:", inner);  // ERROR: inner not accessible
+    // print("i:", i);          // ERROR: i not accessible
+}
+
+// print("middle:", middle);    // ERROR: middle not accessible
+```
+
+### Function Scope
+
+Function parameters and local variables have function scope:
+
+```basic
+var global = "I'm global";
+
+function myFunction(param) {
+    var local = "I'm local";
+    print(global);  // ✓ Can access global variables
+    print(param);   // ✓ Can access parameters
+    print(local);   // ✓ Can access local variables
+}
+
+// print(param);   // ERROR: param not accessible outside function
+// print(local);   // ERROR: local not accessible outside function
+```
 
 ## Keywords Reference
 

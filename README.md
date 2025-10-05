@@ -5,9 +5,11 @@
 ## Key Features
 
 - **C-Style Syntax**: Uses braces `{}`, parentheses for conditions, and modern control flow
-- **Transpiler Architecture**: Compiles BASIC to C++ executables or runs directly via interpreter
-- **Core Language Features**: Variables, functions, arrays, control structures, and built-in functions
-- **Dual Execution**: Designed for identical behavior in both interpreted and compiled modes
+- **Transpiler Architecture**: Compiles BASIC to C++ executables or runs directly via interpreter  
+- **Comprehensive I/O**: Text and binary file operations with full file system support
+- **Typed Arrays**: High-performance `byte_array()`, `int_array()`, `double_array()` for numerical computing
+- **Proper Scoping**: C-style variable scoping within control structures (if/for/while blocks)
+- **Dual Execution**: Identical behavior in both interpreted and compiled modes
 - **Zero Dependencies**: Core language has no external dependencies
 - **Cross-Platform**: Supports Windows, Linux, and macOS with native compilers
 
@@ -63,10 +65,12 @@ cmake .. && cmake --build .
 
 ### Core Syntax Elements
 
-- **C-Style Control Flow**: `if (condition) { }`, `for (init; test; inc) { }`
+- **C-Style Control Flow**: `if (condition) { }`, `for (init; test; inc) { }` with proper block scoping
+- **BASIC-Style Operators**: `and`, `or`, `not` for logical operations (instead of `&&`, `||`, `!`)
 - **Function-Call I/O**: `print("Hello")`, `var input = input()`
 - **Assignment Expressions**: `var y = (x = x + 1) * 2`
 - **Modern Comments**: `//` line comments and `/* */` block comments
+- **Variable Scoping**: Variables declared with `var` in blocks are properly scoped to those blocks
 - **Arrays**: `dim array(size)` declaration with `array[index]` access (0-indexed like C/C++)
 - **Typed Arrays**: High-performance `byte_array()`, `int_array()`, `double_array()` functions
 - **File I/O**: Complete text and binary file operations with `read_text_file()`, `write_binary_file()`, etc.
@@ -127,6 +131,45 @@ if (b != 0) {
 }
 ```
 
+### Data Processing Pipeline
+```basic
+// Advanced example: data_pipeline.bas - Real-world data processing
+var sensor_data = double_array(100);
+var filtered_data = double_array(100);
+var binary_package = byte_array(400);
+
+// Generate and process data
+for (var i = 0; i < 100; i = i + 1) {
+    sensor_data[i] = 20.0 + sin(i * 0.1) * 5.0 + (rnd() - 0.5) * 2.0;
+}
+
+// Apply smoothing filter
+for (var i = 1; i < 99; i = i + 1) {
+    filtered_data[i] = (sensor_data[i-1] + sensor_data[i] + sensor_data[i+1]) / 3.0;
+}
+
+// Export to text file
+var report = "TEMPERATURE ANALYSIS REPORT\n";
+report = report + "Data Points: 100\n";
+write_text_file("analysis_report.txt", report);
+
+// Export to binary format for external tools
+for (var j = 0; j < 10; j = j + 1) {
+    var temp_int = int(filtered_data[j] * 100);
+    binary_package[j * 4 + 0] = (temp_int / 16777216) mod 256;
+    binary_package[j * 4 + 1] = (temp_int / 65536) mod 256;
+    binary_package[j * 4 + 2] = (temp_int / 256) mod 256;
+    binary_package[j * 4 + 3] = temp_int mod 256;
+}
+write_binary_file("sensor_data.bin", binary_package);
+
+// Verify file integrity
+if (file_exists("analysis_report.txt") and file_exists("sensor_data.bin")) {
+    print("Report:", file_size("analysis_report.txt"), "bytes");
+    print("Binary:", file_size("sensor_data.bin"), "bytes");
+}
+```
+
 ### Functions and Arrays
 ```basic
 // User-defined functions and array usage
@@ -169,20 +212,28 @@ BASIC Source → Lexer → Parser → AST
 
 This is an active development project. Core language features are implemented and working:
 
-- ✅ Variables, expressions, and assignment
-- ✅ Control flow (if/else, for, while)
-- ✅ Functions and arrays
+- ✅ Variables, expressions, and assignment with proper C-style scoping
+- ✅ Control flow (if/else, for, while) with block-scoped variable declarations
+- ✅ Functions and arrays (generic and typed arrays)
+- ✅ Comprehensive file I/O (text and binary operations)
 - ✅ Built-in mathematical and string functions
-- ✅ Basic I/O operations
-- ✅ Interpreter and compiler modes
+- ✅ Complete I/O operations with file system integration
+- ✅ Interpreter and compiler modes with identical behavior
 - ✅ Cross-platform compilation (Windows MSVC, Linux/macOS g++)
+- ✅ Real-world data processing capabilities (see `examples/data_pipeline.bas`)
+
+**Recent Improvements:**
+- ✅ **Fixed Variable Scoping**: Variables declared with `var` inside if/for/while blocks are properly scoped
+- ✅ **Enhanced File I/O**: Complete text and binary file operations with proper error handling
+- ✅ **Typed Arrays**: High-performance byte, integer, and double arrays for numerical computing
+- ✅ **Data Processing**: Real-world data pipeline example with filtering, analysis, and export
 
 **Future Development:**
 - 🚀 Foreign Function Interface (FFI) for external library integration
-- 🚀 Selectable compiler backends
-- 🚀 Enhanced optimization features
+- 🚀 Enhanced compiler optimizations
+- 🚀 Additional built-in libraries for specialized domains
 
-The transpiler is suitable for educational use, prototyping, and experimenting with language design.
+The transpiler is suitable for educational use, prototyping, numerical computing, and experimenting with language design.
 
 ## Project Structure
 
