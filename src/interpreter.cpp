@@ -293,8 +293,11 @@ void Interpreter::visit(CallExpr& node) {
             } else {
                 value = std::stoi(input_text);
             }
-        } catch (...) {
+        } catch (const std::invalid_argument&) {
             // If not a number, store as string
+            value = input_text;
+        } catch (const std::out_of_range&) {
+            // Number too large, store as string
             value = input_text;
         }
         
@@ -986,8 +989,8 @@ void Interpreter::visit(ReturnStmt& node) {
 }
 
 void Interpreter::visit(FunctionDecl& node) {
-    functions[node.name] = std::unique_ptr<FunctionDecl>(
-        new FunctionDecl(node.name, node.parameters, node.paramTypes, node.returnType, {}));
+    functions[node.name] = std::make_unique<FunctionDecl>(
+        node.name, node.parameters, node.paramTypes, node.returnType, std::vector<std::unique_ptr<Statement>>());
     
     // Move the body statements
     for (auto& stmt : node.body) {
@@ -996,8 +999,8 @@ void Interpreter::visit(FunctionDecl& node) {
 }
 
 void Interpreter::visit(StructDecl& node) {
-    structs[node.name] = std::unique_ptr<StructDecl>(
-        new StructDecl(node.name, node.fields, node.fieldTypes));
+    structs[node.name] = std::make_unique<StructDecl>(
+        node.name, node.fields, node.fieldTypes);
 }
 
 void Interpreter::visit(DimStmt& node) {

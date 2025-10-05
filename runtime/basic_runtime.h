@@ -51,7 +51,7 @@ struct BasicArray {
         int index = 0;
         int multiplier = 1;
         
-        for (int i = dimensions.size() - 1; i >= 0; i--) {
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
             index += (indices[i] - 1) * multiplier;  // BASIC arrays are 1-indexed
             multiplier *= dimensions[i];
         }
@@ -63,7 +63,7 @@ struct BasicArray {
         int index = 0;
         int multiplier = 1;
         
-        for (int i = dimensions.size() - 1; i >= 0; i--) {
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
             index += (indices[i] - 1) * multiplier;  // BASIC arrays are 1-indexed
             multiplier *= dimensions[i];
         }
