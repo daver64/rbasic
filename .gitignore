@@ -1,6 +1,7 @@
 # Build directories
 build/
 *.dir/
+mingw64/
 
 # Executables
 *.exe

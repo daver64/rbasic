@@ -721,6 +721,53 @@ void set_array_element(BasicValue& arrayVar, BasicValue index, BasicValue value)
     }
 }
 
+// Multidimensional array access helpers
+BasicValue get_array_element(BasicValue& arrayVar, const std::vector<BasicValue>& indices) {
+    // Convert BasicValue indices to int indices
+    std::vector<int> intIndices;
+    for (const auto& index : indices) {
+        intIndices.push_back(to_int(index));
+    }
+    
+    if (std::holds_alternative<BasicArray>(arrayVar)) {
+        BasicArray& array = std::get<BasicArray>(arrayVar);
+        return get_array_element(array, intIndices);
+    } else if (std::holds_alternative<BasicByteArray>(arrayVar)) {
+        BasicByteArray& array = std::get<BasicByteArray>(arrayVar);
+        return static_cast<int>(get_byte_array_element(array, intIndices));
+    } else if (std::holds_alternative<BasicIntArray>(arrayVar)) {
+        BasicIntArray& array = std::get<BasicIntArray>(arrayVar);
+        return get_int_array_element(array, intIndices);
+    } else if (std::holds_alternative<BasicDoubleArray>(arrayVar)) {
+        BasicDoubleArray& array = std::get<BasicDoubleArray>(arrayVar);
+        return get_double_array_element(array, intIndices);
+    }
+    
+    return 0; // Default value if not an array
+}
+
+void set_array_element(BasicValue& arrayVar, const std::vector<BasicValue>& indices, BasicValue value) {
+    // Convert BasicValue indices to int indices
+    std::vector<int> intIndices;
+    for (const auto& index : indices) {
+        intIndices.push_back(to_int(index));
+    }
+    
+    if (std::holds_alternative<BasicArray>(arrayVar)) {
+        BasicArray& array = std::get<BasicArray>(arrayVar);
+        set_array_element(array, intIndices, value);
+    } else if (std::holds_alternative<BasicByteArray>(arrayVar)) {
+        BasicByteArray& array = std::get<BasicByteArray>(arrayVar);
+        set_byte_array_element(array, intIndices, static_cast<uint8_t>(to_int(value)));
+    } else if (std::holds_alternative<BasicIntArray>(arrayVar)) {
+        BasicIntArray& array = std::get<BasicIntArray>(arrayVar);
+        set_int_array_element(array, intIndices, to_int(value));
+    } else if (std::holds_alternative<BasicDoubleArray>(arrayVar)) {
+        BasicDoubleArray& array = std::get<BasicDoubleArray>(arrayVar);
+        set_double_array_element(array, intIndices, to_double(value));
+    }
+}
+
 #ifdef RBASIC_SQLITE_SUPPORT
 // SQLite support for compiled programs
 static sqlite3* g_sqlite_db = nullptr;

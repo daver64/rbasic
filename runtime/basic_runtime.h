@@ -303,6 +303,10 @@ BasicValue func_save_double_array_csv(const BasicValue& filenameVal, const Basic
 BasicValue get_array_element(BasicValue& arrayVar, BasicValue index);
 void set_array_element(BasicValue& arrayVar, BasicValue index, BasicValue value);
 
+// Multidimensional array access helpers
+BasicValue get_array_element(BasicValue& arrayVar, const std::vector<BasicValue>& indices);
+void set_array_element(BasicValue& arrayVar, const std::vector<BasicValue>& indices, BasicValue value);
+
 // Structure functions
 BasicStruct create_struct(const std::string& typeName);
 BasicValue get_struct_field(const BasicStruct& struct_, const std::string& fieldName);

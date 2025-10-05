@@ -74,5 +74,6 @@
         "xutility": "cpp",
         "ranges": "cpp",
         "functional": "cpp"
-    }
+    },
+    "git.ignoreLimitWarning": true
 }

@@ -13,6 +13,30 @@ namespace rbasic {
 // Forward declarations for complex types
 struct ArrayValue {
     std::map<int, std::variant<int, double, std::string, bool>> elements;
+    std::vector<int> dimensions;
+    
+    ArrayValue() = default;
+    ArrayValue(const std::vector<int>& dims) : dimensions(dims) {}
+    
+    // Multidimensional index calculation
+    int calculateIndex(const std::vector<int>& indices) const {
+        if (dimensions.empty()) {
+            // 1D array case
+            return indices.empty() ? 0 : indices[0];
+        }
+        
+        int index = 0;
+        int multiplier = 1;
+        
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
+            if (i < static_cast<int>(indices.size())) {
+                index += indices[i] * multiplier;
+            }
+            multiplier *= dimensions[i];
+        }
+        
+        return index;
+    }
 };
 
 // Typed arrays for interpreter

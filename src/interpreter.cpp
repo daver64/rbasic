@@ -101,16 +101,22 @@ void Interpreter::visit(LiteralExpr& node) {
 
 void Interpreter::visit(VariableExpr& node) {
     // Handle array access
-    if (node.index) {
+    if (!node.indices.empty()) {
         ValueType arrayVar = getVariable(node.name);
-        int index = TypeUtils::toArrayIndex(evaluate(*node.index));
+        
+        // Evaluate all indices
+        std::vector<int> indices;
+        for (auto& indexExpr : node.indices) {
+            indices.push_back(TypeUtils::toArrayIndex(evaluate(*indexExpr)));
+        }
         
         if (std::holds_alternative<ArrayValue>(arrayVar)) {
             ArrayValue& array = std::get<ArrayValue>(arrayVar);
+            int flatIndex = array.calculateIndex(indices);
             
-            if (array.elements.find(index) != array.elements.end()) {
+            if (array.elements.find(flatIndex) != array.elements.end()) {
                 // Convert from simple variant to full ValueType
-                auto& element = array.elements[index];
+                auto& element = array.elements[flatIndex];
                 if (std::holds_alternative<int>(element)) {
                     lastValue = std::get<int>(element);
                 } else if (std::holds_alternative<double>(element)) {
@@ -126,18 +132,12 @@ void Interpreter::visit(VariableExpr& node) {
             }
         } else if (std::holds_alternative<ByteArrayValue>(arrayVar)) {
             ByteArrayValue& array = std::get<ByteArrayValue>(arrayVar);
-            TypeUtils::validateArrayBounds(arrayVar, index);
-            std::vector<int> indices = {index};
             lastValue = static_cast<int>(array.at(indices));
         } else if (std::holds_alternative<IntArrayValue>(arrayVar)) {
             IntArrayValue& array = std::get<IntArrayValue>(arrayVar);
-            TypeUtils::validateArrayBounds(arrayVar, index);
-            std::vector<int> indices = {index};
             lastValue = array.at(indices);
         } else if (std::holds_alternative<DoubleArrayValue>(arrayVar)) {
             DoubleArrayValue& array = std::get<DoubleArrayValue>(arrayVar);
-            TypeUtils::validateArrayBounds(arrayVar, index);
-            std::vector<int> indices = {index};
             lastValue = array.at(indices);
         } else {
             throw RuntimeError("Variable '" + node.name + "' is not an array");
@@ -221,48 +221,43 @@ void Interpreter::visit(AssignExpr& node) {
     ValueType value = evaluate(*node.value);
     
     // Handle array assignment
-    if (node.index) {
+    if (!node.indices.empty()) {
         ValueType arrayVar = getVariable(node.variable);
+        
+        // Evaluate all indices
+        std::vector<int> indices;
+        for (auto& indexExpr : node.indices) {
+            indices.push_back(TypeUtils::toArrayIndex(evaluate(*indexExpr)));
+        }
+        
         if (std::holds_alternative<ArrayValue>(arrayVar)) {
             ArrayValue array = std::get<ArrayValue>(arrayVar);
-            int index = TypeUtils::toArrayIndex(evaluate(*node.index));
+            int flatIndex = array.calculateIndex(indices);
             
             // Convert ValueType to simple variant for storage
             if (std::holds_alternative<int>(value)) {
-                array.elements[index] = std::get<int>(value);
+                array.elements[flatIndex] = std::get<int>(value);
             } else if (std::holds_alternative<double>(value)) {
-                array.elements[index] = std::get<double>(value);
+                array.elements[flatIndex] = std::get<double>(value);
             } else if (std::holds_alternative<std::string>(value)) {
-                array.elements[index] = std::get<std::string>(value);
+                array.elements[flatIndex] = std::get<std::string>(value);
             } else if (std::holds_alternative<bool>(value)) {
-                array.elements[index] = std::get<bool>(value);
+                array.elements[flatIndex] = std::get<bool>(value);
             }
             
             setVariable(node.variable, array);
         } else if (std::holds_alternative<ByteArrayValue>(arrayVar)) {
             ByteArrayValue array = std::get<ByteArrayValue>(arrayVar);
-            int index = TypeUtils::toArrayIndex(evaluate(*node.index));
-            TypeUtils::validateArrayBounds(arrayVar, index);
-            std::vector<int> indices = {index};
-            
             uint8_t byteValue = TypeUtils::getValue<uint8_t>(value);
             array.at(indices) = byteValue;
             setVariable(node.variable, array);
         } else if (std::holds_alternative<IntArrayValue>(arrayVar)) {
             IntArrayValue array = std::get<IntArrayValue>(arrayVar);
-            int index = TypeUtils::toArrayIndex(evaluate(*node.index));
-            TypeUtils::validateArrayBounds(arrayVar, index);
-            std::vector<int> indices = {index};
-            
             int intValue = TypeUtils::toInt(value);
             array.at(indices) = intValue;
             setVariable(node.variable, array);
         } else if (std::holds_alternative<DoubleArrayValue>(arrayVar)) {
             DoubleArrayValue array = std::get<DoubleArrayValue>(arrayVar);
-            int index = TypeUtils::toArrayIndex(evaluate(*node.index));
-            TypeUtils::validateArrayBounds(arrayVar, index);
-            std::vector<int> indices = {index};
-            
             double doubleValue = TypeUtils::toDouble(value);
             array.at(indices) = doubleValue;
             setVariable(node.variable, array);
@@ -961,26 +956,46 @@ void Interpreter::visit(VarStmt& node) {
         }
     }
     // Handle array assignment
-    else if (node.index) {
+    else if (!node.indices.empty()) {
         ValueType arrayVar = getVariable(node.variable);
+        
+        // Evaluate all indices
+        std::vector<int> indices;
+        for (auto& indexExpr : node.indices) {
+            indices.push_back(TypeUtils::toArrayIndex(evaluate(*indexExpr)));
+        }
+        
         if (std::holds_alternative<ArrayValue>(arrayVar)) {
             ArrayValue array = std::get<ArrayValue>(arrayVar);
-            ValueType indexValue = evaluate(*node.index);
-            int index = std::holds_alternative<int>(indexValue) ? 
-                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            int flatIndex = array.calculateIndex(indices);
             
             // Convert ValueType to simple variant for storage
             if (std::holds_alternative<int>(value)) {
-                array.elements[index] = std::get<int>(value);
+                array.elements[flatIndex] = std::get<int>(value);
             } else if (std::holds_alternative<double>(value)) {
-                array.elements[index] = std::get<double>(value);
+                array.elements[flatIndex] = std::get<double>(value);
             } else if (std::holds_alternative<std::string>(value)) {
-                array.elements[index] = std::get<std::string>(value);
+                array.elements[flatIndex] = std::get<std::string>(value);
             } else if (std::holds_alternative<bool>(value)) {
-                array.elements[index] = std::get<bool>(value);
+                array.elements[flatIndex] = std::get<bool>(value);
             }
             
             setVariable(node.variable, array);  // Use setVariable instead of defineVariable
+        } else if (std::holds_alternative<ByteArrayValue>(arrayVar)) {
+            ByteArrayValue array = std::get<ByteArrayValue>(arrayVar);
+            uint8_t byteValue = TypeUtils::getValue<uint8_t>(value);
+            array.at(indices) = byteValue;
+            setVariable(node.variable, array);
+        } else if (std::holds_alternative<IntArrayValue>(arrayVar)) {
+            IntArrayValue array = std::get<IntArrayValue>(arrayVar);
+            int intValue = TypeUtils::toInt(value);
+            array.at(indices) = intValue;
+            setVariable(node.variable, array);
+        } else if (std::holds_alternative<DoubleArrayValue>(arrayVar)) {
+            DoubleArrayValue array = std::get<DoubleArrayValue>(arrayVar);
+            double doubleValue = TypeUtils::toDouble(value);
+            array.at(indices) = doubleValue;
+            setVariable(node.variable, array);
         } else {
             throw RuntimeError("Variable '" + node.variable + "' is not an array");
         }
@@ -1162,8 +1177,13 @@ void Interpreter::visit(DimStmt& node) {
             }
         }
     } else {
-        // Array declaration - create an empty array
-        ArrayValue array;
+        // Array declaration - evaluate dimensions and create array
+        std::vector<int> dimensions;
+        for (auto& dimExpr : node.dimensions) {
+            dimensions.push_back(TypeUtils::toInt(evaluate(*dimExpr)));
+        }
+        
+        ArrayValue array(dimensions);
         defineVariable(node.variable, array);
     }
 }

@@ -85,17 +85,17 @@ std::unique_ptr<Expression> Parser::assignment() {
         // This should be a variable expression
         if (auto varExpr = dynamic_cast<VariableExpr*>(expr.get())) {
             std::string variable = varExpr->name;
-            std::unique_ptr<Expression> index = nullptr;
+            std::vector<std::unique_ptr<Expression>> indices;
             
             // Check if this is an array assignment
-            if (varExpr->index) {
-                // Extract the index expression
-                index = std::move(varExpr->index);
+            if (!varExpr->indices.empty()) {
+                // Extract the index expressions
+                indices = std::move(varExpr->indices);
             }
             
             auto value = assignment(); // Right associative
             expr.release(); // Release the variable expression since we're not using it
-            return std::make_unique<AssignExpr>(variable, std::move(value), std::move(index));
+            return std::make_unique<AssignExpr>(variable, std::move(value), std::move(indices));
         } else {
             throw SyntaxError("Invalid assignment target");
         }
@@ -222,11 +222,20 @@ std::unique_ptr<Expression> Parser::call() {
                 throw SyntaxError("Invalid struct literal");
             }
         } else if (match({TokenType::LEFT_BRACKET})) {
-            auto index = expression();
-            consume(TokenType::RIGHT_BRACKET, "Expected ']' after array index");
+            std::vector<std::unique_ptr<Expression>> indices;
+            
+            // Parse first index
+            indices.push_back(expression());
+            
+            // Parse additional indices separated by commas
+            while (match({TokenType::COMMA})) {
+                indices.push_back(expression());
+            }
+            
+            consume(TokenType::RIGHT_BRACKET, "Expected ']' after array indices");
             
             if (auto var = dynamic_cast<VariableExpr*>(expr.get())) {
-                var->index = std::move(index);
+                var->indices = std::move(indices);
             }
         } else if (match({TokenType::DOT})) {
             auto member = consume(TokenType::IDENTIFIER, "Expected member name after '.'");
@@ -322,17 +331,24 @@ std::unique_ptr<Statement> Parser::varStatement() {
     }
     
     // Check for array assignment: var array[index] = value
-    std::unique_ptr<Expression> index = nullptr;
+    std::vector<std::unique_ptr<Expression>> indices;
     if (match({TokenType::LEFT_BRACKET})) {
-        index = expression();
-        consume(TokenType::RIGHT_BRACKET, "Expected ']' after array index");
+        // Parse first index
+        indices.push_back(expression());
+        
+        // Parse additional indices separated by commas
+        while (match({TokenType::COMMA})) {
+            indices.push_back(expression());
+        }
+        
+        consume(TokenType::RIGHT_BRACKET, "Expected ']' after array indices");
     }
     
     consume(TokenType::ASSIGN, "Expected '=' after variable name");
     auto value = expression();
     consume(TokenType::SEMICOLON, "Expected ';' after variable declaration");
     
-    return std::make_unique<VarStmt>(name.value, std::move(value), std::move(index), member);
+    return std::make_unique<VarStmt>(name.value, std::move(value), std::move(indices), member);
 }
 
 std::unique_ptr<Statement> Parser::ifStatement() {

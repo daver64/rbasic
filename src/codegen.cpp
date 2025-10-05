@@ -108,11 +108,14 @@ void CodeGenerator::visit(LiteralExpr& node) {
 }
 
 void CodeGenerator::visit(VariableExpr& node) {
-    if (node.index) {
-        // Array access: array[index]
-        write("get_array_element(variables[\"" + node.name + "\"], ");
-        node.index->accept(*this);
-        write(")");
+    if (!node.indices.empty()) {
+        // Array access: array[index1, index2, ...]
+        write("get_array_element(variables[\"" + node.name + "\"], std::vector<BasicValue>{");
+        for (size_t i = 0; i < node.indices.size(); ++i) {
+            if (i > 0) write(", ");
+            node.indices[i]->accept(*this);
+        }
+        write("})");
     } else if (!node.member.empty()) {
         // Struct member access: struct.member
         write("get_struct_field(std::get<BasicStruct>(variables[\"" + node.name + "\"]), \"" + node.member + "\")");
@@ -189,11 +192,14 @@ void CodeGenerator::visit(BinaryExpr& node) {
 }
 
 void CodeGenerator::visit(AssignExpr& node) {
-    if (node.index) {
-        // Array assignment: arr[index] = value
-        write("set_array_element(variables[\"" + node.variable + "\"], to_int(");
-        node.index->accept(*this);
-        write("), ");
+    if (!node.indices.empty()) {
+        // Array assignment: arr[index1, index2, ...] = value
+        write("set_array_element(variables[\"" + node.variable + "\"], std::vector<BasicValue>{");
+        for (size_t i = 0; i < node.indices.size(); ++i) {
+            if (i > 0) write(", ");
+            node.indices[i]->accept(*this);
+        }
+        write("}, ");
         node.value->accept(*this);
         write(")");
     } else {
@@ -482,11 +488,14 @@ void CodeGenerator::visit(ExpressionStmt& node) {
 
 void CodeGenerator::visit(VarStmt& node) {
     indent();
-    if (node.index) {
-        // Array assignment: array[index] = value
-        write("set_array_element(variables[\"" + node.variable + "\"], ");
-        node.index->accept(*this);
-        write(", ");
+    if (!node.indices.empty()) {
+        // Array assignment: array[index1, index2, ...] = value
+        write("set_array_element(variables[\"" + node.variable + "\"], std::vector<BasicValue>{");
+        for (size_t i = 0; i < node.indices.size(); ++i) {
+            if (i > 0) write(", ");
+            node.indices[i]->accept(*this);
+        }
+        write("}, ");
         node.value->accept(*this);
         write(");\n");
     } else if (!node.member.empty()) {

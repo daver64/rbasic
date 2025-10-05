@@ -42,12 +42,12 @@ public:
 class VariableExpr : public Expression {
 public:
     std::string name;
-    std::unique_ptr<Expression> index; // For array access
-    std::string member;                // For struct member access
+    std::vector<std::unique_ptr<Expression>> indices; // For multidimensional array access
+    std::string member;                               // For struct member access
     
-    explicit VariableExpr(std::string n, std::unique_ptr<Expression> idx = nullptr, 
+    explicit VariableExpr(std::string n, std::vector<std::unique_ptr<Expression>> idx = {}, 
                          std::string mem = "", const SourcePosition& pos = SourcePosition())
-        : Expression(pos), name(std::move(n)), index(std::move(idx)), member(std::move(mem)) {}
+        : Expression(pos), name(std::move(n)), indices(std::move(idx)), member(std::move(mem)) {}
     void accept(ASTVisitor& visitor) override;
 };
 
@@ -67,10 +67,10 @@ class AssignExpr : public Expression {
 public:
     std::string variable;
     std::unique_ptr<Expression> value;
-    std::unique_ptr<Expression> index;  // For array assignment like arr[i] = value
+    std::vector<std::unique_ptr<Expression>> indices;  // For multidimensional array assignment
     
-    AssignExpr(std::string var, std::unique_ptr<Expression> val, std::unique_ptr<Expression> idx = nullptr)
-        : variable(std::move(var)), value(std::move(val)), index(std::move(idx)) {}
+    AssignExpr(std::string var, std::unique_ptr<Expression> val, std::vector<std::unique_ptr<Expression>> idx = {})
+        : variable(std::move(var)), value(std::move(val)), indices(std::move(idx)) {}
     void accept(ASTVisitor& visitor) override;
 };
 
@@ -123,13 +123,13 @@ public:
 class VarStmt : public Statement {
 public:
     std::string variable;
-    std::unique_ptr<Expression> index; // For array assignment
-    std::string member;                // For struct member assignment
+    std::vector<std::unique_ptr<Expression>> indices; // For multidimensional array assignment
+    std::string member;                                // For struct member assignment
     std::unique_ptr<Expression> value;
     
     VarStmt(std::string var, std::unique_ptr<Expression> val, 
-            std::unique_ptr<Expression> idx = nullptr, std::string mem = "")
-        : variable(std::move(var)), index(std::move(idx)), member(std::move(mem)), value(std::move(val)) {}
+            std::vector<std::unique_ptr<Expression>> idx = {}, std::string mem = "")
+        : variable(std::move(var)), indices(std::move(idx)), member(std::move(mem)), value(std::move(val)) {}
     void accept(ASTVisitor& visitor) override;
 };
 
