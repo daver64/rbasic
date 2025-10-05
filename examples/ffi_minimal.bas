@@ -1,3 +1,4 @@
-print("Before declare");
-declare function Test lib "test" as int;
-print("After declare");
+// Even simpler test - just call the function without assignment
+print("About to call GetCurrentProcessId directly");
+ffi int GetCurrentProcessId() from "kernel32";
+GetCurrentProcessId();

@@ -9,6 +9,9 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <fstream>
 #include <filesystem>
 
@@ -1079,6 +1082,7 @@ bool Interpreter::handleFFIFunctions(CallExpr& node) {
         return true;
     }
     
+    
     // Check if it's a declared FFI function
     auto ffiIt = ffiFunctions.find(node.name);
     if (ffiIt != ffiFunctions.end()) {
@@ -1095,176 +1099,20 @@ bool Interpreter::handleFFIFunctions(CallExpr& node) {
             if (!library || !library->is_valid()) {
                 throw RuntimeError("Failed to load library: " + ffiFunc.library);
             }
-            
+
             // Get function pointer
             void* funcPtr = library->get_function_address(ffiFunc.name);
             if (!funcPtr) {
                 throw RuntimeError("Function not found in library: " + ffiFunc.name);
             }
             
-            // Handle different function signatures
-            
-            // Generic FFI function calling with pointer support
-            if (ffiFunc.returnType == "pointer" || ffiFunc.returnType.find('*') != std::string::npos) {
-                // Function returns a pointer
-                if (ffiFunc.parameters.empty()) {
-                    // No parameters, returns pointer
-                    typedef void* (*FuncPtr0)();
-                    auto func = reinterpret_cast<FuncPtr0>(funcPtr);
-                    void* result = func();
-                    lastValue = result;
-                    return true;
-                }
-                // Add more pointer-returning function patterns as needed
+            // Use generic FFI calling system
+            if (callGenericFFIFunction(ffiFunc, node, funcPtr)) {
+                return true;
             }
             
-            if (ffiFunc.parameters.empty() && (ffiFunc.returnType == "int" || ffiFunc.returnType == "integer")) {
-                // No parameters, returns int (like GetTickCount, GetCurrentProcessId)
-                typedef int (*FuncType0)();
-                auto func = reinterpret_cast<FuncType0>(funcPtr);
-                lastValue = static_cast<double>(func());
-            }
-            else if (ffiFunc.parameters.size() == 1 && (ffiFunc.returnType == "int" || ffiFunc.returnType == "integer") &&
-                     (ffiFunc.parameters[0].second == "int" || ffiFunc.parameters[0].second == "integer")) {
-                // Single integer parameter, returns int (like MessageBeep)
-                if (node.arguments.size() != 1) {
-                    throw RuntimeError("Expected 1 argument for " + ffiFunc.name);
-                }
-                
-                // Evaluate argument
-                auto argVal = evaluate(*node.arguments[0]);
-                
-                // Convert to C type
-                int param = 0;
-                if (std::holds_alternative<double>(argVal)) {
-                    param = static_cast<int>(std::get<double>(argVal));
-                } else if (std::holds_alternative<int>(argVal)) {
-                    param = std::get<int>(argVal);
-                }
-                
-                // Call function
-                typedef int (*FuncType1)(int);
-                auto func = reinterpret_cast<FuncType1>(funcPtr);
-                lastValue = static_cast<double>(func(param));
-            }
-            else if (ffiFunc.parameters.size() == 4 && ffiFunc.returnType == "int" && 
-                     ffiFunc.parameters[0].second == "int" && ffiFunc.parameters[1].second == "string" &&
-                     ffiFunc.parameters[2].second == "string" && ffiFunc.parameters[3].second == "int") {
-                // MessageBoxA style: int MessageBoxA(int, string, string, int)
-                if (node.arguments.size() != 4) {
-                    throw RuntimeError("Expected 4 arguments for " + ffiFunc.name);
-                }
-                
-                // Evaluate arguments
-                auto arg0Val = evaluate(*node.arguments[0]);
-                auto arg1Val = evaluate(*node.arguments[1]);
-                auto arg2Val = evaluate(*node.arguments[2]);
-                auto arg3Val = evaluate(*node.arguments[3]);
-                
-                // Convert to C types, handling different value types
-                int hwnd = 0;
-                if (std::holds_alternative<double>(arg0Val)) {
-                    hwnd = static_cast<int>(std::get<double>(arg0Val));
-                } else if (std::holds_alternative<int>(arg0Val)) {
-                    hwnd = std::get<int>(arg0Val);
-                }
-                
-                std::string text, caption;
-                if (std::holds_alternative<std::string>(arg1Val)) {
-                    text = std::get<std::string>(arg1Val);
-                }
-                if (std::holds_alternative<std::string>(arg2Val)) {
-                    caption = std::get<std::string>(arg2Val);
-                }
-                
-                int type = 0;
-                if (std::holds_alternative<double>(arg3Val)) {
-                    type = static_cast<int>(std::get<double>(arg3Val));
-                } else if (std::holds_alternative<int>(arg3Val)) {
-                    type = std::get<int>(arg3Val);
-                }
-                
-                // Call MessageBoxA
-                typedef int (*MessageBoxAFunc)(int, const char*, const char*, int);
-                auto func = reinterpret_cast<MessageBoxAFunc>(funcPtr);
-                int result = func(hwnd, text.c_str(), caption.c_str(), type);
-                
-                lastValue = static_cast<double>(result);
-            }
-            // SDL_CreateWindow style: pointer SDL_CreateWindow(string, int, int, int, int, int)
-            else if (ffiFunc.parameters.size() == 6 && 
-                     (ffiFunc.returnType == "pointer" || ffiFunc.returnType.find('*') != std::string::npos) &&
-                     ffiFunc.parameters[0].second == "string" && 
-                     ffiFunc.parameters[1].second == "int" && ffiFunc.parameters[2].second == "int" &&
-                     ffiFunc.parameters[3].second == "int" && ffiFunc.parameters[4].second == "int" &&
-                     ffiFunc.parameters[5].second == "int") {
-                
-                if (node.arguments.size() != 6) {
-                    throw RuntimeError("Expected 6 arguments for " + ffiFunc.name);
-                }
-                
-                // Evaluate arguments
-                auto arg0Val = evaluate(*node.arguments[0]);
-                auto arg1Val = evaluate(*node.arguments[1]);
-                auto arg2Val = evaluate(*node.arguments[2]);
-                auto arg3Val = evaluate(*node.arguments[3]);
-                auto arg4Val = evaluate(*node.arguments[4]);
-                auto arg5Val = evaluate(*node.arguments[5]);
-                
-                // Convert to C types
-                std::string title;
-                if (std::holds_alternative<std::string>(arg0Val)) {
-                    title = std::get<std::string>(arg0Val);
-                }
-                
-                int x = static_cast<int>(std::get<double>(arg1Val));
-                int y = static_cast<int>(std::get<double>(arg2Val));
-                int w = static_cast<int>(std::get<double>(arg3Val));
-                int h = static_cast<int>(std::get<double>(arg4Val));
-                int flags = static_cast<int>(std::get<double>(arg5Val));
-                
-                // Call function returning pointer
-                typedef void* (*CreateWindowFunc)(const char*, int, int, int, int, int);
-                auto func = reinterpret_cast<CreateWindowFunc>(funcPtr);
-                void* result = func(title.c_str(), x, y, w, h, flags);
-                
-                lastValue = result;
-            }
-            // SDL_CreateRenderer style: pointer SDL_CreateRenderer(pointer, int, int)
-            else if (ffiFunc.parameters.size() == 3 && 
-                     (ffiFunc.returnType == "pointer" || ffiFunc.returnType.find('*') != std::string::npos) &&
-                     (ffiFunc.parameters[0].second == "pointer" || ffiFunc.parameters[0].second.find('*') != std::string::npos) &&
-                     ffiFunc.parameters[1].second == "int" && ffiFunc.parameters[2].second == "int") {
-                
-                if (node.arguments.size() != 3) {
-                    throw RuntimeError("Expected 3 arguments for " + ffiFunc.name);
-                }
-                
-                // Evaluate arguments
-                auto arg0Val = evaluate(*node.arguments[0]);
-                auto arg1Val = evaluate(*node.arguments[1]);
-                auto arg2Val = evaluate(*node.arguments[2]);
-                
-                // Convert to C types
-                void* window = nullptr;
-                if (std::holds_alternative<void*>(arg0Val)) {
-                    window = std::get<void*>(arg0Val);
-                }
-                
-                int index = static_cast<int>(std::get<double>(arg1Val));
-                int flags = static_cast<int>(std::get<double>(arg2Val));
-                
-                // Call function
-                typedef void* (*CreateRendererFunc)(void*, int, int);
-                auto func = reinterpret_cast<CreateRendererFunc>(funcPtr);
-                void* result = func(window, index, flags);
-                
-                lastValue = result;
-            }
-            else {
-                throw RuntimeError("Unsupported FFI function signature: " + ffiFunc.name);
-            }
-            
+            // Fallback error
+            throw RuntimeError("Failed to call FFI function: " + ffiFunc.name);
         } catch (const std::exception& e) {
             throw RuntimeError("FFI call failed: " + std::string(e.what()));
         }
@@ -1273,6 +1121,279 @@ bool Interpreter::handleFFIFunctions(CallExpr& node) {
     }
     
     return false; // Function not handled by this dispatcher
+}
+
+bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExpr& node, void* funcPtr) {
+    // Generic FFI function calling for SDL2, SQLite, and all library patterns
+    
+    try {
+        // Check argument count
+        if (node.arguments.size() != ffiFunc.parameters.size()) {
+            throw RuntimeError("Function " + ffiFunc.name + " expects " + 
+                             std::to_string(ffiFunc.parameters.size()) + " arguments, got " + 
+                             std::to_string(node.arguments.size()));
+        }
+        
+        // Determine return type
+        bool returnsPointer = (ffiFunc.returnType == "pointer" || ffiFunc.returnType.find('*') != std::string::npos);
+        bool returnsInteger = (ffiFunc.returnType == "int" || ffiFunc.returnType == "integer");
+        bool returnsVoid = (ffiFunc.returnType == "void");
+        
+        // Handle function calls based on parameter count and signature
+        if (ffiFunc.parameters.size() == 0) {
+            // No parameters - common for system functions
+            if (returnsInteger) {
+                typedef int (*Func0)();
+                auto func = reinterpret_cast<Func0>(funcPtr);
+                lastValue = static_cast<double>(func());
+            } else if (returnsPointer) {
+                typedef void* (*Func0)();
+                auto func = reinterpret_cast<Func0>(funcPtr);
+                lastValue = func();
+            } else {
+                typedef void (*Func0)();
+                auto func = reinterpret_cast<Func0>(funcPtr);
+                func();
+                lastValue = 0.0;
+            }
+        } else if (ffiFunc.parameters.size() == 1) {
+            // Single parameter
+            ValueType argVal = evaluate(*node.arguments[0]);
+            const auto& paramType = ffiFunc.parameters[0].second;
+            
+            if (paramType == "int" || paramType == "integer") {
+                int param = getIntValue(argVal);
+                if (returnsInteger) {
+                    typedef int (*Func1)(int);
+                    auto func = reinterpret_cast<Func1>(funcPtr);
+                    lastValue = static_cast<double>(func(param));
+                } else if (returnsPointer) {
+                    typedef void* (*Func1)(int);
+                    auto func = reinterpret_cast<Func1>(funcPtr);
+                    lastValue = func(param);
+                } else {
+                    typedef void (*Func1)(int);
+                    auto func = reinterpret_cast<Func1>(funcPtr);
+                    func(param);
+                    lastValue = 0.0;
+                }
+            } else if (paramType == "string") {
+                std::string str = getStringValue(argVal);
+                if (returnsInteger) {
+                    typedef int (*Func1)(const char*);
+                    auto func = reinterpret_cast<Func1>(funcPtr);
+                    lastValue = static_cast<double>(func(str.c_str()));
+                } else if (returnsPointer) {
+                    typedef void* (*Func1)(const char*);
+                    auto func = reinterpret_cast<Func1>(funcPtr);
+                    lastValue = func(str.c_str());
+                } else {
+                    typedef void (*Func1)(const char*);
+                    auto func = reinterpret_cast<Func1>(funcPtr);
+                    func(str.c_str());
+                    lastValue = 0.0;
+                }
+            } else if (paramType == "pointer" || paramType.find('*') != std::string::npos) {
+                void* param = getPointerValue(argVal);
+                if (returnsInteger) {
+                    typedef int (*Func1)(void*);
+                    auto func = reinterpret_cast<Func1>(funcPtr);
+                    lastValue = static_cast<double>(func(param));
+                } else if (returnsPointer) {
+                    typedef void* (*Func1)(void*);
+                    auto func = reinterpret_cast<Func1>(funcPtr);
+                    lastValue = func(param);
+                } else {
+                    typedef void (*Func1)(void*);
+                    auto func = reinterpret_cast<Func1>(funcPtr);
+                    func(param);
+                    lastValue = 0.0;
+                }
+            }
+        } else if (ffiFunc.parameters.size() == 2) {
+            // Two parameters - common SDL/SQLite patterns
+            ValueType arg1Val = evaluate(*node.arguments[0]);
+            ValueType arg2Val = evaluate(*node.arguments[1]);
+            const auto& param1Type = ffiFunc.parameters[0].second;
+            const auto& param2Type = ffiFunc.parameters[1].second;
+            
+            // Pattern: (pointer, int)
+            if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) && 
+                (param2Type == "int" || param2Type == "integer")) {
+                void* param1 = getPointerValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func2)(void*, int);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2));
+                } else if (returnsPointer) {
+                    typedef void* (*Func2)(void*, int);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    lastValue = func(param1, param2);
+                } else {
+                    typedef void (*Func2)(void*, int);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    func(param1, param2);
+                    lastValue = 0.0;
+                }
+            }
+            // Pattern: (int, int)
+            else if ((param1Type == "int" || param1Type == "integer") && 
+                     (param2Type == "int" || param2Type == "integer")) {
+                int param1 = getIntValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func2)(int, int);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2));
+                } else if (returnsPointer) {
+                    typedef void* (*Func2)(int, int);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    lastValue = func(param1, param2);
+                } else {
+                    typedef void (*Func2)(int, int);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    func(param1, param2);
+                    lastValue = 0.0;
+                }
+            }
+        } else if (ffiFunc.parameters.size() == 3) {
+            // Three parameters - SDL renderer creation patterns
+            ValueType arg1Val = evaluate(*node.arguments[0]);
+            ValueType arg2Val = evaluate(*node.arguments[1]);
+            ValueType arg3Val = evaluate(*node.arguments[2]);
+            const auto& param1Type = ffiFunc.parameters[0].second;
+            const auto& param2Type = ffiFunc.parameters[1].second;
+            const auto& param3Type = ffiFunc.parameters[2].second;
+            
+            // Pattern: (pointer, int, int) - SDL_CreateRenderer
+            if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) && 
+                (param2Type == "int" || param2Type == "integer") &&
+                (param3Type == "int" || param3Type == "integer")) {
+                void* param1 = getPointerValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                int param3 = getIntValue(arg3Val);
+                
+                if (returnsPointer) {
+                    typedef void* (*Func3)(void*, int, int);
+                    auto func = reinterpret_cast<Func3>(funcPtr);
+                    lastValue = func(param1, param2, param3);
+                } else if (returnsInteger) {
+                    typedef int (*Func3)(void*, int, int);
+                    auto func = reinterpret_cast<Func3>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3));
+                } else {
+                    typedef void (*Func3)(void*, int, int);
+                    auto func = reinterpret_cast<Func3>(funcPtr);
+                    func(param1, param2, param3);
+                    lastValue = 0.0;
+                }
+            }
+        } else if (ffiFunc.parameters.size() == 4) {
+            // Four parameters - MessageBox patterns
+            ValueType arg1Val = evaluate(*node.arguments[0]);
+            ValueType arg2Val = evaluate(*node.arguments[1]);
+            ValueType arg3Val = evaluate(*node.arguments[2]);
+            ValueType arg4Val = evaluate(*node.arguments[3]);
+            const auto& param1Type = ffiFunc.parameters[0].second;
+            const auto& param2Type = ffiFunc.parameters[1].second;
+            const auto& param3Type = ffiFunc.parameters[2].second;
+            const auto& param4Type = ffiFunc.parameters[3].second;
+            
+            // Pattern: (int, string, string, int) - MessageBoxA
+            if ((param1Type == "int" || param1Type == "integer") && param2Type == "string" &&
+                param3Type == "string" && (param4Type == "int" || param4Type == "integer")) {
+                int param1 = getIntValue(arg1Val);
+                std::string str2 = getStringValue(arg2Val);
+                std::string str3 = getStringValue(arg3Val);
+                int param4 = getIntValue(arg4Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func4)(int, const char*, const char*, int);
+                    auto func = reinterpret_cast<Func4>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, str2.c_str(), str3.c_str(), param4));
+                } else if (returnsPointer) {
+                    typedef void* (*Func4)(int, const char*, const char*, int);
+                    auto func = reinterpret_cast<Func4>(funcPtr);
+                    lastValue = func(param1, str2.c_str(), str3.c_str(), param4);
+                } else {
+                    typedef void (*Func4)(int, const char*, const char*, int);
+                    auto func = reinterpret_cast<Func4>(funcPtr);
+                    func(param1, str2.c_str(), str3.c_str(), param4);
+                    lastValue = 0.0;
+                }
+            }
+        } else if (ffiFunc.parameters.size() == 6) {
+            // Six parameters - SDL_CreateWindow pattern
+            ValueType arg1Val = evaluate(*node.arguments[0]);
+            ValueType arg2Val = evaluate(*node.arguments[1]);
+            ValueType arg3Val = evaluate(*node.arguments[2]);
+            ValueType arg4Val = evaluate(*node.arguments[3]);
+            ValueType arg5Val = evaluate(*node.arguments[4]);
+            ValueType arg6Val = evaluate(*node.arguments[5]);
+            
+            const auto& param1Type = ffiFunc.parameters[0].second;
+            
+            // Pattern: (string, int, int, int, int, int) - SDL_CreateWindow
+            if (param1Type == "string") {
+                std::string str1 = getStringValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                int param3 = getIntValue(arg3Val);
+                int param4 = getIntValue(arg4Val);
+                int param5 = getIntValue(arg5Val);
+                int param6 = getIntValue(arg6Val);
+                
+                if (returnsPointer) {
+                    typedef void* (*Func6)(const char*, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func6>(funcPtr);
+                    lastValue = func(str1.c_str(), param2, param3, param4, param5, param6);
+                } else if (returnsInteger) {
+                    typedef int (*Func6)(const char*, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func6>(funcPtr);
+                    lastValue = static_cast<double>(func(str1.c_str(), param2, param3, param4, param5, param6));
+                } else {
+                    typedef void (*Func6)(const char*, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func6>(funcPtr);
+                    func(str1.c_str(), param2, param3, param4, param5, param6);
+                    lastValue = 0.0;
+                }
+            }
+        } else {
+            // Unsupported parameter count
+            throw RuntimeError("FFI functions with " + std::to_string(ffiFunc.parameters.size()) + 
+                             " parameters not yet implemented for " + ffiFunc.name);
+        }
+        
+        return true;
+    } catch (const std::exception& e) {
+        throw RuntimeError("FFI call failed for " + ffiFunc.name + ": " + std::string(e.what()));
+    }
+}
+
+// Helper functions for type conversion
+int Interpreter::getIntValue(const ValueType& value) {
+    if (std::holds_alternative<double>(value)) {
+        return static_cast<int>(std::get<double>(value));
+    } else if (std::holds_alternative<int>(value)) {
+        return std::get<int>(value);
+    }
+    return 0;
+}
+
+std::string Interpreter::getStringValue(const ValueType& value) {
+    if (std::holds_alternative<std::string>(value)) {
+        return std::get<std::string>(value);
+    }
+    return "";
+}
+
+void* Interpreter::getPointerValue(const ValueType& value) {
+    if (std::holds_alternative<void*>(value)) {
+        return std::get<void*>(value);
+    }
+    return nullptr;
 }
 
 bool Interpreter::handleUserDefinedFunction(CallExpr& node) {

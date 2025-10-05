@@ -1635,13 +1635,92 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
 }
 
 BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2) {
-    // Implementation for 2-parameter functions
-    throw std::runtime_error("2-parameter FFI functions not yet implemented in compiled mode");
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        auto library = ffi_manager.get_library(library_name);
+        if (!library) {
+            library = ffi_manager.load_library(library_name);
+        }
+        
+        if (!library || !library->is_valid()) {
+            throw std::runtime_error("Failed to load library: " + library_name);
+        }
+        
+        void* funcPtr = library->get_function_address(function_name);
+        if (!funcPtr) {
+            throw std::runtime_error("Function not found: " + function_name);
+        }
+        
+        // Convert arguments - common 2-parameter patterns
+        // Pattern 1: (pointer, int) -> pointer (e.g., some SDL functions)
+        void* ptr_arg = nullptr;
+        if (std::holds_alternative<void*>(arg1)) {
+            ptr_arg = std::get<void*>(arg1);
+        }
+        
+        int int_arg = 0;
+        if (std::holds_alternative<double>(arg2)) {
+            int_arg = static_cast<int>(std::get<double>(arg2));
+        } else if (std::holds_alternative<int>(arg2)) {
+            int_arg = std::get<int>(arg2);
+        }
+        
+        // Try most common pattern: (pointer, int) -> int
+        typedef int (*FuncType2)(void*, int);
+        auto func = reinterpret_cast<FuncType2>(funcPtr);
+        return BasicValue(static_cast<double>(func(ptr_arg, int_arg)));
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("FFI call failed: " + std::string(e.what()));
+    }
 }
 
 BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3) {
-    // Implementation for 3-parameter functions
-    throw std::runtime_error("3-parameter FFI functions not yet implemented in compiled mode");
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        auto library = ffi_manager.get_library(library_name);
+        if (!library) {
+            library = ffi_manager.load_library(library_name);
+        }
+        
+        if (!library || !library->is_valid()) {
+            throw std::runtime_error("Failed to load library: " + library_name);
+        }
+        
+        void* funcPtr = library->get_function_address(function_name);
+        if (!funcPtr) {
+            throw std::runtime_error("Function not found: " + function_name);
+        }
+        
+        // Common 3-parameter pattern: (pointer, int, int) -> pointer
+        // Used by SDL_CreateRenderer and similar functions
+        void* ptr_arg = nullptr;
+        if (std::holds_alternative<void*>(arg1)) {
+            ptr_arg = std::get<void*>(arg1);
+        }
+        
+        int int_arg1 = 0;
+        if (std::holds_alternative<double>(arg2)) {
+            int_arg1 = static_cast<int>(std::get<double>(arg2));
+        } else if (std::holds_alternative<int>(arg2)) {
+            int_arg1 = std::get<int>(arg2);
+        }
+        
+        int int_arg2 = 0;
+        if (std::holds_alternative<double>(arg3)) {
+            int_arg2 = static_cast<int>(std::get<double>(arg3));
+        } else if (std::holds_alternative<int>(arg3)) {
+            int_arg2 = std::get<int>(arg3);
+        }
+        
+        // Try most common pattern: (pointer, int, int) -> pointer
+        typedef void* (*FuncType3)(void*, int, int);
+        auto func = reinterpret_cast<FuncType3>(funcPtr);
+        return BasicValue(func(ptr_arg, int_arg1, int_arg2));
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("FFI call failed: " + std::string(e.what()));
+    }
 }
 
 BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3, const BasicValue& arg4) {

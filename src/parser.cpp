@@ -650,14 +650,16 @@ std::unique_ptr<Statement> Parser::declareStatement() {
 
 // Parse direct FFI syntax: ffi "library" FunctionName(params) as returnType;
 std::unique_ptr<Statement> Parser::ffiStatement() {
-    // Parse: ffi "library" FunctionName(param1 as type1, ...) as returnType;
+    // Parse: ffi returnType FunctionName(param1, param2, ...) from "library";
     
-    // Consume library name string
-    Token libToken = consume(TokenType::STRING, "Expected library name string after 'ffi'");
-    std::string libraryName = libToken.value;
-    // Remove quotes
-    if (libraryName.length() >= 2 && libraryName[0] == '"' && libraryName.back() == '"') {
-        libraryName = libraryName.substr(1, libraryName.length() - 2);
+    // Parse return type
+    Token returnTypeToken = consume(TokenType::IDENTIFIER, "Expected return type after 'ffi'");
+    std::string returnType = returnTypeToken.value;
+    
+    // Check for pointer syntax
+    if (check(TokenType::MULTIPLY)) {
+        advance(); // consume '*'
+        returnType += "*";
     }
     
     // Parse function name
@@ -671,41 +673,31 @@ std::unique_ptr<Statement> Parser::ffiStatement() {
     
     if (!check(TokenType::RIGHT_PAREN)) {
         do {
-            Token paramName = consume(TokenType::IDENTIFIER, "Expected parameter name");
-            consume(TokenType::AS, "Expected 'as' after parameter name");
+            // Parse parameter type directly (simplified syntax)
             Token paramType = consume(TokenType::IDENTIFIER, "Expected parameter type");
-            
             std::string typeStr = paramType.value;
             
             // Check for pointer syntax
-            if (check(TokenType::POINTER)) {
-                advance(); // consume 'pointer'
-                typeStr = "pointer";
-            } else if (check(TokenType::MULTIPLY)) {
+            if (check(TokenType::MULTIPLY)) {
                 advance(); // consume '*'
                 typeStr += "*";
             }
             
-            parameters.emplace_back(paramName.value, typeStr);
+            // Use type as both name and type for simplified syntax
+            parameters.emplace_back("param" + std::to_string(parameters.size()), typeStr);
         } while (match({TokenType::COMMA}));
     }
     
     consume(TokenType::RIGHT_PAREN, "Expected ')' after parameters");
     
-    // Parse return type
-    std::string returnType = "void";
-    if (match({TokenType::AS})) {
-        Token retType = consume(TokenType::IDENTIFIER, "Expected return type");
-        returnType = retType.value;
-        
-        // Check for pointer syntax
-        if (check(TokenType::POINTER)) {
-            advance(); // consume 'pointer'
-            returnType = "pointer";
-        } else if (check(TokenType::MULTIPLY)) {
-            advance(); // consume '*'
-            returnType += "*";
-        }
+    // Parse 'from' keyword and library name
+    consume(TokenType::FROM, "Expected 'from' after function parameters");
+    Token libToken = consume(TokenType::STRING, "Expected library name string after 'from'");
+    std::string libraryName = libToken.value;
+    
+    // Remove quotes from library name
+    if (libraryName.length() >= 2 && libraryName[0] == '"' && libraryName.back() == '"') {
+        libraryName = libraryName.substr(1, libraryName.length() - 2);
     }
     
     consume(TokenType::SEMICOLON, "Expected ';' after FFI declaration");

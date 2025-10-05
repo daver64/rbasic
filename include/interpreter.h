@@ -51,6 +51,13 @@ public:
     bool handleFileFunctions(CallExpr& node);
     bool handleTerminalFunctions(CallExpr& node);
     bool handleFFIFunctions(CallExpr& node);
+    bool callDirectFFIFunction(const FFIFunctionDecl& ffiFunc, CallExpr& node, void* funcPtr);
+    bool callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExpr& node, void* funcPtr);
+    
+    // FFI helper functions
+    int getIntValue(const ValueType& value);
+    std::string getStringValue(const ValueType& value);
+    void* getPointerValue(const ValueType& value);
     bool handleUserDefinedFunction(CallExpr& node);
     
     // Visitor methods
