@@ -52,13 +52,20 @@ void writeFile(const std::string& filename, const std::string& content) {
 }
 
 bool compileToExecutable(const std::string& cppFile, const std::string& outputFile) {
-    // Use cl compiler directly since it's set up globally
-    std::string command = "cl /EHsc /std:c++17 \"" + cppFile + "\" /Fe:\"" + outputFile + "\" runtime\\Release\\rbasic_runtime.lib";
+    // TODO: Make compiler selectable via command line option
+    std::string command;
     
-    // Add linker flags at the end
+#ifdef _WIN32
+    // Windows: Use Microsoft Visual C++ compiler
+    command = "cl /EHsc /std:c++17 \"" + cppFile + "\" /Fe:\"" + outputFile + "\" runtime\\Release\\rbasic_runtime.lib";
     command += " /link /SUBSYSTEM:CONSOLE kernel32.lib user32.lib";
-    
     std::cout << "Compiling with MSVC: " << command << std::endl;
+#else
+    // Linux/Unix: Use g++ compiler
+    command = "g++ -std=c++17 -O2 \"" + cppFile + "\" -o \"" + outputFile + "\" runtime/librbasic_runtime.a";
+    std::cout << "Compiling with g++: " << command << std::endl;
+#endif
+    
     int result = std::system(command.c_str());
     
     if (result == 0) {
