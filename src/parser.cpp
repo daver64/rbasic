@@ -49,6 +49,20 @@ Token Parser::consume(TokenType type, const std::string& message) {
     throw SyntaxError(message + " at '" + current.value + "'", current.line);
 }
 
+Token Parser::consumeIdentifierOrKeyword(const std::string& message) {
+    Token current = peek();
+    
+    // Allow identifiers and keywords that can serve as parameter names
+    if (current.type == TokenType::IDENTIFIER ||
+        current.type == TokenType::TYPE ||
+        current.type == TokenType::VAR ||
+        current.type == TokenType::FUNCTION) {
+        return advance();
+    }
+    
+    throw SyntaxError(message + " at '" + current.value + "'", current.line);
+}
+
 void Parser::synchronize() {
     advance();
     
@@ -566,9 +580,9 @@ std::unique_ptr<Statement> Parser::declareStatement() {
         
         if (!check(TokenType::RIGHT_PAREN)) {
             do {
-                Token paramName = consume(TokenType::IDENTIFIER, "Expected parameter name");
+                Token paramName = consumeIdentifierOrKeyword("Expected parameter name");
                 consume(TokenType::AS, "Expected 'as' after parameter name");
-                Token paramType = consume(TokenType::IDENTIFIER, "Expected parameter type");
+                Token paramType = consumeIdentifierOrKeyword("Expected parameter type");
                 
                 parameters.emplace_back(paramName.value, paramType.value);
             } while (match({TokenType::COMMA}));
@@ -579,7 +593,7 @@ std::unique_ptr<Statement> Parser::declareStatement() {
     
     // Parse return type: as returnType
     consume(TokenType::AS, "Expected 'as' for return type");
-    Token returnTypeToken = consume(TokenType::IDENTIFIER, "Expected return type");
+    Token returnTypeToken = consumeIdentifierOrKeyword("Expected return type");
     std::string returnType = returnTypeToken.value;
     
     consume(TokenType::SEMICOLON, "Expected ';' after declare statement");

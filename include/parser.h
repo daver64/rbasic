@@ -20,6 +20,7 @@ private:
     bool check(TokenType type) const;
     bool match(std::initializer_list<TokenType> types);
     Token consume(TokenType type, const std::string& message);
+    Token consumeIdentifierOrKeyword(const std::string& message); // Allow keywords as identifiers in FFI context
     void synchronize();
     
     // Expression parsing (precedence climbing)
