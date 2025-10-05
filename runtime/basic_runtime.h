@@ -93,6 +93,7 @@ int len(const BasicValue& str);
 BasicValue mid(const BasicValue& str, int start, int length = -1);
 BasicValue left(const BasicValue& str, int length);
 BasicValue right(const BasicValue& str, int length);
+BasicValue val(const BasicValue& str);  // Convert string to number
 
 // Math functions
 BasicValue abs_val(const BasicValue& value);

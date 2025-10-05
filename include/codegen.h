@@ -19,6 +19,7 @@ private:
     void write(const std::string& text);
     std::string generateVariableName(const std::string& basicName);
     std::string generateTempVar();
+    std::string escapeString(const std::string& str);
     int tempVarCounter;
     
 public:

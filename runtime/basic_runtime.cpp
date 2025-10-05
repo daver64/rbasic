@@ -134,6 +134,19 @@ BasicValue right(const BasicValue& str, int length) {
     return s.substr(start);
 }
 
+BasicValue val(const BasicValue& str) {
+    std::string s = to_string(str);
+    try {
+        if (s.find('.') != std::string::npos) {
+            return std::stod(s);
+        } else {
+            return std::stoi(s);
+        }
+    } catch (const std::exception&) {
+        return 0; // Default to 0 if conversion fails
+    }
+}
+
 BasicValue abs_val(const BasicValue& value) {
     if (std::holds_alternative<int>(value)) {
         return std::abs(std::get<int>(value));
@@ -600,8 +613,8 @@ BasicValue get_array_element(BasicValue& arrayVar, BasicValue index) {
     if (std::holds_alternative<BasicArray>(arrayVar)) {
         BasicArray& array = std::get<BasicArray>(arrayVar);
         int idx = to_int(index);
-        if (idx >= 1 && idx <= static_cast<int>(array.elements.size())) {
-            return array.elements[idx - 1]; // Convert to 0-based indexing
+        if (idx >= 0 && idx < static_cast<int>(array.elements.size())) {
+            return array.elements[idx]; // Use 0-based indexing directly
         }
     }
     return BasicValue(0); // Default value
@@ -611,8 +624,8 @@ void set_array_element(BasicValue& arrayVar, BasicValue index, BasicValue value)
     if (std::holds_alternative<BasicArray>(arrayVar)) {
         BasicArray& array = std::get<BasicArray>(arrayVar);
         int idx = to_int(index);
-        if (idx >= 1 && idx <= static_cast<int>(array.elements.size())) {
-            array.elements[idx - 1] = value; // Convert to 0-based indexing
+        if (idx >= 0 && idx < static_cast<int>(array.elements.size())) {
+            array.elements[idx] = value; // Use 0-based indexing directly
         }
     }
 }

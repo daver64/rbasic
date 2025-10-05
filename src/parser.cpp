@@ -85,9 +85,17 @@ std::unique_ptr<Expression> Parser::assignment() {
         // This should be a variable expression
         if (auto varExpr = dynamic_cast<VariableExpr*>(expr.get())) {
             std::string variable = varExpr->name;
+            std::unique_ptr<Expression> index = nullptr;
+            
+            // Check if this is an array assignment
+            if (varExpr->index) {
+                // Extract the index expression
+                index = std::move(varExpr->index);
+            }
+            
             auto value = assignment(); // Right associative
             expr.release(); // Release the variable expression since we're not using it
-            return std::make_unique<AssignExpr>(variable, std::move(value));
+            return std::make_unique<AssignExpr>(variable, std::move(value), std::move(index));
         } else {
             throw SyntaxError("Invalid assignment target");
         }
@@ -311,6 +319,7 @@ std::unique_ptr<Statement> Parser::ifStatement() {
     if (match({TokenType::ELSE})) {
         if (check(TokenType::IF)) {
             // Handle else-if as a nested if statement
+            consume(TokenType::IF, "Expected 'if' in 'else if'");
             elseBranch.push_back(ifStatement());
         } else {
             // Handle regular else with braces

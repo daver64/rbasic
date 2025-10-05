@@ -56,9 +56,10 @@ class AssignExpr : public Expression {
 public:
     std::string variable;
     std::unique_ptr<Expression> value;
+    std::unique_ptr<Expression> index;  // For array assignment like arr[i] = value
     
-    AssignExpr(std::string var, std::unique_ptr<Expression> val)
-        : variable(std::move(var)), value(std::move(val)) {}
+    AssignExpr(std::string var, std::unique_ptr<Expression> val, std::unique_ptr<Expression> idx = nullptr)
+        : variable(std::move(var)), value(std::move(val)), index(std::move(idx)) {}
     void accept(ASTVisitor& visitor) override;
 };
 

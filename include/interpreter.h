@@ -5,6 +5,7 @@
 #include "io_handler.h"
 #include <map>
 #include <stack>
+#include <vector>
 #include <memory>
 
 namespace rbasic {
@@ -12,7 +13,7 @@ namespace rbasic {
 class Interpreter : public ASTVisitor {
 private:
     std::map<std::string, ValueType> globals;
-    std::stack<std::map<std::string, ValueType>> scopes;
+    std::vector<std::map<std::string, ValueType>> scopes;
     std::map<std::string, std::unique_ptr<FunctionDecl>> functions;
     std::map<std::string, std::unique_ptr<StructDecl>> structs;
     std::map<std::string, std::map<std::string, ValueType>> structInstances;

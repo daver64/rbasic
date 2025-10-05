@@ -1,24 +1,21 @@
 # rbasic - C-Leaning BASIC Language Transpiler
 
-**rbasic** is a modern BASIC language transpiler that bridges traditional BASIC with contemporary C-style programming. It features familiar C-style syntax while maintaining BASIC's simplicity, making it accessible to developers from C/C++/JavaScript backgrounds.
+**rbasic** is a modern BASIC language transpiler that implements C-style syntax while maintaining BASIC's simplicity. It supports both interpretation for rapid development and compilation to native C++ executables.
 
-## What Makes rbasic Different
+## Key Features
 
-- **C-Style Syntax**: Uses braces `{}`, parentheses for conditions, and function-call I/O
-- **Transpiler Architecture**: Compiles BASIC to optimized C++ executables or runs directly via interpreter
-- **Modern Language Features**: C++ style comments, assignment expressions, structured control flow
-- **Graphics Programming**: Built-in SDL2 graphics support with drawing primitives and text rendering
-- **Zero Dependencies**: Compiled programs run independently (except SDL for graphics)
-- **Dual Execution**: Identical behavior in both interpreted and compiled modes
-- **British English**: Uses British spelling conventions throughout (colour, randomise, etc.)
-- **Complete Function Library**: 30+ built-in functions covering I/O, mathematics, strings, and graphics
+- **C-Style Syntax**: Uses braces `{}`, parentheses for conditions, and modern control flow
+- **Transpiler Architecture**: Compiles BASIC to C++ executables or runs directly via interpreter
+- **Core Language Features**: Variables, functions, arrays, control structures, and built-in functions
+- **Dual Execution**: Designed for identical behavior in both interpreted and compiled modes
+- **Zero Dependencies**: Core language has no external dependencies
 
 ## Language Overview
 
-rbasic implements a "C-leaning BASIC" that looks familiar to modern developers:
+rbasic implements a "C-leaning BASIC" with modern syntax:
 
 ```basic
-// Modern C-style BASIC with function-call syntax
+// Modern C-style BASIC
 function fibonacci(n) {
     if (n <= 1) {
         return n;
@@ -28,10 +25,10 @@ function fibonacci(n) {
 }
 
 var limit = 10;
-print("Fibonacci sequence up to", limit, ":");
+print("Fibonacci sequence:");
 
 for (var i = 0; i <= limit; i = i + 1) {
-    print("F(", i, ") =", fibonacci(i));
+    print("F(" + str(i) + ") = " + str(fibonacci(i)));
 }
 ```
 
@@ -41,7 +38,6 @@ for (var i = 0; i <= limit; i = i + 1) {
 
 - CMake 3.16+
 - C++17 compiler (GCC, Clang, MSVC)
-- SDL2 (optional, for graphics - auto-detected)
 
 ### Quick Start
 
@@ -58,38 +54,34 @@ cmake .. && cmake --build .
 ./hello
 ```
 
-### Graphics Programs
+### Experimental Features
+
+Graphics and database support are available as experimental features:
 
 ```bash
-# Run with graphics support
-./rbasic -i graphics_demo.bas --io sdl
+# Enable experimental SDL2 graphics support
+cmake -DENABLE_SDL_SUPPORT=ON ..
 
-# Compile graphics program (SDL automatically linked)
-./rbasic -c graphics_demo.bas -o graphics_demo
-./graphics_demo
+# Enable experimental SQLite database support  
+cmake -DENABLE_SQLITE_SUPPORT=ON ..
 ```
 
-## Key Language Features
+## Language Features
 
-### Modern Syntax Elements
+### Core Syntax Elements
 
 - **C-Style Control Flow**: `if (condition) { }`, `for (init; test; inc) { }`
 - **Function-Call I/O**: `print("Hello")`, `var input = input()`
 - **Assignment Expressions**: `var y = (x = x + 1) * 2`
 - **Modern Comments**: `//` line comments and `/* */` block comments
-- **Structured Data**: Arrays with `dim array(size)` and `array[index]` access
-- **Structures**: `struct Name { fields } end struct` with member access
+- **Arrays**: `dim array(size)` declaration with `array[index]` access
 
-### Complete Function Library (30+ Functions)
-
-**Status: ✅ 100% Complete** - All planned functions implemented and tested.
+### Built-in Functions
 
 #### I/O and Control
 ```basic
 print("Hello", "World");        // Multi-argument print
 var name = input();             // User input
-clear_screen();                 // Clear display
-sleep_ms(1000);                // Pause execution
 ```
 
 #### Mathematics
@@ -97,10 +89,7 @@ sleep_ms(1000);                // Pause execution
 print(sqrt(16));               // Square root: 4
 print(pow(2, 8));              // Power: 256
 print(sin(pi() / 2));          // Trigonometry: 1
-print(min(5, 10), max(5, 10)); // Min/max: 5, 10
-randomise();                   // Seed random generator (British spelling)
 print(rnd());                  // Random 0.0-1.0
-print(int(rnd() * 6) + 1);     // Random 1-6
 ```
 
 #### String Manipulation
@@ -114,16 +103,20 @@ print(str(42));                // Convert number to string: "42"
 print(val("3.14"));            // Convert string to number: 3.14
 ```
 
-#### Graphics (SDL2-based)
+### Experimental Features
+
+**Graphics (SDL2)** - Enable with `-DENABLE_SDL_SUPPORT=ON`
 ```basic
-graphics_mode(800, 600);       // Create window
-set_colour(255, 0, 0);         // Red colour (British spelling)
-draw_pixel(100, 100);          // Single pixel
-draw_line(0, 0, 200, 200);     // Diagonal line
-draw_rect(50, 50, 100, 75, true); // Filled rectangle
-draw_circle(400, 300, 50, true);  // Filled circle
-draw_text(10, 10, "Hello!");   // Text rendering
-refresh_screen();              // Update display
+graphics_mode(800, 600);       // Create window (experimental)
+set_colour(255, 0, 0);         // Set drawing color (experimental)
+draw_pixel(100, 100);          // Draw pixel (experimental)
+refresh_screen();              // Update display (experimental)
+```
+
+**Database (SQLite)** - Enable with `-DENABLE_SQLITE_SUPPORT=ON`
+```basic
+db_open("data.db");            // Open database (experimental)
+db_exec("CREATE TABLE...");    // Execute SQL (experimental)
 ```
 
 ## Example Programs
@@ -151,9 +144,9 @@ if (b != 0) {
 }
 ```
 
-### Functions and Structures
+### Functions and Arrays
 ```basic
-// User-defined functions and structures
+// User-defined functions and array usage
 function factorial(n) {
     if (n <= 1) {
         return 1;
@@ -162,22 +155,17 @@ function factorial(n) {
     }
 }
 
-struct Point
-    x as integer;
-    y as integer;
-end struct;
+dim numbers(5);
+numbers[0] = 10;
+numbers[1] = 20;
 
-dim p as Point;
-var p.x = 10;
-var p.y = 20;
-
-print("Point: (", p.x, ",", p.y, ")");
+print("Array: ", numbers[0], numbers[1]);
 print("5! =", factorial(5));
 ```
 
 ## Transpiler Architecture
 
-rbasic uses a sophisticated transpiler design that ensures identical behavior between interpreted and compiled modes:
+rbasic uses a transpiler design that aims for identical behavior between interpreted and compiled modes:
 
 ```
 BASIC Source → Lexer → Parser → AST
@@ -188,32 +176,28 @@ BASIC Source → Lexer → Parser → AST
 ```
 
 ### Components
-- **Lexer**: Modern tokenization with C-style syntax support
-- **Parser**: Builds comprehensive AST with all language constructs  
-- **Interpreter**: Direct AST execution for rapid development
-- **Code Generator**: Emits optimized C++ for production deployment
-- **Runtime Library**: Shared function implementations for both modes
+- **Lexer**: Tokenizes BASIC source with C-style syntax support
+- **Parser**: Builds AST from tokens with support for modern language constructs  
+- **Interpreter**: Direct AST execution for development and testing
+- **Code Generator**: Transpiles AST to C++ source code
+- **Runtime Library**: Shared function implementations for both execution modes
 
-## Graphics System
+## Development Status
 
-rbasic includes a complete graphics programming environment:
+This is an active development project. Core language features are implemented and working:
 
-### Automatic SDL Integration
-- **Interpreted Mode**: Uses SDL2 IOHandler for immediate graphics
-- **Compiled Mode**: Links SDL2 libraries automatically when graphics functions detected
-- **Fallback**: Non-graphics programs have zero SDL dependencies
+- ✅ Variables, expressions, and assignment
+- ✅ Control flow (if/else, for, while)
+- ✅ Functions and arrays
+- ✅ Built-in mathematical and string functions
+- ✅ Basic I/O operations
+- ✅ Interpreter and compiler modes
 
-### Drawing Primitives
-- Pixel-level control with `draw_pixel(x, y)`
-- Vector graphics with `draw_line()`, `draw_rect()`, and `draw_circle()`
-- Text rendering with `draw_text(x, y, text)`
-- Colour management with `set_colour(r, g, b)` (British spelling)
-- Double-buffering with `refresh_screen()`
+**Experimental Features:**
+- 🧪 Graphics support (SDL2-based)
+- 🧪 Database support (SQLite-based)
 
-### Interactive Features
-- Real-time input with `key_pressed(key)`
-- Window management with `quit_requested()`
-- Animation timing with `get_ticks()` and `sleep_ms()`
+The transpiler is suitable for educational use, prototyping, and experimenting with language design.
 
 ## Project Structure
 
@@ -231,56 +215,55 @@ rbasic/
 
 ## Build Configuration
 
-### Standard Build (Console Only)
+### Standard Build (Core Language Only)
 ```bash
-cmake -B build
+mkdir build && cd build
+cmake ..
 cmake --build build
 ```
 
-### With Graphics Support
+### With Experimental Features
 ```bash
-# Auto-detects SDL2 installation
-cmake -B build -DENABLE_SDL_SUPPORT=ON
-cmake --build build
+# Enable experimental SDL2 graphics support
+cmake -DENABLE_SDL_SUPPORT=ON ..
+
+# Enable experimental SQLite database support
+cmake -DENABLE_SQLITE_SUPPORT=ON ..
+
+# Enable both experimental features
+cmake -DENABLE_SDL_SUPPORT=ON -DENABLE_SQLITE_SUPPORT=ON ..
 ```
 
-### Cross-Platform Notes
-- **Windows**: Uses MSVC compiler, auto-detects SDL2
-- **Linux**: Requires `libsdl2-dev` package for graphics
-- **macOS**: Install SDL2 via Homebrew for graphics support
+### Platform Notes
+- **Windows**: Uses MSVC compiler
+- **Linux**: Requires development packages for experimental features
+- **macOS**: Install dependencies via Homebrew for experimental features
 
-## Performance and Deployment
+## Performance and Use Cases
 
 ### Compilation Benefits
-- **Native Speed**: Compiled programs run at C++ performance levels
-- **No Dependencies**: Standalone executables (except SDL for graphics)
-- **Optimized Output**: Generated C++ is human-readable and compiler-optimized
-- **Cross-Platform**: Compiles to native code on Windows, Linux, macOS
+- **Development Speed**: Interpreted mode for rapid iteration
+- **Native Performance**: Compiled mode generates C++ for production
+- **Standalone Executables**: No runtime dependencies for core language
+- **Readable Output**: Generated C++ code is human-readable
 
-### Development Workflow
-1. **Rapid Prototyping**: Use interpreted mode (`-i`) for fast iteration
-2. **Testing**: Identical behavior guarantees between modes  
-3. **Production**: Compile (`-c`) for deployment and distribution
-4. **Graphics**: Automatic SDL linking for visual applications
+### Intended Use Cases
+- **Learning**: Explore language implementation and transpiler design
+- **Prototyping**: Rapid development with C-style syntax
+- **Educational**: Teaching programming concepts with familiar syntax
+- **Experimentation**: Test ideas before implementing in other languages
 
-## Learning Resources
+## Contributing and Learning
 
-rbasic is designed for developers familiar with C-style languages who want:
-- **Rapid Prototyping**: BASIC's simplicity with modern syntax
-- **Graphics Programming**: Built-in visual capabilities
-- **Educational Use**: Clear, readable transpiled C++ output
+rbasic is designed for developers interested in:
+- **Language Implementation**: Study transpiler architecture
+- **Rapid Prototyping**: BASIC simplicity with modern syntax
+- **Educational Use**: Clear, understandable codebase
 - **Cross-Platform Development**: Single source for multiple targets
 
-The C-leaning syntax makes rbasic approachable for developers transitioning from:
-- C/C++ (familiar control structures)
-- JavaScript (function-call syntax) 
-- Python (rapid development cycle)
-- Java (structured programming)
+The project welcomes contributions, bug reports, and suggestions for improving the core language implementation.
 
 ## License
 
 MIT License - See LICENSE file for details.
 
----
-
-**rbasic** - Where BASIC meets modern development. Write like C, think like BASIC, compile to anything.

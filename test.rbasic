@@ -1,7 +1,0 @@
-// Test rbasic syntax highlighting
-function test() {
-    var x = 42;
-    print("Hello, rbasic!");
-    set_colour(255, 0, 0);
-    return x;
-}

@@ -27,6 +27,21 @@ std::string CodeGenerator::generateTempVar() {
     return "temp_" + std::to_string(tempVarCounter++);
 }
 
+std::string CodeGenerator::escapeString(const std::string& str) {
+    std::string escaped;
+    for (char c : str) {
+        switch (c) {
+            case '\n': escaped += "\\n"; break;
+            case '\r': escaped += "\\r"; break;
+            case '\t': escaped += "\\t"; break;
+            case '\\': escaped += "\\\\"; break;
+            case '"': escaped += "\\\""; break;
+            default: escaped += c; break;
+        }
+    }
+    return escaped;
+}
+
 std::string CodeGenerator::generate(Program& program) {
     output.str("");
     output.clear();
@@ -92,7 +107,7 @@ void CodeGenerator::visit(LiteralExpr& node) {
     } else if (std::holds_alternative<double>(node.value)) {
         write(std::to_string(std::get<double>(node.value)));
     } else if (std::holds_alternative<std::string>(node.value)) {
-        write("\"" + std::get<std::string>(node.value) + "\"");
+        write("\"" + escapeString(std::get<std::string>(node.value)) + "\"");
     } else if (std::holds_alternative<bool>(node.value)) {
         write(std::get<bool>(node.value) ? "true" : "false");
     }
@@ -178,9 +193,19 @@ void CodeGenerator::visit(BinaryExpr& node) {
 }
 
 void CodeGenerator::visit(AssignExpr& node) {
-    write("(variables[\"" + node.variable + "\"] = ");
-    node.value->accept(*this);
-    write(")");
+    if (node.index) {
+        // Array assignment: arr[index] = value
+        write("set_array_element(variables[\"" + node.variable + "\"], to_int(");
+        node.index->accept(*this);
+        write("), ");
+        node.value->accept(*this);
+        write(")");
+    } else {
+        // Simple variable assignment: var = value
+        write("(variables[\"" + node.variable + "\"] = ");
+        node.value->accept(*this);
+        write(")");
+    }
 }
 
 void CodeGenerator::visit(UnaryExpr& node) {
@@ -523,7 +548,63 @@ void CodeGenerator::visit(CallExpr& node) {
         write("))");
         return;
     }
-    
+
+    // String conversion functions
+    if (node.name == "str" && node.arguments.size() == 1) {
+        write("to_string(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+
+    if (node.name == "val" && node.arguments.size() == 1) {
+        write("val(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+
+    // String functions
+    if (node.name == "len" && node.arguments.size() == 1) {
+        write("len(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+
+    if (node.name == "mid" && (node.arguments.size() == 2 || node.arguments.size() == 3)) {
+        write("mid(");
+        node.arguments[0]->accept(*this);
+        write(", to_int(");
+        node.arguments[1]->accept(*this);
+        if (node.arguments.size() == 3) {
+            write("), to_int(");
+            node.arguments[2]->accept(*this);
+            write("))");
+        } else {
+            write("), -1)");
+        }
+        return;
+    }
+
+    if (node.name == "left" && node.arguments.size() == 2) {
+        write("left(");
+        node.arguments[0]->accept(*this);
+        write(", to_int(");
+        node.arguments[1]->accept(*this);
+        write("))");
+        return;
+    }
+
+    if (node.name == "right" && node.arguments.size() == 2) {
+        write("right(");
+        node.arguments[0]->accept(*this);
+        write(", to_int(");
+        node.arguments[1]->accept(*this);
+        write("))");
+        return;
+    }
+
     // User-defined function calls
     write("func_" + node.name + "(");
     for (size_t i = 0; i < node.arguments.size(); i++) {

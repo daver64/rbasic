@@ -23,20 +23,21 @@ Interpreter::Interpreter(std::unique_ptr<IOHandler> io) : hasReturned(false) {
 
 void Interpreter::defineVariable(const std::string& name, const ValueType& value) {
     if (!scopes.empty()) {
-        scopes.top()[name] = value;
+        scopes.back()[name] = value;
     } else {
         globals[name] = value;
     }
 }
 
 ValueType Interpreter::getVariable(const std::string& name) {
-    if (!scopes.empty()) {
-        auto& scope = scopes.top();
-        if (scope.find(name) != scope.end()) {
-            return scope[name];
+    // Search through scope stack from top to bottom (reverse vector order)
+    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
+        if (it->find(name) != it->end()) {
+            return (*it)[name];
         }
     }
     
+    // Check global scope
     if (globals.find(name) != globals.end()) {
         return globals[name];
     }
@@ -45,14 +46,15 @@ ValueType Interpreter::getVariable(const std::string& name) {
 }
 
 void Interpreter::setVariable(const std::string& name, const ValueType& value) {
-    if (!scopes.empty()) {
-        auto& scope = scopes.top();
-        if (scope.find(name) != scope.end()) {
-            scope[name] = value;
+    // Search through scope stack from top to bottom to find existing variable
+    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
+        if (it->find(name) != it->end()) {
+            (*it)[name] = value;
             return;
         }
     }
     
+    // Check global scope
     if (globals.find(name) != globals.end()) {
         globals[name] = value;
     } else {
@@ -61,12 +63,12 @@ void Interpreter::setVariable(const std::string& name, const ValueType& value) {
 }
 
 void Interpreter::pushScope() {
-    scopes.push(std::map<std::string, ValueType>());
+    scopes.push_back(std::map<std::string, ValueType>());
 }
 
 void Interpreter::popScope() {
     if (!scopes.empty()) {
-        scopes.pop();
+        scopes.pop_back();
     }
 }
 
@@ -93,8 +95,6 @@ void Interpreter::visit(LiteralExpr& node) {
 }
 
 void Interpreter::visit(VariableExpr& node) {
-    ValueType value = getVariable(node.name);
-    
     // Handle array access
     if (node.index) {
         ValueType arrayVar = getVariable(node.name);
@@ -152,7 +152,8 @@ void Interpreter::visit(VariableExpr& node) {
         return;
     }
     
-    lastValue = value;
+    // Regular variable access
+    lastValue = getVariable(node.name);
 }
 
 void Interpreter::visit(BinaryExpr& node) {
@@ -201,7 +202,36 @@ void Interpreter::visit(BinaryExpr& node) {
 
 void Interpreter::visit(AssignExpr& node) {
     ValueType value = evaluate(*node.value);
-    setVariable(node.variable, value);
+    
+    // Handle array assignment
+    if (node.index) {
+        ValueType arrayVar = getVariable(node.variable);
+        if (std::holds_alternative<ArrayValue>(arrayVar)) {
+            ArrayValue array = std::get<ArrayValue>(arrayVar);
+            ValueType indexValue = evaluate(*node.index);
+            int index = std::holds_alternative<int>(indexValue) ? 
+                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            
+            // Convert ValueType to simple variant for storage
+            if (std::holds_alternative<int>(value)) {
+                array.elements[index] = std::get<int>(value);
+            } else if (std::holds_alternative<double>(value)) {
+                array.elements[index] = std::get<double>(value);
+            } else if (std::holds_alternative<std::string>(value)) {
+                array.elements[index] = std::get<std::string>(value);
+            } else if (std::holds_alternative<bool>(value)) {
+                array.elements[index] = std::get<bool>(value);
+            }
+            
+            setVariable(node.variable, array);
+        } else {
+            throw RuntimeError("Variable '" + node.variable + "' is not an array");
+        }
+    } else {
+        // Regular variable assignment
+        setVariable(node.variable, value);
+    }
+    
     lastValue = value;
 }
 
@@ -803,7 +833,7 @@ void Interpreter::visit(VarStmt& node) {
                 array.elements[index] = std::get<bool>(value);
             }
             
-            defineVariable(node.variable, array);  // Update the variable
+            setVariable(node.variable, array);  // Use setVariable instead of defineVariable
         } else {
             throw RuntimeError("Variable '" + node.variable + "' is not an array");
         }
@@ -849,14 +879,20 @@ void Interpreter::visit(IfStmt& node) {
     ValueType condition = evaluate(*node.condition);
     
     if (isTruthy(condition)) {
+        // Execute then branch without creating new scope for now
         for (auto& stmt : node.thenBranch) {
             stmt->accept(*this);
-            if (hasReturned) break;
+            if (hasReturned) {
+                return;
+            }
         }
     } else {
+        // Execute else branch without creating new scope for now
         for (auto& stmt : node.elseBranch) {
             stmt->accept(*this);
-            if (hasReturned) break;
+            if (hasReturned) {
+                return;
+            }
         }
     }
 }
@@ -874,11 +910,14 @@ void Interpreter::visit(ForStmt& node) {
         std::get<int>(stepVal) : static_cast<int>(std::get<double>(stepVal));
     
     for (int i = start; i <= end; i += step) {
+        // Execute for loop without creating new scope for now
         defineVariable(node.variable, i);
         
         for (auto& stmt : node.body) {
             stmt->accept(*this);
-            if (hasReturned) return;
+            if (hasReturned) {
+                return;
+            }
         }
     }
 }
@@ -890,10 +929,14 @@ void Interpreter::visit(ModernForStmt& node) {
     
     // Loop while condition is true
     while (isTruthy(evaluate(*node.condition))) {
+        // Execute body without creating new scope for now
+        
         // Execute body
         for (auto& stmt : node.body) {
             stmt->accept(*this);
-            if (hasReturned) return;
+            if (hasReturned) {
+                return;
+            }
         }
         
         // Execute increment: i = i + 1
@@ -904,9 +947,12 @@ void Interpreter::visit(ModernForStmt& node) {
 
 void Interpreter::visit(WhileStmt& node) {
     while (isTruthy(evaluate(*node.condition))) {
+        // Execute while block without creating new scope for now
         for (auto& stmt : node.body) {
             stmt->accept(*this);
-            if (hasReturned) return;
+            if (hasReturned) {
+                return;
+            }
         }
     }
 }
