@@ -173,7 +173,6 @@ void CodeGenerator::visit(BinaryExpr& node) {
         write("))");
     } else {
         // For comparison operators, generate boolean result
-        write("(");
         if (node.operator_ == "==" || node.operator_ == "=") {
             write("equal(");
         } else if (node.operator_ == "<>" || node.operator_ == "!=") {
@@ -191,7 +190,7 @@ void CodeGenerator::visit(BinaryExpr& node) {
         node.left->accept(*this);
         write(", ");
         node.right->accept(*this);
-        write(") ? BasicValue(true) : BasicValue(false))");
+        write(")");
     }
 }
 
@@ -343,36 +342,36 @@ void CodeGenerator::visit(CallExpr& node) {
     
     // Built-in I/O functions
     if (node.name == "print") {
-        write("([&](){");
         if (node.arguments.size() == 0) {
             // Handle empty print - just print a newline
-            write("basic_runtime::print_line();return BasicValue(0);})()");
+            write("basic_runtime::print_line()");
         } else {
             for (size_t i = 0; i < node.arguments.size(); i++) {
                 write("basic_runtime::print(");
                 node.arguments[i]->accept(*this);
-                write(");");
+                write(")");
                 if (i < node.arguments.size() - 1) {
-                    write("basic_runtime::print(BasicValue(\" \"));");
+                    write("; basic_runtime::print(BasicValue(\" \")); ");
                 }
             }
-            write("basic_runtime::print_line();return BasicValue(0);})()");
+            write("; basic_runtime::print_line()");
         }
         return;
     }
     
     if (node.name == "debug_print") {
-        write("([&](){");
         if (node.arguments.size() == 0) {
             // Handle empty debug_print - just print a newline
-            write("basic_runtime::debug_print(BasicValue(\"\"));return BasicValue(0);})()");
+            write("basic_runtime::debug_print(BasicValue(\"\"))");
         } else {
             for (size_t i = 0; i < node.arguments.size(); i++) {
                 write("basic_runtime::debug_print(");
                 node.arguments[i]->accept(*this);
-                write(");");
+                write(")");
+                if (i < node.arguments.size() - 1) {
+                    write("; ");
+                }
             }
-            write("return BasicValue(0);})()");
         }
         return;
     }
@@ -774,11 +773,11 @@ void CodeGenerator::visit(WhileStmt& node) {
 void CodeGenerator::visit(ReturnStmt& node) {
     indent();
     if (node.value) {
-        write("return to_int(");
+        write("return ");
         node.value->accept(*this);
-        write(");\n");
+        write(";\n");
     } else {
-        write("return 0;\n");
+        write("return BasicValue(0);\n");
     }
 }
 
