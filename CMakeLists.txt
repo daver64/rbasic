@@ -41,6 +41,7 @@ set(SOURCES
     src/command_builder.cpp
     src/type_utils.cpp
     src/terminal.cpp
+    src/repl.cpp
 )
 
 # Header files
@@ -57,6 +58,7 @@ set(HEADERS
     include/command_builder.h
     include/type_utils.h
     include/terminal.h
+    include/repl.h
 )
 
 # Create main executable
@@ -105,6 +107,7 @@ add_executable(rbasic_tests
     src/command_builder.cpp
     src/type_utils.cpp
     src/terminal.cpp
+    src/repl.cpp
 )
 
 target_include_directories(rbasic_tests PRIVATE include)

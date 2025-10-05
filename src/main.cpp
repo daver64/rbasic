@@ -6,6 +6,7 @@
 #include "io_handler.h"
 #include "command_builder.h"
 #include "terminal.h"
+#include "repl.h"
 
 // Future: FFI support will be added here
 
@@ -21,10 +22,12 @@ void printUsage(const std::string& programName) {
     std::cout << "Usage:\n";
     std::cout << "  " << programName << " -i <file.bas> [--io <type>]     # Interpret mode\n";
     std::cout << "  " << programName << " -c <file.bas> [-o <output>]     # Compile mode\n";
+    std::cout << "  " << programName << " -r | --repl                    # Interactive REPL mode\n";
     std::cout << "  " << programName << " --help                         # Show this help\n\n";
     std::cout << "Options:\n";
     std::cout << "  -i, --interpret    Interpret the BASIC program directly\n";
     std::cout << "  -c, --compile      Compile BASIC program to C++ executable\n";
+    std::cout << "  -r, --repl         Start interactive REPL (Read-Eval-Print Loop)\n";
     std::cout << "  -o, --output       Specify output filename (compile mode only)\n";
     std::cout << "  --io <type>        I/O handler type: console (default: console)\n";
     std::cout << "  --keep-cpp         Keep generated C++ file (compile mode only)\n";
@@ -120,6 +123,10 @@ int main(int argc, char* argv[]) {
             if (arg == "--help" || arg == "-h") {
                 printUsage(argv[0]);
                 return 0;
+            } else if (arg == "-r" || arg == "--repl") {
+                // Handle REPL mode immediately
+                REPL repl;
+                return repl.run();
             } else if (arg == "-i" || arg == "--interpret") {
                 mode = "interpret";
                 if (i + 1 < argc) {
