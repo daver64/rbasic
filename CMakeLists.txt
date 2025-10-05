@@ -1,9 +1,20 @@
 cmake_minimum_required(VERSION 3.16)
 project(rbasic VERSION 1.0.0 LANGUAGES CXX C)
 
+# Require C++17 as a minimum
+if(CMAKE_CXX_STANDARD LESS 17)
+    message(FATAL_ERROR "C++17 or higher is required")
+endif()
+
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)  # Disable compiler-specific extensions
+
+# Ensure C++17 is used on all platforms
+if(NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 17)
+endif()
 
 # Set output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -65,8 +76,15 @@ if(MSVC)
     target_compile_options(rbasic PRIVATE /W4)
     target_compile_options(rbasic_runtime PRIVATE /W4)
 else()
-    target_compile_options(rbasic PRIVATE -Wall -Wextra -pedantic)
-    target_compile_options(rbasic_runtime PRIVATE -Wall -Wextra -pedantic)
+    # Ensure C++17 is explicitly set for GCC/Clang
+    target_compile_options(rbasic PRIVATE -std=c++17 -Wall -Wextra -pedantic)
+    target_compile_options(rbasic_runtime PRIVATE -std=c++17 -Wall -Wextra -pedantic)
+    target_compile_options(rbasic_tests PRIVATE -std=c++17 -Wall -Wextra -pedantic)
+    
+    # Add additional useful warnings for better code quality
+    target_compile_options(rbasic PRIVATE -Wunused -Wuninitialized -Wshadow)
+    target_compile_options(rbasic_runtime PRIVATE -Wunused -Wuninitialized -Wshadow)
+    target_compile_options(rbasic_tests PRIVATE -Wunused -Wuninitialized -Wshadow)
 endif()
 
 # Enable testing
