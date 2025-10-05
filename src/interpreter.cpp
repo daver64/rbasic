@@ -2,6 +2,7 @@
 #include "runtime.h"
 #include "io_handler.h"
 #include "type_utils.h"
+#include "terminal.h"
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
@@ -300,6 +301,7 @@ void Interpreter::visit(CallExpr& node) {
         handleStringFunctions(node) ||
         handleArrayFunctions(node) ||
         handleFileFunctions(node) ||
+        handleTerminalFunctions(node) ||
         handleUserDefinedFunction(node)) {
         return;
     }
@@ -838,6 +840,168 @@ bool Interpreter::handleFileFunctions(CallExpr& node) {
         } else {
             lastValue = false;
         }
+        return true;
+    }
+    
+    return false; // Function not handled by this dispatcher
+}
+
+// Terminal Functions Handler
+bool Interpreter::handleTerminalFunctions(CallExpr& node) {
+    // Initialize terminal if needed
+    static bool terminalInitialized = false;
+    if (!terminalInitialized) {
+        Terminal::initialize();
+        terminalInitialized = true;
+    }
+    
+    std::vector<ValueType> args;
+    for (auto& arg : node.arguments) {
+        args.push_back(evaluate(*arg));
+    }
+    
+    if (node.name == "terminal_init") {
+        lastValue = Terminal::initialize();
+        return true;
+    }
+    
+    if (node.name == "terminal_cleanup") {
+        Terminal::cleanup();
+        lastValue = 0;
+        return true;
+    }
+    
+    if (node.name == "terminal_supports_color") {
+        lastValue = Terminal::supportsColor();
+        return true;
+    }
+    
+    if (node.name == "terminal_clear") {
+        Terminal::clear();
+        lastValue = 0;
+        return true;
+    }
+    
+    if (node.name == "terminal_set_cursor") {
+        if (args.size() >= 2) {
+            Terminal::setCursor(TypeUtils::toInt(args[0]), TypeUtils::toInt(args[1]));
+        }
+        lastValue = 0;
+        return true;
+    }
+    
+    if (node.name == "terminal_get_cursor_row") {
+        int row, col;
+        Terminal::getCursor(row, col);
+        lastValue = row;
+        return true;
+    }
+    
+    if (node.name == "terminal_get_cursor_col") {
+        int row, col;
+        Terminal::getCursor(row, col);
+        lastValue = col;
+        return true;
+    }
+    
+    if (node.name == "terminal_set_color") {
+        if (args.size() >= 2) {
+            Terminal::setColor(static_cast<Color>(TypeUtils::toInt(args[0])), 
+                              static_cast<Color>(TypeUtils::toInt(args[1])));
+        } else if (args.size() >= 1) {
+            Terminal::setColor(static_cast<Color>(TypeUtils::toInt(args[0])));
+        }
+        lastValue = 0;
+        return true;
+    }
+    
+    if (node.name == "terminal_reset_color") {
+        Terminal::resetColor();
+        lastValue = 0;
+        return true;
+    }
+    
+    if (node.name == "terminal_print") {
+        if (args.size() >= 3) {
+            Terminal::print(TypeUtils::toString(args[0]), 
+                           static_cast<Color>(TypeUtils::toInt(args[1])), 
+                           static_cast<Color>(TypeUtils::toInt(args[2])));
+        } else if (args.size() >= 2) {
+            Terminal::print(TypeUtils::toString(args[0]), 
+                           static_cast<Color>(TypeUtils::toInt(args[1])));
+        } else if (args.size() >= 1) {
+            Terminal::print(TypeUtils::toString(args[0]));
+        }
+        lastValue = 0;
+        return true;
+    }
+    
+    if (node.name == "terminal_println") {
+        if (args.size() >= 3) {
+            Terminal::println(TypeUtils::toString(args[0]), 
+                             static_cast<Color>(TypeUtils::toInt(args[1])), 
+                             static_cast<Color>(TypeUtils::toInt(args[2])));
+        } else if (args.size() >= 2) {
+            Terminal::println(TypeUtils::toString(args[0]), 
+                             static_cast<Color>(TypeUtils::toInt(args[1])));
+        } else if (args.size() >= 1) {
+            Terminal::println(TypeUtils::toString(args[0]));
+        } else {
+            Terminal::println();
+        }
+        lastValue = 0;
+        return true;
+    }
+    
+    if (node.name == "terminal_get_rows") {
+        int rows, cols;
+        Terminal::getSize(rows, cols);
+        lastValue = rows;
+        return true;
+    }
+    
+    if (node.name == "terminal_get_cols") {
+        int rows, cols;
+        Terminal::getSize(rows, cols);
+        lastValue = cols;
+        return true;
+    }
+    
+    if (node.name == "terminal_kbhit") {
+        lastValue = Terminal::kbhit();
+        return true;
+    }
+    
+    if (node.name == "terminal_getch") {
+        lastValue = Terminal::getch();
+        return true;
+    }
+    
+    if (node.name == "terminal_getline") {
+        if (args.size() >= 2) {
+            lastValue = Terminal::getline(TypeUtils::toString(args[0]), 
+                                      static_cast<Color>(TypeUtils::toInt(args[1])));
+        } else if (args.size() >= 1) {
+            lastValue = Terminal::getline(TypeUtils::toString(args[0]));
+        } else {
+            lastValue = Terminal::getline();
+        }
+        return true;
+    }
+    
+    if (node.name == "terminal_show_cursor") {
+        if (args.size() >= 1) {
+            Terminal::showCursor(TypeUtils::toBool(args[0]));
+        }
+        lastValue = 0;
+        return true;
+    }
+    
+    if (node.name == "terminal_set_echo") {
+        if (args.size() >= 1) {
+            Terminal::setEcho(TypeUtils::toBool(args[0]));
+        }
+        lastValue = 0;
         return true;
     }
     

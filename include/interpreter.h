@@ -48,6 +48,7 @@ public:
     bool handleStringFunctions(CallExpr& node);
     bool handleArrayFunctions(CallExpr& node);
     bool handleFileFunctions(CallExpr& node);
+    bool handleTerminalFunctions(CallExpr& node);
     bool handleUserDefinedFunction(CallExpr& node);
     
     // Visitor methods

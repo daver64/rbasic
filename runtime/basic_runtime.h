@@ -299,6 +299,33 @@ BasicValue func_load_double_array_csv(const std::string& filename);
 BasicValue func_save_int_array_csv(const BasicValue& filenameVal, const BasicValue& array);
 BasicValue func_save_double_array_csv(const BasicValue& filenameVal, const BasicValue& array);
 
+// Terminal wrapper functions for code generator (with func_ prefix)
+BasicValue func_terminal_init();
+BasicValue func_terminal_cleanup();
+BasicValue func_terminal_supports_color();
+BasicValue func_terminal_clear();
+BasicValue func_terminal_set_cursor(const BasicValue& row, const BasicValue& col);
+BasicValue func_terminal_get_cursor_row();
+BasicValue func_terminal_get_cursor_col();
+BasicValue func_terminal_set_color(const BasicValue& foreground, const BasicValue& background);
+BasicValue func_terminal_reset_color();
+BasicValue func_terminal_print(const BasicValue& text);
+BasicValue func_terminal_print(const BasicValue& text, const BasicValue& foreground);
+BasicValue func_terminal_print(const BasicValue& text, const BasicValue& foreground, const BasicValue& background);
+BasicValue func_terminal_println();
+BasicValue func_terminal_println(const BasicValue& text);
+BasicValue func_terminal_println(const BasicValue& text, const BasicValue& foreground);
+BasicValue func_terminal_println(const BasicValue& text, const BasicValue& foreground, const BasicValue& background);
+BasicValue func_terminal_get_rows();
+BasicValue func_terminal_get_cols();
+BasicValue func_terminal_kbhit();
+BasicValue func_terminal_getch();
+BasicValue func_terminal_getline();
+BasicValue func_terminal_getline(const BasicValue& prompt);
+BasicValue func_terminal_getline(const BasicValue& prompt, const BasicValue& promptColor);
+BasicValue func_terminal_show_cursor(const BasicValue& visible);
+BasicValue func_terminal_set_echo(const BasicValue& enabled);
+
 // Simple 1D array access helpers
 BasicValue get_array_element(BasicValue& arrayVar, BasicValue index);
 void set_array_element(BasicValue& arrayVar, BasicValue index, BasicValue value);
@@ -317,6 +344,26 @@ int to_int(const BasicValue& value);
 double to_double(const BasicValue& value);
 std::string to_string(const BasicValue& value);
 bool to_bool(const BasicValue& value);
+
+// Terminal functions
+bool terminal_init();
+void terminal_cleanup();
+bool terminal_supports_color();
+void terminal_clear();
+void terminal_set_cursor(int row, int col);
+BasicValue terminal_get_cursor_row();
+BasicValue terminal_get_cursor_col();
+void terminal_set_color(int foreground, int background);
+void terminal_reset_color();
+void terminal_print(const std::string& text, int foreground, int background);
+void terminal_println(const std::string& text, int foreground, int background);
+BasicValue terminal_get_rows();
+BasicValue terminal_get_cols();
+bool terminal_kbhit();
+BasicValue terminal_getch();
+BasicValue terminal_getline(const std::string& prompt, int promptColor);
+void terminal_show_cursor(bool visible);
+void terminal_set_echo(bool enabled);
 
 // Arithmetic operations
 BasicValue add(const BasicValue& left, const BasicValue& right);

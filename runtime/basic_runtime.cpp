@@ -1,6 +1,7 @@
 #include "basic_runtime.h"
 #include "../include/io_handler.h"
 #include "../include/common.h"
+#include "../include/terminal.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -60,6 +61,8 @@ rbasic::IOHandler* get_io_handler() {
 
 void init_runtime() {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
+    // Initialize terminal support for compiled programs
+    rbasic::Terminal::initialize();
 }
 
 void init_runtime_sdl() {
@@ -1166,6 +1169,205 @@ BasicValue func_save_double_array_csv(const BasicValue& filenameVal, const Basic
         return save_double_array_csv(std::get<std::string>(filenameVal), std::get<BasicDoubleArray>(array));
     }
     return false;
+}
+
+// Terminal functions
+bool terminal_init() {
+    return rbasic::Terminal::initialize();
+}
+
+void terminal_cleanup() {
+    rbasic::Terminal::cleanup();
+}
+
+bool terminal_supports_color() {
+    return rbasic::Terminal::supportsColor();
+}
+
+void terminal_clear() {
+    rbasic::Terminal::clear();
+}
+
+void terminal_set_cursor(int row, int col) {
+    rbasic::Terminal::setCursor(row, col);
+}
+
+BasicValue terminal_get_cursor_row() {
+    int row, col;
+    rbasic::Terminal::getCursor(row, col);
+    return row;
+}
+
+BasicValue terminal_get_cursor_col() {
+    int row, col;
+    rbasic::Terminal::getCursor(row, col);
+    return col;
+}
+
+void terminal_set_color(int foreground, int background) {
+    rbasic::Terminal::setColor(static_cast<rbasic::Color>(foreground), 
+                               static_cast<rbasic::Color>(background));
+}
+
+void terminal_reset_color() {
+    rbasic::Terminal::resetColor();
+}
+
+void terminal_print(const std::string& text, int foreground, int background) {
+    rbasic::Terminal::print(text, static_cast<rbasic::Color>(foreground), 
+                            static_cast<rbasic::Color>(background));
+}
+
+void terminal_println(const std::string& text, int foreground, int background) {
+    rbasic::Terminal::println(text, static_cast<rbasic::Color>(foreground), 
+                              static_cast<rbasic::Color>(background));
+}
+
+BasicValue terminal_get_rows() {
+    int rows, cols;
+    rbasic::Terminal::getSize(rows, cols);
+    return rows;
+}
+
+BasicValue terminal_get_cols() {
+    int rows, cols;
+    rbasic::Terminal::getSize(rows, cols);
+    return cols;
+}
+
+bool terminal_kbhit() {
+    return rbasic::Terminal::kbhit();
+}
+
+BasicValue terminal_getch() {
+    return rbasic::Terminal::getch();
+}
+
+BasicValue terminal_getline(const std::string& prompt, int promptColor) {
+    return rbasic::Terminal::getline(prompt, static_cast<rbasic::Color>(promptColor));
+}
+
+void terminal_show_cursor(bool visible) {
+    rbasic::Terminal::showCursor(visible);
+}
+
+void terminal_set_echo(bool enabled) {
+    rbasic::Terminal::setEcho(enabled);
+}
+
+// Terminal wrapper functions for code generator (with func_ prefix)
+BasicValue func_terminal_init() {
+    return terminal_init();
+}
+
+BasicValue func_terminal_cleanup() {
+    terminal_cleanup();
+    return 0;
+}
+
+BasicValue func_terminal_supports_color() {
+    return terminal_supports_color();
+}
+
+BasicValue func_terminal_clear() {
+    terminal_clear();
+    return 0;
+}
+
+BasicValue func_terminal_set_cursor(const BasicValue& row, const BasicValue& col) {
+    terminal_set_cursor(to_int(row), to_int(col));
+    return 0;
+}
+
+BasicValue func_terminal_get_cursor_row() {
+    return terminal_get_cursor_row();
+}
+
+BasicValue func_terminal_get_cursor_col() {
+    return terminal_get_cursor_col();
+}
+
+BasicValue func_terminal_set_color(const BasicValue& foreground, const BasicValue& background) {
+    terminal_set_color(to_int(foreground), to_int(background));
+    return 0;
+}
+
+BasicValue func_terminal_reset_color() {
+    terminal_reset_color();
+    return 0;
+}
+
+BasicValue func_terminal_print(const BasicValue& text) {
+    terminal_print(to_string(text), -1, -1);
+    return 0;
+}
+
+BasicValue func_terminal_print(const BasicValue& text, const BasicValue& foreground) {
+    terminal_print(to_string(text), to_int(foreground), -1);
+    return 0;
+}
+
+BasicValue func_terminal_print(const BasicValue& text, const BasicValue& foreground, const BasicValue& background) {
+    terminal_print(to_string(text), to_int(foreground), to_int(background));
+    return 0;
+}
+
+BasicValue func_terminal_println() {
+    terminal_println("", -1, -1);
+    return 0;
+}
+
+BasicValue func_terminal_println(const BasicValue& text) {
+    terminal_println(to_string(text), -1, -1);
+    return 0;
+}
+
+BasicValue func_terminal_println(const BasicValue& text, const BasicValue& foreground) {
+    terminal_println(to_string(text), to_int(foreground), -1);
+    return 0;
+}
+
+BasicValue func_terminal_println(const BasicValue& text, const BasicValue& foreground, const BasicValue& background) {
+    terminal_println(to_string(text), to_int(foreground), to_int(background));
+    return 0;
+}
+
+BasicValue func_terminal_get_rows() {
+    return terminal_get_rows();
+}
+
+BasicValue func_terminal_get_cols() {
+    return terminal_get_cols();
+}
+
+BasicValue func_terminal_kbhit() {
+    return terminal_kbhit();
+}
+
+BasicValue func_terminal_getch() {
+    return terminal_getch();
+}
+
+BasicValue func_terminal_getline() {
+    return terminal_getline("", -1);
+}
+
+BasicValue func_terminal_getline(const BasicValue& prompt) {
+    return terminal_getline(to_string(prompt), -1);
+}
+
+BasicValue func_terminal_getline(const BasicValue& prompt, const BasicValue& promptColor) {
+    return terminal_getline(to_string(prompt), to_int(promptColor));
+}
+
+BasicValue func_terminal_show_cursor(const BasicValue& visible) {
+    terminal_show_cursor(to_bool(visible));
+    return 0;
+}
+
+BasicValue func_terminal_set_echo(const BasicValue& enabled) {
+    terminal_set_echo(to_bool(enabled));
+    return 0;
 }
 
 } // namespace basic_runtime

@@ -40,6 +40,7 @@ set(SOURCES
     src/console_io_handler.cpp
     src/command_builder.cpp
     src/type_utils.cpp
+    src/terminal.cpp
 )
 
 # Header files
@@ -55,6 +56,7 @@ set(HEADERS
     include/console_io_handler.h
     include/command_builder.h
     include/type_utils.h
+    include/terminal.h
 )
 
 # Create main executable
@@ -64,7 +66,12 @@ add_executable(rbasic ${SOURCES} ${HEADERS})
 add_library(rbasic_runtime STATIC
     runtime/basic_runtime.cpp
     runtime/basic_runtime.h
+    src/terminal.cpp
+    include/terminal.h
 )
+
+# Include directories for runtime library
+target_include_directories(rbasic_runtime PRIVATE include)
 
 # Set runtime library output to runtime directory
 set_target_properties(rbasic_runtime PROPERTIES
@@ -97,6 +104,7 @@ add_executable(rbasic_tests
     src/console_io_handler.cpp
     src/command_builder.cpp
     src/type_utils.cpp
+    src/terminal.cpp
 )
 
 target_include_directories(rbasic_tests PRIVATE include)
