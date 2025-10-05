@@ -2,6 +2,18 @@
 
 namespace rbasic {
 
+void InputStmt::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+void FFIFunctionDecl::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+void Program::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
 // Expression implementations
 void LiteralExpr::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
@@ -69,14 +81,6 @@ void StructDecl::accept(ASTVisitor& visitor) {
 }
 
 void DimStmt::accept(ASTVisitor& visitor) {
-    visitor.visit(*this);
-}
-
-void InputStmt::accept(ASTVisitor& visitor) {
-    visitor.visit(*this);
-}
-
-void Program::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
 }
 

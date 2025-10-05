@@ -47,6 +47,7 @@ public:
     void visit(FunctionDecl& node) override;
     void visit(StructDecl& node) override;
     void visit(DimStmt& node) override;
+    void visit(FFIFunctionDecl& node) override;
     
     void visit(Program& node) override;
     

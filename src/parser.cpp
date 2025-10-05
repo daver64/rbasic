@@ -301,6 +301,7 @@ std::unique_ptr<Statement> Parser::statement() {
         if (match({TokenType::FUNCTION})) return functionDeclaration();
         if (match({TokenType::STRUCT})) return structDeclaration();
         if (match({TokenType::DIM})) return dimStatement();
+        if (match({TokenType::DECLARE})) return declareStatement();
         
         return expressionStatement();
     } catch (const std::exception&) {
@@ -541,6 +542,49 @@ std::vector<std::unique_ptr<Statement>> Parser::blockUntil(TokenType endToken) {
     }
     
     return statements;
+}
+
+std::unique_ptr<Statement> Parser::declareStatement() {
+    // Parse: declare function FunctionName lib "library" (param1 as type1, ...) as returnType;
+    consume(TokenType::FUNCTION, "Expected 'function' after 'declare'");
+    
+    Token nameToken = consume(TokenType::IDENTIFIER, "Expected function name");
+    std::string functionName = nameToken.value;
+    
+    consume(TokenType::LIB, "Expected 'lib' after function name");
+    Token libToken = consume(TokenType::STRING, "Expected library name as string");
+    std::string libraryName = libToken.value;
+    // Remove quotes from library name
+    if (libraryName.length() >= 2 && libraryName[0] == '"' && libraryName.back() == '"') {
+        libraryName = libraryName.substr(1, libraryName.length() - 2);
+    }
+    
+    // Parse parameters: (param1 as type1, param2 as type2, ...)
+    std::vector<std::pair<std::string, std::string>> parameters;
+    if (check(TokenType::LEFT_PAREN)) {
+        consume(TokenType::LEFT_PAREN, "Expected '(' for parameters");
+        
+        if (!check(TokenType::RIGHT_PAREN)) {
+            do {
+                Token paramName = consume(TokenType::IDENTIFIER, "Expected parameter name");
+                consume(TokenType::AS, "Expected 'as' after parameter name");
+                Token paramType = consume(TokenType::IDENTIFIER, "Expected parameter type");
+                
+                parameters.emplace_back(paramName.value, paramType.value);
+            } while (match({TokenType::COMMA}));
+        }
+        
+        consume(TokenType::RIGHT_PAREN, "Expected ')' after parameters");
+    }
+    
+    // Parse return type: as returnType
+    consume(TokenType::AS, "Expected 'as' for return type");
+    Token returnTypeToken = consume(TokenType::IDENTIFIER, "Expected return type");
+    std::string returnType = returnTypeToken.value;
+    
+    consume(TokenType::SEMICOLON, "Expected ';' after declare statement");
+    
+    return std::make_unique<FFIFunctionDecl>(functionName, libraryName, returnType, parameters);
 }
 
 std::unique_ptr<Program> Parser::parse() {

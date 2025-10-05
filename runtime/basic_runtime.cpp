@@ -1557,10 +1557,10 @@ BasicValue unload_library(const BasicValue& library_handle) {
             std::string lib_name = handle_str.substr(15); // Remove "library_handle:" prefix
             auto& ffi_manager = rbasic::ffi::FFIManager::instance();
             bool success = ffi_manager.unload_library(lib_name);
-            return BasicValue(success);
+            return BasicValue(success ? 1.0 : 0.0); // Return double for consistency
         }
     }
-    return BasicValue(false);
+    return BasicValue(0.0);
 }
 
 bool is_library_loaded(const BasicValue& library_handle) {

@@ -748,6 +748,13 @@ void CodeGenerator::visit(DimStmt& node) {
     }
 }
 
+void CodeGenerator::visit(FFIFunctionDecl& node) {
+    // For Phase 2, we'll store the FFI function declarations for later use
+    // The actual implementation will be in handleFFIFunctions in interpreter
+    // For now, just add a comment to the generated code
+    writeLine("// FFI Function Declaration: " + node.name + " from " + node.library);
+}
+
 void CodeGenerator::visit(Program& node) {
     for (auto& stmt : node.statements) {
         stmt->accept(*this);

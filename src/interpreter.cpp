@@ -1066,7 +1066,7 @@ bool Interpreter::handleFFIFunctions(CallExpr& node) {
                 try {
                     auto& ffi_manager = rbasic::ffi::FFIManager::instance();
                     bool success = ffi_manager.unload_library(libName);
-                    lastValue = success ? 1.0 : 0.0;
+                    lastValue = success ? 1.0 : 0.0; // Return double for consistency
                 } catch (...) {
                     lastValue = 0.0;
                 }
@@ -1424,6 +1424,13 @@ void Interpreter::visit(DimStmt& node) {
         ArrayValue array(dimensions);
         defineVariable(node.variable, array);
     }
+}
+
+void Interpreter::visit(FFIFunctionDecl& node) {
+    // Store FFI function declaration for later use
+    auto ffiDecl = std::make_unique<FFIFunctionDecl>(node.name, node.library, node.returnType, node.parameters);
+    ffiFunctions[node.name] = std::move(ffiDecl);
+    // Note: The actual library loading will happen when the function is first called
 }
 
 void Interpreter::visit(Program& node) {

@@ -16,6 +16,7 @@ private:
     std::vector<std::map<std::string, ValueType>> scopes;
     std::map<std::string, std::unique_ptr<FunctionDecl>> functions;
     std::map<std::string, std::unique_ptr<StructDecl>> structs;
+    std::map<std::string, std::unique_ptr<FFIFunctionDecl>> ffiFunctions; // Store FFI function declarations
     std::map<std::string, std::map<std::string, ValueType>> structInstances;
     ValueType lastValue;
     bool hasReturned;
@@ -72,6 +73,7 @@ public:
     void visit(FunctionDecl& node) override;
     void visit(StructDecl& node) override;
     void visit(DimStmt& node) override;
+    void visit(FFIFunctionDecl& node) override;
     
     void visit(Program& node) override;
 };

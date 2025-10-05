@@ -142,6 +142,8 @@ TokenType Lexer::getKeywordType(const std::string& text) const {
         {"as", TokenType::AS},
         {"call", TokenType::CALL},
         {"const", TokenType::CONST},
+        {"declare", TokenType::DECLARE},
+        {"lib", TokenType::LIB},
         {"mod", TokenType::MODULO},
         {"and", TokenType::AND},
         {"or", TokenType::OR},

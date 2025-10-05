@@ -34,6 +34,8 @@ enum class TokenType {
     AS,
     CALL,
     CONST,
+    DECLARE,
+    LIB,
     MOD,
     
     // Operators
