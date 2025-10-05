@@ -45,6 +45,7 @@ set(SOURCES
     src/runtime.cpp
     src/common.cpp
     src/io_handler.cpp
+    src/ffi.cpp
     src/console_io_handler.cpp
     src/command_builder.cpp
     src/type_utils.cpp
@@ -67,6 +68,7 @@ set(HEADERS
     include/type_utils.h
     include/terminal.h
     include/repl.h
+    include/ffi.h
 )
 
 # Create main executable
@@ -78,6 +80,8 @@ add_library(rbasic_runtime STATIC
     runtime/basic_runtime.h
     src/terminal.cpp
     include/terminal.h
+    src/ffi.cpp
+    include/ffi.h
 )
 
 # Include directories for runtime library
@@ -89,6 +93,7 @@ set_target_properties(rbasic_runtime PROPERTIES
 )
 
 # Link with required libraries
+target_link_libraries(rbasic rbasic_runtime)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(rbasic OpenMP::OpenMP_CXX)
     target_link_libraries(rbasic_runtime OpenMP::OpenMP_CXX)
@@ -98,6 +103,9 @@ if(NOT WIN32)
     # On Linux/Unix, link with stdc++fs for filesystem support (GCC < 9)
     target_link_libraries(rbasic stdc++fs)
     target_link_libraries(rbasic_runtime stdc++fs)
+    # Link with dl for dynamic library loading
+    target_link_libraries(rbasic dl)
+    target_link_libraries(rbasic_runtime dl)
 endif()
 
 # Enable testing
@@ -126,6 +134,7 @@ add_executable(rbasic_tests
 target_include_directories(rbasic_tests PRIVATE include)
 
 # Link rbasic_tests with required libraries
+target_link_libraries(rbasic_tests rbasic_runtime)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(rbasic_tests OpenMP::OpenMP_CXX)
 endif()

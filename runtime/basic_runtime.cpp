@@ -2,6 +2,7 @@
 #include "../include/io_handler.h"
 #include "../include/common.h"
 #include "../include/terminal.h"
+#include "../include/ffi.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -9,6 +10,16 @@
 #include <filesystem>
 #include <vector>
 #include <cstdlib>
+
+#ifdef _WIN32
+// Undefine Windows macros that conflict with std::min/std::max
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+#endif
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -112,7 +123,8 @@ void parallel_fill_double_array(BasicDoubleArray& array, double value) {
 }
 
 void parallel_array_add(BasicDoubleArray& result, const BasicDoubleArray& a, const BasicDoubleArray& b) {
-    int size = static_cast<int>(std::min(a.elements.size(), b.elements.size()));
+    auto min_size = std::min(a.elements.size(), b.elements.size());
+    int size = static_cast<int>(min_size);
     result.elements.resize(size);
     
 #ifdef _OPENMP
@@ -188,6 +200,7 @@ void print(const BasicValue& value) {
         g_io_handler->print(to_string(value));
     } else {
         std::cout << to_string(value);
+        std::cout.flush(); // Ensure output is flushed immediately
     }
 }
 
@@ -196,6 +209,7 @@ void print_line() {
         g_io_handler->newline();
     } else {
         std::cout << std::endl;
+        std::cout.flush(); // Ensure output is flushed immediately
     }
 }
 
@@ -231,7 +245,8 @@ int len(const BasicValue& str) {
 
 BasicValue mid(const BasicValue& str, int start, int length) {
     std::string s = to_string(str);
-    start = std::max(0, start - 1); // BASIC is 1-indexed
+    int adjusted_start = std::max(0, start - 1); // BASIC is 1-indexed
+    start = adjusted_start;
     
     if (length == -1) {
         return s.substr(start);
@@ -247,7 +262,8 @@ BasicValue left(const BasicValue& str, int length) {
 
 BasicValue right(const BasicValue& str, int length) {
     std::string s = to_string(str);
-    int start = std::max(0, static_cast<int>(s.length()) - length);
+    int string_len = static_cast<int>(s.length());
+    int start = std::max(0, string_len - length);
     return s.substr(start);
 }
 
@@ -1514,6 +1530,45 @@ BasicValue func_terminal_show_cursor(const BasicValue& visible) {
 BasicValue func_terminal_set_echo(const BasicValue& enabled) {
     terminal_set_echo(to_bool(enabled));
     return 0;
+}
+
+// Foreign Function Interface (FFI) implementation - Phase 1 Simplified
+BasicValue load_library(const std::string& library_name) {
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        auto library = ffi_manager.load_library(library_name);
+        
+        if (library && library->is_valid()) {
+            // For Phase 1, return a simple string identifier
+            return BasicValue(std::string("library_handle:" + library_name));
+        } else {
+            return BasicValue(std::string("error:Failed to load " + library_name));
+        }
+    } catch (const rbasic::ffi::FFIError& e) {
+        std::cerr << "FFI Error: " << e.what() << std::endl;
+        return BasicValue(std::string("error:" + std::string(e.what())));
+    }
+}
+
+BasicValue unload_library(const BasicValue& library_handle) {
+    if (std::holds_alternative<std::string>(library_handle)) {
+        const auto& handle_str = std::get<std::string>(library_handle);
+        if (handle_str.length() >= 15 && handle_str.substr(0, 15) == "library_handle:") {
+            std::string lib_name = handle_str.substr(15); // Remove "library_handle:" prefix
+            auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+            bool success = ffi_manager.unload_library(lib_name);
+            return BasicValue(success);
+        }
+    }
+    return BasicValue(false);
+}
+
+bool is_library_loaded(const BasicValue& library_handle) {
+    if (std::holds_alternative<std::string>(library_handle)) {
+        const auto& handle_str = std::get<std::string>(library_handle);
+        return handle_str.length() >= 15 && handle_str.substr(0, 15) == "library_handle:";
+    }
+    return false;
 }
 
 } // namespace basic_runtime

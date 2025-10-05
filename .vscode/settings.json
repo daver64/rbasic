@@ -73,7 +73,9 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "ranges": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "random": "cpp",
+        "valarray": "cpp"
     },
     "git.ignoreLimitWarning": true
 }

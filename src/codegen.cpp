@@ -439,6 +439,28 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
 
+    // FFI functions
+    if (node.name == "load_library" && node.arguments.size() == 1) {
+        write("basic_runtime::load_library(to_string(");
+        node.arguments[0]->accept(*this);
+        write("))");
+        return;
+    }
+
+    if (node.name == "unload_library" && node.arguments.size() == 1) {
+        write("basic_runtime::unload_library(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+
+    if (node.name == "is_library_loaded" && node.arguments.size() == 1) {
+        write("BasicValue(basic_runtime::is_library_loaded(");
+        node.arguments[0]->accept(*this);
+        write("))");
+        return;
+    }
+
     // User-defined function calls
     write("func_" + node.name + "(");
     for (size_t i = 0; i < node.arguments.size(); i++) {

@@ -3,12 +3,24 @@
 #include "io_handler.h"
 #include "type_utils.h"
 #include "terminal.h"
+#include "../runtime/basic_runtime.h"
+#include "../include/ffi.h"
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <filesystem>
+
+#ifdef _WIN32
+// Undefine Windows macros that conflict with std::min/std::max
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+#endif
 
 namespace rbasic {
 
@@ -302,6 +314,7 @@ void Interpreter::visit(CallExpr& node) {
         handleArrayFunctions(node) ||
         handleFileFunctions(node) ||
         handleTerminalFunctions(node) ||
+        handleFFIFunctions(node) ||
         handleUserDefinedFunction(node)) {
         return;
     }
@@ -1014,6 +1027,55 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
             Terminal::setEcho(TypeUtils::toBool(args[0]));
         }
         lastValue = 0;
+        return true;
+    }
+    
+    return false; // Function not handled by this dispatcher
+}
+
+// FFI Functions Handler - Simplified for Phase 1
+bool Interpreter::handleFFIFunctions(CallExpr& node) {
+    if (node.name == "load_library" && node.arguments.size() == 1) {
+        ValueType libNameVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<std::string>(libNameVal)) {
+            std::string libName = std::get<std::string>(libNameVal);
+            // For Phase 1, just verify the library exists and return a simple success indicator
+            try {
+                auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+                auto library = ffi_manager.load_library(libName);
+                if (library && library->is_valid()) {
+                    lastValue = std::string("library_handle:" + libName);
+                } else {
+                    lastValue = std::string("error:Failed to load " + libName);
+                }
+            } catch (...) {
+                lastValue = std::string("error:Exception loading " + libName);
+            }
+        } else {
+            throw RuntimeError("load_library() requires a string library name");
+        }
+        return true;
+    }
+    
+    if (node.name == "unload_library" && node.arguments.size() == 1) {
+        ValueType handleVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<std::string>(handleVal)) {
+            std::string handle = std::get<std::string>(handleVal);
+            if (handle.length() >= 15 && handle.substr(0, 15) == "library_handle:") {
+                std::string libName = handle.substr(15); // Remove "library_handle:" prefix
+                try {
+                    auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+                    bool success = ffi_manager.unload_library(libName);
+                    lastValue = success ? 1.0 : 0.0;
+                } catch (...) {
+                    lastValue = 0.0;
+                }
+            } else {
+                lastValue = 0.0;
+            }
+        } else {
+            lastValue = 0.0;
+        }
         return true;
     }
     

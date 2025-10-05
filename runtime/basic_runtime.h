@@ -26,6 +26,7 @@ struct BasicArray;
 struct BasicByteArray;
 struct BasicIntArray;
 struct BasicDoubleArray;
+// struct BasicLibraryHandle; // Temporarily disabled for Phase 1
 
 // Value type for compiled BASIC programs
 using BasicValue = std::variant<int, double, std::string, bool, BasicStruct, BasicArray, BasicByteArray, BasicIntArray, BasicDoubleArray>;
@@ -192,6 +193,20 @@ struct BasicDoubleArray {
         return elements[index];
     }
 };
+
+// Library handle for FFI - Temporarily disabled for Phase 1
+/*
+struct BasicLibraryHandle {
+    std::string name;
+    void* handle;  // Platform-specific library handle
+    
+    BasicLibraryHandle() : handle(nullptr) {}
+    BasicLibraryHandle(const std::string& lib_name, void* lib_handle) 
+        : name(lib_name), handle(lib_handle) {}
+    
+    bool is_valid() const { return handle != nullptr; }
+};
+*/
 
 // Forward declaration for IOHandler
 namespace rbasic {
@@ -422,5 +437,10 @@ void parallel_fill_int_array(BasicIntArray& array, int value);
 void parallel_fill_double_array(BasicDoubleArray& array, double value);
 void parallel_array_add(BasicDoubleArray& result, const BasicDoubleArray& a, const BasicDoubleArray& b);
 void parallel_array_multiply_scalar(BasicDoubleArray& array, double scalar);
+
+// Foreign Function Interface (FFI)
+BasicValue load_library(const std::string& library_name);
+BasicValue unload_library(const BasicValue& library_handle);
+bool is_library_loaded(const BasicValue& library_handle);
 
 } // namespace basic_runtime

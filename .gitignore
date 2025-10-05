@@ -3,7 +3,7 @@ build/
 *.dir/
 mingw64/
 mingw64_temp/
-
+build_mingw/
 # Executables
 *.exe
 *.out
