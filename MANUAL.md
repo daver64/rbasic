@@ -230,20 +230,27 @@ print("First element:", numbers[0]);
 
 ### Structure Keywords
 
-#### `struct`, `end`
-Defines custom data structures.
+#### `struct`
+Defines custom data structures using C-style syntax.
 
 ```basic
-struct Point
-    x;
-    y;
-end struct;
+struct Point {
+    x,
+    y
+};
+
+struct Person {
+    name,
+    age,
+    email
+};
 
 // Using structures
-var p = Point();
-p.x = 10;
-p.y = 20;
+var p = Point { 10, 20 };
+var person = Person { "John Doe", 30, "john@example.com" };
+
 print("Point coordinates:", p.x, p.y);
+print("Person:", person.name, "is", person.age, "years old");
 ```
 
 ### Logical Operators
@@ -648,33 +655,41 @@ for (var i = 0; i < 5; i = i + 1) {
 #### Defining Structures
 
 ```basic
-struct Person
-    name;
-    age;
-    email;
-end struct;
+struct Person {
+    name,
+    age,
+    email
+};
+
+struct Point {
+    x,
+    y
+};
 ```
 
 #### Using Structures
 
 ```basic
-var person = Person();
-person.name = "John Doe";
-person.age = 30;
-person.email = "john@example.com";
+// Create structure with initial values
+var person = Person { "John Doe", 30, "john@example.com" };
 
+// Access structure fields
 print("Name:", person.name);
 print("Age:", person.age);
 print("Email:", person.email);
+
+// Modify structure fields
+person.age = 31;
+person.email = "newemail@example.com";
 ```
 
 #### Structure Example - Point System
 
 ```basic
-struct Point
-    x;
-    y;
-end struct;
+struct Point {
+    x,
+    y
+};
 
 function distance(p1, p2) {
     var dx = p1.x - p2.x;
@@ -682,13 +697,8 @@ function distance(p1, p2) {
     return sqrt(dx * dx + dy * dy);
 }
 
-var start = Point();
-start.x = 0;
-start.y = 0;
-
-var end = Point();
-end.x = 3;
-end.y = 4;
+var start = Point { 0, 0 };
+var end = Point { 3, 4 };
 
 print("Distance:", distance(start, end));  // 5.0
 ```

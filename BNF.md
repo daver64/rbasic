@@ -36,10 +36,8 @@ rbasic is a "C-leaning BASIC" language that combines traditional BASIC simplicit
 ### Keywords
 
 ```bnf
-<keyword> ::= "var" | "if" | "then" | "else" | "end" | "for" | "to" | "next" 
-            | "while" | "wend" | "function" | "return" | "sub" | "gosub" 
-            | "goto" | "dim" | "struct" | "type" | "as" | "call" | "const"
-            | "mod" | "and" | "or" | "not"
+<keyword> ::= "var" | "if" | "else" | "for" | "while" | "function" | "return" 
+            | "dim" | "struct" | "and" | "or" | "not"
 ```
 
 ### Operators
@@ -115,11 +113,11 @@ rbasic is a "C-leaning BASIC" language that combines traditional BASIC simplicit
 #### Structure Declaration
 
 ```bnf
-<struct_declaration> ::= "struct" <identifier> <field_list> "end" "struct" ";"
+<struct_declaration> ::= "struct" <identifier> "{" <field_list> "}" ";"
 
-<field_list> ::= <field_declaration>*
+<field_list> ::= <field_declaration> ( "," <field_declaration> )*
 
-<field_declaration> ::= <identifier> ( "as" <type> )? ";"
+<field_declaration> ::= <identifier>
 ```
 
 ### Statements
@@ -293,14 +291,12 @@ print("5! =", result);
 
 ### Structure Usage
 ```basic
-struct Point
-    x as integer;
-    y as integer;
-end struct;
+struct Point {
+    x,
+    y
+};
 
-dim p as Point;
-var p.x = 10;
-var p.y = 20;
+var p = Point { 10, 20 };
 print("Point:", p.x, p.y);
 ```
 
