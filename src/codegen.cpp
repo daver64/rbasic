@@ -333,6 +333,22 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
     
+    if (node.name == "debug_print") {
+        write("([&](){");
+        if (node.arguments.size() == 0) {
+            // Handle empty debug_print - just print a newline
+            write("basic_runtime::debug_print(BasicValue(\"\"));return BasicValue(0);})()");
+        } else {
+            for (size_t i = 0; i < node.arguments.size(); i++) {
+                write("basic_runtime::debug_print(");
+                node.arguments[i]->accept(*this);
+                write(");");
+            }
+            write("return BasicValue(0);})()");
+        }
+        return;
+    }
+    
     if (node.name == "input" && node.arguments.size() == 0) {
         write("basic_runtime::input()");
         return;

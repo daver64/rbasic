@@ -14,10 +14,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR})
 include_directories(include)
 
 # Optional SDL2 support
-option(ENABLE_SDL_SUPPORT "Enable SDL2 graphics support" OFF)
+option(ENABLE_SDL_SUPPORT "Enable SDL2 graphics support" ON)
 
 # Optional SQLite support
-option(ENABLE_SQLITE_SUPPORT "Enable SQLite database support" OFF)
+option(ENABLE_SQLITE_SUPPORT "Enable SQLite database support" ON)
 
 if(ENABLE_SDL_SUPPORT)
     # Try to find SDL2 using environment variables

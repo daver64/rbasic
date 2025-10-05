@@ -82,6 +82,12 @@ void print_line() {
     }
 }
 
+// Debug function that always prints to console, bypassing SDL
+void debug_print(const BasicValue& value) {
+    std::cout << to_string(value) << std::endl;
+    std::cout.flush();
+}
+
 BasicValue input() {
     std::string line;
     if (g_io_handler) {

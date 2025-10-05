@@ -85,6 +85,7 @@ void init_io_handler(rbasic::IOHandler* handler);
 rbasic::IOHandler* get_io_handler();
 void print(const BasicValue& value);
 void print_line();
+void debug_print(const BasicValue& value);
 BasicValue input();
 
 // String functions  

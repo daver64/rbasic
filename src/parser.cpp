@@ -326,10 +326,19 @@ std::unique_ptr<Statement> Parser::ifStatement() {
 std::unique_ptr<Statement> Parser::forStatement() {
     consume(TokenType::LEFT_PAREN, "Expected '(' after 'for'");
     
-    // Parse initialization: var i = 1
-    consume(TokenType::VAR, "Expected 'var' in for loop initialization");
-    auto variable = consume(TokenType::IDENTIFIER, "Expected variable name in for loop");
-    consume(TokenType::ASSIGN, "Expected '=' after for variable");
+    // Parse initialization: var i = 1 OR i = 1
+    Token variable = peek(); // Initialize with current token
+    if (check(TokenType::VAR)) {
+        // New variable declaration: var i = 1
+        advance(); // consume 'var'
+        variable = consume(TokenType::IDENTIFIER, "Expected variable name after 'var'");
+        consume(TokenType::ASSIGN, "Expected '=' after for variable");
+    } else {
+        // Existing variable assignment: i = 1
+        variable = consume(TokenType::IDENTIFIER, "Expected variable name in for loop");
+        consume(TokenType::ASSIGN, "Expected '=' after for variable");
+    }
+    
     auto initialization = expression();
     consume(TokenType::SEMICOLON, "Expected ';' after for initialization");
     

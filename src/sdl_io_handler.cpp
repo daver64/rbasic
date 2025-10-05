@@ -231,15 +231,15 @@ void SDLIOHandler::graphics_mode(int width, int height) {
     
     // Load a font for text rendering
     if (!font) {
-        // Try to load a system font (Windows)
-        font = TTF_OpenFont("C:/Windows/Fonts/consola.ttf", 16);
+        // Try to load a system font (Windows) with larger size for better visibility
+        font = TTF_OpenFont("C:/Windows/Fonts/consola.ttf", 20);
         if (!font) {
             // Fallback to courier
-            font = TTF_OpenFont("C:/Windows/Fonts/cour.ttf", 16);
+            font = TTF_OpenFont("C:/Windows/Fonts/cour.ttf", 20);
         }
         if (!font) {
             // Another fallback
-            font = TTF_OpenFont("C:/Windows/Fonts/arial.ttf", 16);
+            font = TTF_OpenFont("C:/Windows/Fonts/arial.ttf", 20);
         }
         if (!font) {
             std::cerr << "Could not load font! TTF_Error: " << TTF_GetError() << std::endl;

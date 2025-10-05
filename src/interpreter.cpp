@@ -237,6 +237,20 @@ void Interpreter::visit(CallExpr& node) {
         lastValue = 0; // print returns 0
         return;
     }
+
+    if (node.name == "debug_print") {
+        for (size_t i = 0; i < node.arguments.size(); i++) {
+            ValueType value = evaluate(*node.arguments[i]);
+            std::cout << valueToString(value);
+            if (i < node.arguments.size() - 1) {
+                std::cout << " ";
+            }
+        }
+        std::cout << std::endl;
+        std::cout.flush();
+        lastValue = 0; // debug_print returns 0
+        return;
+    }
     
     if (node.name == "input" && node.arguments.size() == 0) {
         std::string input_text = ioHandler->input();
@@ -870,9 +884,9 @@ void Interpreter::visit(ForStmt& node) {
 }
 
 void Interpreter::visit(ModernForStmt& node) {
-    // Execute initialization: var i = 1
+    // Execute initialization: var i = 1 or i = 1
     ValueType initValue = evaluate(*node.initialization);
-    defineVariable(node.variable, initValue);
+    setVariable(node.variable, initValue);  // Use setVariable to handle both new and existing variables
     
     // Loop while condition is true
     while (isTruthy(evaluate(*node.condition))) {
