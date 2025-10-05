@@ -71,22 +71,6 @@ set_target_properties(rbasic_runtime PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/runtime
 )
 
-# Compiler-specific options
-if(MSVC)
-    target_compile_options(rbasic PRIVATE /W4)
-    target_compile_options(rbasic_runtime PRIVATE /W4)
-else()
-    # Ensure C++17 is explicitly set for GCC/Clang
-    target_compile_options(rbasic PRIVATE -std=c++17 -Wall -Wextra -pedantic)
-    target_compile_options(rbasic_runtime PRIVATE -std=c++17 -Wall -Wextra -pedantic)
-    target_compile_options(rbasic_tests PRIVATE -std=c++17 -Wall -Wextra -pedantic)
-    
-    # Add additional useful warnings for better code quality
-    target_compile_options(rbasic PRIVATE -Wunused -Wuninitialized -Wshadow)
-    target_compile_options(rbasic_runtime PRIVATE -Wunused -Wuninitialized -Wshadow)
-    target_compile_options(rbasic_tests PRIVATE -Wunused -Wuninitialized -Wshadow)
-endif()
-
 # Enable testing
 enable_testing()
 
@@ -109,6 +93,23 @@ add_executable(rbasic_tests
 )
 
 target_include_directories(rbasic_tests PRIVATE include)
+
+# Compiler-specific options (set after all targets are defined)
+if(MSVC)
+    target_compile_options(rbasic PRIVATE /W4)
+    target_compile_options(rbasic_runtime PRIVATE /W4)
+    target_compile_options(rbasic_tests PRIVATE /W4)
+else()
+    # Ensure C++17 is explicitly set for GCC/Clang
+    target_compile_options(rbasic PRIVATE -std=c++17 -Wall -Wextra -pedantic)
+    target_compile_options(rbasic_runtime PRIVATE -std=c++17 -Wall -Wextra -pedantic)
+    target_compile_options(rbasic_tests PRIVATE -std=c++17 -Wall -Wextra -pedantic)
+    
+    # Add additional useful warnings for better code quality
+    target_compile_options(rbasic PRIVATE -Wunused -Wuninitialized -Wshadow)
+    target_compile_options(rbasic_runtime PRIVATE -Wunused -Wuninitialized -Wshadow)
+    target_compile_options(rbasic_tests PRIVATE -Wunused -Wuninitialized -Wshadow)
+endif()
 
 # Set MSVC runtime library for all targets after they're defined
 if(MSVC)
