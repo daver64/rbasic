@@ -1,11 +1,46 @@
 # rbasic - C-Leaning BASIC Language Transpiler
 
-**rbasic** is a modern BASIC language transpiler that implements C-style syntax while maintaining BASIC's simplicity. It supports both interpretation for rapid development and compilation to native C++ executables.
+**rbasic** is a modern BASIC### Interactive REPL Mode
+
+rbasic includes a powerful Read-Eval-Print Loop for interactive development:
+
+```bash
+# Start interactive mode
+./rbasic -r
+
+# REPL supports:
+# - Multi-line statements with automatic brace detection
+# - Variable persistence between commands
+# - Function definitions and immediate execution
+# - Meta commands for file operations and help
+```
+
+**REPL Meta Commands:**
+- `:help` - Show available commands
+- `:load filename.bas` - Load and execute a file
+- `:save filename.bas` - Save current session to file
+- `:clear` - Clear all variables and functions
+- `:exit` - Exit REPL mode
+
+**Example REPL Session:**
+```
+rbasic> var x = 10;
+rbasic> function double(n) {
+...>     return n * 2;
+...> }
+rbasic> print(double(x));
+20
+rbasic> :save my_session.bas
+Session saved to my_session.bas
+```
+
+### Language Featureslanguage transpiler that implements C-style syntax while maintaining BASIC's simplicity. It supports both interpretation for rapid development and compilation to native C++ executables.
 
 ## Key Features
 
 - **C-Style Syntax**: Uses braces `{}`, parentheses for conditions, and modern control flow
 - **Transpiler Architecture**: Compiles BASIC to C++ executables or runs directly via interpreter  
+- **Interactive REPL**: Read-Eval-Print Loop for rapid development and testing
 - **Comprehensive I/O**: Text and binary file operations with full file system support
 - **Typed Arrays**: High-performance `byte_array()`, `int_array()`, `double_array()` for numerical computing
 - **Proper Scoping**: C-style variable scoping within control structures (if/for/while blocks)
@@ -44,7 +79,8 @@ for (var i = 0; i <= limit; i = i + 1) {
 ### Prerequisites
 
 - CMake 3.16+
-- C++17 compiler (GCC, Clang, MSVC)
+- C++17 compiler (MinGW64, GCC, Clang, or MSVC)
+- **Windows**: MinGW64 (bundled) or Visual Studio 2019+ with MSVC
 
 ### Quick Start
 
@@ -56,10 +92,23 @@ cmake .. && cmake --build .
 # Run a program directly (interpreted)
 ./rbasic -i hello.bas
 
-# Compile to standalone executable  
+# Compile to standalone executable (uses bundled MinGW64 or falls back to MSVC)
 ./rbasic -c hello.bas -o hello
 ./hello
+
+# Interactive development mode
+./rbasic -r
 ```
+
+### Compiler Support
+
+**Windows:**
+- **Primary**: Bundled MinGW64 (portable, no Visual Studio required)
+- **Fallback**: Microsoft Visual C++ (when MinGW64 not available)
+- **Static Linking**: MinGW64 produces self-contained executables
+
+**Linux/macOS:**
+- **Standard**: GCC or Clang with system libraries
 
 ## Language Features
 
@@ -229,8 +278,8 @@ This is an active development project. **All core language features are implemen
 - ✅ **Multidimensional Arrays**: True `array[i,j,k]` syntax for 2D/3D arrays in both execution modes
 - ✅ **Comprehensive File I/O**: Text and binary file operations with error handling
 - ✅ **Built-in Function Library**: Mathematical, string, and array manipulation functions
-- ✅ **Dual Execution Modes**: Interpreter (`-i`) and compiler (`-c`) with identical behavior
-- ✅ **Cross-Platform Support**: Windows MSVC, Linux/macOS g++ compilation
+- ✅ **Dual Execution Modes**: Interpreter (`-i`), compiler (`-c`), and interactive REPL (`-r`) with identical behavior
+- ✅ **Cross-Platform Support**: Windows MinGW64/MSVC, Linux/macOS g++ compilation
 - ✅ **Advanced Features**: Typed arrays, struct literals, comprehensive data processing
 - ✅ **Error Handling**: Source position tracking with detailed error reporting
 - ✅ **Production Ready**: All unit tests passing, comprehensive example suite
@@ -281,9 +330,14 @@ cmake --build build
 ```
 
 ### Platform Notes
-- **Windows**: Uses MSVC compiler, use `build.bat` for convenience builds
+- **Windows**: Uses bundled MinGW64 (portable) or falls back to MSVC, use `build.bat` for convenience builds
 - **Linux**: Use `./build.sh` for convenience builds
 - **macOS**: Standard CMake build process
+
+### Portable Deployment
+- **MinGW64**: Self-contained executables with static linking (Windows)
+- **No Dependencies**: Core language requires no external libraries
+- **Bundled Compiler**: MinGW64 included for systems without Visual Studio
 
 ### Convenience Build Scripts
 ```bash

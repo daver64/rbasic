@@ -8,17 +8,19 @@ This manual provides comprehensive documentation for using the rbasic programmin
 
 - ✅ **Complete Language**: All syntax, control flow, functions, and data structures working
 - ✅ **Multidimensional Arrays**: True `array[i,j,k]` syntax working in both execution modes
-- ✅ **Dual Execution**: Both interpreter (`-i`) and compiler (`-c`) modes fully functional
+- ✅ **Triple Execution Modes**: Interpreter (`-i`), compiler (`-c`), and interactive REPL (`-r`) fully functional
+- ✅ **Portable Compilation**: MinGW64 bundled for Windows, falls back to MSVC when needed
 - ✅ **File I/O**: Complete text and binary file operations
 - ✅ **Built-in Functions**: Math, string, array, and file functions all implemented
 - ✅ **Error Handling**: Source position tracking with detailed error messages
-- ✅ **Cross-Platform**: Works on Windows (MSVC) and Linux/macOS (g++)
+- ✅ **Cross-Platform**: Works on Windows (MinGW64/MSVC) and Linux/macOS (g++)
 - ✅ **All Tests Passing**: Comprehensive test suite validates functionality
 
 ## Table of Contents
 
 - [Getting Started](#getting-started)
 - [Command Line Usage](#command-line-usage)
+- [Interactive REPL Mode](#interactive-repl-mode)
 - [Language Syntax](#language-syntax)
 - [Variable Scope](#variable-scope)
 - [Keywords Reference](#keywords-reference)
@@ -83,6 +85,7 @@ rbasic [options] <source-file>
 |--------|-------------|---------|
 | `-i, --interpret` | Run program in interpreter mode | `rbasic -i program.bas` |
 | `-c, --compile` | Compile program to executable | `rbasic -c program.bas` |
+| `-r, --repl` | Start interactive REPL mode | `rbasic -r` |
 | `-o, --output <file>` | Specify output executable name | `rbasic -c program.bas -o myprogram` |
 | `--io <type>` | Set I/O handler (console) | `rbasic -i program.bas --io console` |
 | `--keep-cpp` | Keep generated C++ file | `rbasic -c program.bas --keep-cpp` |
@@ -94,13 +97,89 @@ rbasic [options] <source-file>
 # Interpret a program (fast development)
 rbasic -i calculator.bas
 
-# Compile to executable (production)
+# Compile to executable (production - uses MinGW64 or MSVC)
 rbasic -c calculator.bas -o calc
 ./calc
+
+# Start interactive REPL mode
+rbasic -r
 
 # Compile and keep the generated C++ code
 rbasic -c program.bas -o program --keep-cpp
 ```
+
+### Compilation Notes
+
+**Windows:**
+- **Primary**: Uses bundled MinGW64 compiler (portable, no Visual Studio required)
+- **Fallback**: Uses Microsoft Visual C++ if MinGW64 not available
+- **Static Linking**: MinGW64 produces self-contained executables
+
+**Linux/macOS:**
+- Uses system GCC or Clang compiler
+
+## Interactive REPL Mode
+
+The REPL (Read-Eval-Print Loop) provides an interactive environment for rapid development and testing:
+
+### Starting REPL
+
+```bash
+rbasic -r
+```
+
+### REPL Features
+
+- **Multi-line Support**: Automatic detection of incomplete statements
+- **Variable Persistence**: Variables and functions persist between commands
+- **Immediate Execution**: See results instantly
+- **Session Management**: Save and load complete sessions
+
+### Meta Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `:help` | Show available commands | `:help` |
+| `:load <file>` | Load and execute a file | `:load examples/hello.bas` |
+| `:save <file>` | Save current session | `:save my_session.bas` |
+| `:clear` | Clear all variables and functions | `:clear` |
+| `:exit` | Exit REPL mode | `:exit` |
+
+### Example REPL Session
+
+```
+$ rbasic -r
+rbasic REPL v1.0 - Interactive Mode
+Type :help for commands, :exit to quit
+
+rbasic> var x = 10;
+rbasic> var y = 20;
+rbasic> function add(a, b) {
+...>     return a + b;
+...> }
+rbasic> print("Result:", add(x, y));
+Result: 30
+
+rbasic> for (var i = 1; i <= 3; i = i + 1) {
+...>     print("Count:", i);
+...> }
+Count: 1
+Count: 2
+Count: 3
+
+rbasic> :save my_work.bas
+Session saved to my_work.bas
+
+rbasic> :exit
+Goodbye!
+```
+
+### REPL Best Practices
+
+- Use multi-line mode for complex functions and control structures
+- Save interesting sessions with `:save` for later use
+- Load examples with `:load` to explore language features
+- Use `:clear` to start fresh when experimenting
 
 ## Language Syntax
 
