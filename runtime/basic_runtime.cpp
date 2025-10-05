@@ -1571,4 +1571,102 @@ bool is_library_loaded(const BasicValue& library_handle) {
     return false;
 }
 
+// FFI function calling for compiled programs
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name) {
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        auto library = ffi_manager.get_library(library_name);
+        if (!library) {
+            library = ffi_manager.load_library(library_name);
+        }
+        
+        if (!library || !library->is_valid()) {
+            throw std::runtime_error("Failed to load library: " + library_name);
+        }
+        
+        void* funcPtr = library->get_function_address(function_name);
+        if (!funcPtr) {
+            throw std::runtime_error("Function not found: " + function_name);
+        }
+        
+        // Call no-parameter function returning int
+        typedef int (*FuncType0)();
+        auto func = reinterpret_cast<FuncType0>(funcPtr);
+        return BasicValue(static_cast<double>(func()));
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("FFI call failed: " + std::string(e.what()));
+    }
+}
+
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1) {
+    // Implementation for 1-parameter functions
+    throw std::runtime_error("1-parameter FFI functions not yet implemented in compiled mode");
+}
+
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2) {
+    // Implementation for 2-parameter functions
+    throw std::runtime_error("2-parameter FFI functions not yet implemented in compiled mode");
+}
+
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3) {
+    // Implementation for 3-parameter functions
+    throw std::runtime_error("3-parameter FFI functions not yet implemented in compiled mode");
+}
+
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3, const BasicValue& arg4) {
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        auto library = ffi_manager.get_library(library_name);
+        if (!library) {
+            library = ffi_manager.load_library(library_name);
+        }
+        
+        if (!library || !library->is_valid()) {
+            throw std::runtime_error("Failed to load library: " + library_name);
+        }
+        
+        void* funcPtr = library->get_function_address(function_name);
+        if (!funcPtr) {
+            throw std::runtime_error("Function not found: " + function_name);
+        }
+        
+        // Handle MessageBoxA-style function (int, string, string, int) -> int
+        if (function_name == "MessageBoxA") {
+            int hwnd = 0;
+            if (std::holds_alternative<double>(arg1)) {
+                hwnd = static_cast<int>(std::get<double>(arg1));
+            } else if (std::holds_alternative<int>(arg1)) {
+                hwnd = std::get<int>(arg1);
+            }
+            
+            std::string text, caption;
+            if (std::holds_alternative<std::string>(arg2)) {
+                text = std::get<std::string>(arg2);
+            }
+            if (std::holds_alternative<std::string>(arg3)) {
+                caption = std::get<std::string>(arg3);
+            }
+            
+            int type = 0;
+            if (std::holds_alternative<double>(arg4)) {
+                type = static_cast<int>(std::get<double>(arg4));
+            } else if (std::holds_alternative<int>(arg4)) {
+                type = std::get<int>(arg4);
+            }
+            
+            typedef int (*MessageBoxAFunc)(int, const char*, const char*, int);
+            auto func = reinterpret_cast<MessageBoxAFunc>(funcPtr);
+            int result = func(hwnd, text.c_str(), caption.c_str(), type);
+            
+            return BasicValue(static_cast<double>(result));
+        }
+        
+        throw std::runtime_error("Unsupported 4-parameter FFI function: " + function_name);
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("FFI call failed: " + std::string(e.what()));
+    }
+}
+
 } // namespace basic_runtime

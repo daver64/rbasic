@@ -36,6 +36,8 @@ enum class TokenType {
     CONST,
     DECLARE,
     LIB,
+    FFI,
+    FROM,
     MOD,
     
     // Operators

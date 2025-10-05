@@ -559,13 +559,31 @@ std::vector<std::unique_ptr<Statement>> Parser::blockUntil(TokenType endToken) {
 }
 
 std::unique_ptr<Statement> Parser::declareStatement() {
-    // Parse: declare function FunctionName lib "library" (param1 as type1, ...) as returnType;
-    consume(TokenType::FUNCTION, "Expected 'function' after 'declare'");
+    // Parse: declare [ffi] function FunctionName [from "library" | lib "library"] (param1 as type1, ...) as returnType;
+    
+    // Check for optional 'ffi' keyword
+    bool isFFI = false;
+    if (check(TokenType::FFI)) {
+        isFFI = true;
+        advance(); // consume FFI token
+    }
+    
+    consume(TokenType::FUNCTION, "Expected 'function' after 'declare' [ffi]");
     
     Token nameToken = consume(TokenType::IDENTIFIER, "Expected function name");
     std::string functionName = nameToken.value;
     
-    consume(TokenType::LIB, "Expected 'lib' after function name");
+    // Handle both 'from' and 'lib' keywords for library specification
+    if (isFFI) {
+        if (match({TokenType::FROM})) {
+            // declare ffi function Name from "library" 
+        } else {
+            consume(TokenType::LIB, "Expected 'from' or 'lib' after function name in FFI declaration");
+        }
+    } else {
+        consume(TokenType::LIB, "Expected 'lib' after function name");
+    }
+    
     Token libToken = consume(TokenType::STRING, "Expected library name as string");
     std::string libraryName = libToken.value;
     // Remove quotes from library name

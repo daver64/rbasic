@@ -461,6 +461,24 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
 
+    // Check if this is an FFI function call
+    auto ffiIt = ffiFunctions.find(node.name);
+    if (ffiIt != ffiFunctions.end()) {
+        const auto& ffiFunc = *ffiIt->second;
+        
+        // Generate FFI function call
+        write("basic_runtime::call_ffi_function(\"" + ffiFunc.library + "\", \"" + ffiFunc.name + "\"");
+        
+        // Add arguments
+        for (size_t i = 0; i < node.arguments.size(); i++) {
+            write(", ");
+            node.arguments[i]->accept(*this);
+        }
+        
+        write(")");
+        return;
+    }
+
     // User-defined function calls
     write("func_" + node.name + "(");
     for (size_t i = 0; i < node.arguments.size(); i++) {
@@ -749,9 +767,10 @@ void CodeGenerator::visit(DimStmt& node) {
 }
 
 void CodeGenerator::visit(FFIFunctionDecl& node) {
-    // For Phase 2, we'll store the FFI function declarations for later use
-    // The actual implementation will be in handleFFIFunctions in interpreter
-    // For now, just add a comment to the generated code
+    // Store the FFI function declaration for use in call generation
+    ffiFunctions[node.name] = std::make_unique<FFIFunctionDecl>(node.name, node.library, node.returnType, node.parameters);
+    
+    // Generate comment in the output
     writeLine("// FFI Function Declaration: " + node.name + " from " + node.library);
 }
 

@@ -442,5 +442,10 @@ void parallel_array_multiply_scalar(BasicDoubleArray& array, double scalar);
 BasicValue load_library(const std::string& library_name);
 BasicValue unload_library(const BasicValue& library_handle);
 bool is_library_loaded(const BasicValue& library_handle);
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name);
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1);
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2);
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3);
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3, const BasicValue& arg4);
 
 } // namespace basic_runtime

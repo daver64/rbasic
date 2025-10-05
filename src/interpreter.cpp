@@ -1079,6 +1079,91 @@ bool Interpreter::handleFFIFunctions(CallExpr& node) {
         return true;
     }
     
+    // Check if it's a declared FFI function
+    auto ffiIt = ffiFunctions.find(node.name);
+    if (ffiIt != ffiFunctions.end()) {
+        const auto& ffiFunc = *ffiIt->second;
+        
+        try {
+            // Load library if not already loaded
+            auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+            auto library = ffi_manager.get_library(ffiFunc.library);
+            if (!library) {
+                library = ffi_manager.load_library(ffiFunc.library);
+            }
+            
+            if (!library || !library->is_valid()) {
+                throw RuntimeError("Failed to load library: " + ffiFunc.library);
+            }
+            
+            // Get function pointer
+            void* funcPtr = library->get_function_address(ffiFunc.name);
+            if (!funcPtr) {
+                throw RuntimeError("Function not found in library: " + ffiFunc.name);
+            }
+            
+            // Handle different function signatures
+            if (ffiFunc.parameters.empty() && ffiFunc.returnType == "int") {
+                // No parameters, returns int (like GetTickCount)
+                typedef int (*FuncType0)();
+                auto func = reinterpret_cast<FuncType0>(funcPtr);
+                lastValue = static_cast<double>(func());
+            }
+            else if (ffiFunc.parameters.size() == 4 && ffiFunc.returnType == "int" && 
+                     ffiFunc.parameters[0].second == "int" && ffiFunc.parameters[1].second == "string" &&
+                     ffiFunc.parameters[2].second == "string" && ffiFunc.parameters[3].second == "int") {
+                // MessageBoxA style: int MessageBoxA(int, string, string, int)
+                if (node.arguments.size() != 4) {
+                    throw RuntimeError("Expected 4 arguments for " + ffiFunc.name);
+                }
+                
+                // Evaluate arguments
+                auto arg0Val = evaluate(*node.arguments[0]);
+                auto arg1Val = evaluate(*node.arguments[1]);
+                auto arg2Val = evaluate(*node.arguments[2]);
+                auto arg3Val = evaluate(*node.arguments[3]);
+                
+                // Convert to C types, handling different value types
+                int hwnd = 0;
+                if (std::holds_alternative<double>(arg0Val)) {
+                    hwnd = static_cast<int>(std::get<double>(arg0Val));
+                } else if (std::holds_alternative<int>(arg0Val)) {
+                    hwnd = std::get<int>(arg0Val);
+                }
+                
+                std::string text, caption;
+                if (std::holds_alternative<std::string>(arg1Val)) {
+                    text = std::get<std::string>(arg1Val);
+                }
+                if (std::holds_alternative<std::string>(arg2Val)) {
+                    caption = std::get<std::string>(arg2Val);
+                }
+                
+                int type = 0;
+                if (std::holds_alternative<double>(arg3Val)) {
+                    type = static_cast<int>(std::get<double>(arg3Val));
+                } else if (std::holds_alternative<int>(arg3Val)) {
+                    type = std::get<int>(arg3Val);
+                }
+                
+                // Call MessageBoxA
+                typedef int (*MessageBoxAFunc)(int, const char*, const char*, int);
+                auto func = reinterpret_cast<MessageBoxAFunc>(funcPtr);
+                int result = func(hwnd, text.c_str(), caption.c_str(), type);
+                
+                lastValue = static_cast<double>(result);
+            }
+            else {
+                throw RuntimeError("Unsupported FFI function signature: " + ffiFunc.name);
+            }
+            
+        } catch (const std::exception& e) {
+            throw RuntimeError("FFI call failed: " + std::string(e.what()));
+        }
+        
+        return true;
+    }
+    
     return false; // Function not handled by this dispatcher
 }
 
