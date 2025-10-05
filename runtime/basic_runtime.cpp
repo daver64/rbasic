@@ -1,5 +1,6 @@
 #include "basic_runtime.h"
 #include "../include/io_handler.h"
+#include "../include/common.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -98,7 +99,7 @@ BasicValue input() {
     
     // Try to parse as number
     try {
-        if (line.find('.') != std::string::npos) {
+        if (rbasic::hasDecimalPoint(line)) {
             return std::stod(line);
         } else {
             return std::stoi(line);
@@ -137,7 +138,7 @@ BasicValue right(const BasicValue& str, int length) {
 BasicValue val(const BasicValue& str) {
     std::string s = to_string(str);
     try {
-        if (s.find('.') != std::string::npos) {
+        if (rbasic::hasDecimalPoint(s)) {
             return std::stod(s);
         } else {
             return std::stoi(s);

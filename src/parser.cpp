@@ -245,7 +245,7 @@ std::unique_ptr<Expression> Parser::call() {
 std::unique_ptr<Expression> Parser::primary() {
     if (match({TokenType::NUMBER})) {
         std::string value = previous().value;
-        if (value.find('.') != std::string::npos) {
+        if (hasDecimalPoint(value)) {
             return std::make_unique<LiteralExpr>(std::stod(value));
         } else {
             return std::make_unique<LiteralExpr>(std::stoi(value));

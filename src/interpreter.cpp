@@ -288,7 +288,7 @@ void Interpreter::visit(CallExpr& node) {
         // Try to parse as number first
         ValueType value;
         try {
-            if (input_text.find('.') != std::string::npos) {
+            if (hasDecimalPoint(input_text)) {
                 value = std::stod(input_text);
             } else {
                 value = std::stoi(input_text);
@@ -660,7 +660,7 @@ void Interpreter::visit(CallExpr& node) {
             // Convert string to number
             std::string str = valueToString(evaluate(*node.arguments[0]));
             try {
-                if (str.find('.') != std::string::npos) {
+                if (hasDecimalPoint(str)) {
                     lastValue = std::stod(str);
                 } else {
                     lastValue = std::stoi(str);
@@ -902,7 +902,7 @@ void Interpreter::visit(InputStmt& node) {
     // Try to parse as number first
     ValueType value;
     try {
-        if (input_text.find('.') != std::string::npos) {
+        if (hasDecimalPoint(input_text)) {
             // Contains decimal point, parse as double
             value = std::stod(input_text);
         } else {

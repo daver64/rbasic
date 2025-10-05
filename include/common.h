@@ -78,4 +78,12 @@ ValueType multiplyValues(const ValueType& left, const ValueType& right);
 ValueType divideValues(const ValueType& left, const ValueType& right);
 ValueType compareValues(const ValueType& left, const ValueType& right, const std::string& op);
 
+// Performance-optimized number parsing
+inline bool hasDecimalPoint(const std::string& str) {
+    for (char c : str) {
+        if (c == '.') return true;
+    }
+    return false;
+}
+
 } // namespace rbasic

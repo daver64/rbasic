@@ -22,7 +22,7 @@ ValueType Runtime::basicInput(const std::vector<ValueType>& args) {
     
     // Try to parse as number
     try {
-        if (line.find('.') != std::string::npos) {
+        if (hasDecimalPoint(line)) {
             return std::stod(line);
         } else {
             return std::stoi(line);
