@@ -26,6 +26,7 @@ void printUsage(const std::string& programName) {
     std::cout << "  -c, --compile      Compile BASIC program to C++ executable\n";
     std::cout << "  -o, --output       Specify output filename (compile mode only)\n";
     std::cout << "  --io <type>        I/O handler type: console, sdl (default: console)\n";
+    std::cout << "  --keep-cpp         Keep generated C++ file (compile mode only)\n";
     std::cout << "  --help             Show this help message\n";
 }
 
@@ -109,6 +110,7 @@ int main(int argc, char* argv[]) {
         std::string inputFile;
         std::string outputFile;
         std::string ioType = "console";
+        bool keepCppFile = false;
         
         // Parse command line arguments
         for (int i = 1; i < argc; i++) {
@@ -135,6 +137,8 @@ int main(int argc, char* argv[]) {
                 if (i + 1 < argc) {
                     ioType = argv[++i];
                 }
+            } else if (arg == "--keep-cpp") {
+                keepCppFile = true;
             } else if (inputFile.empty()) {
                 inputFile = arg;
                 if (mode.empty()) {
@@ -201,8 +205,12 @@ int main(int argc, char* argv[]) {
             
             // Compile to executable
             if (compileToExecutable(tempCppFile, outputFile, usesSDL, usesSQLite)) {
-                // Clean up temporary file
-                std::filesystem::remove(tempCppFile);
+                // Clean up temporary file unless user wants to keep it
+                if (!keepCppFile) {
+                    std::filesystem::remove(tempCppFile);
+                } else {
+                    std::cout << "Generated C++ code preserved in: " << tempCppFile << std::endl;
+                }
             } else {
                 std::cerr << "Compilation failed. Generated C++ code preserved in: " << tempCppFile << std::endl;
                 return 1;
