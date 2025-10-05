@@ -4,6 +4,7 @@
 #include "interpreter.h"
 #include "codegen.h"
 #include "io_handler.h"
+#include "command_builder.h"
 
 // Future: FFI support will be added here
 
@@ -52,27 +53,41 @@ void writeFile(const std::string& filename, const std::string& content) {
 }
 
 bool compileToExecutable(const std::string& cppFile, const std::string& outputFile) {
-    // TODO: Make compiler selectable via command line option
-    std::string command;
-    
+    try {
+        CommandBuilder builder;
+        
 #ifdef _WIN32
-    // Windows: Use Microsoft Visual C++ compiler
-    command = "cl /EHsc /std:c++17 \"" + cppFile + "\" /Fe:\"" + outputFile + "\" runtime\\Release\\rbasic_runtime.lib";
-    command += " /link /SUBSYSTEM:CONSOLE kernel32.lib user32.lib";
-    std::cout << "Compiling with MSVC: " << command << std::endl;
+        // Windows: Use Microsoft Visual C++ compiler
+        builder.compiler("cl")
+               .compileFlags({"/EHsc", "/std:c++17"})
+               .input(cppFile)
+               .output(outputFile)
+               .library("runtime\\Release\\rbasic_runtime.lib")
+               .linkFlags({"/SUBSYSTEM:CONSOLE", "kernel32.lib", "user32.lib"});
+        
+        std::cout << "Compiling with MSVC..." << std::endl;
 #else
-    // Linux/Unix: Use g++ compiler
-    command = "g++ -std=c++17 -O2 \"" + cppFile + "\" -o \"" + outputFile + "\" runtime/librbasic_runtime.a";
-    std::cout << "Compiling with g++: " << command << std::endl;
+        // Linux/Unix: Use g++ compiler
+        builder.compiler("g++")
+               .compileFlags({"-std=c++17", "-O2"})
+               .input(cppFile)
+               .output(outputFile)
+               .library("runtime/librbasic_runtime.a");
+        
+        std::cout << "Compiling with g++..." << std::endl;
 #endif
-    
-    int result = std::system(command.c_str());
-    
-    if (result == 0) {
-        std::cout << "Successfully compiled to: " << outputFile << std::endl;
-        return true;
-    } else {
-        std::cerr << "Compilation failed with exit code: " << result << std::endl;
+        
+        int result = builder.execute();
+        
+        if (result == 0) {
+            std::cout << "Successfully compiled to: " << outputFile << std::endl;
+            return true;
+        } else {
+            std::cerr << "Compilation failed with exit code: " << result << std::endl;
+            return false;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Compilation error: " << e.what() << std::endl;
         return false;
     }
 }

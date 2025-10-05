@@ -55,9 +55,23 @@ void ConsoleIOHandler::text_mode() {
 
 void ConsoleIOHandler::clear_screen() {
 #ifdef _WIN32
-    system("cls");
+    // Use Windows API instead of system() call
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole != INVALID_HANDLE_VALUE) {
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+        if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+            COORD topLeft = {0, 0};
+            DWORD charsWritten;
+            DWORD consoleSize = csbi.dwSize.X * csbi.dwSize.Y;
+            
+            FillConsoleOutputCharacterA(hConsole, ' ', consoleSize, topLeft, &charsWritten);
+            FillConsoleOutputAttribute(hConsole, csbi.wAttributes, consoleSize, topLeft, &charsWritten);
+            SetConsoleCursorPosition(hConsole, topLeft);
+        }
+    }
 #else
-    system("clear");
+    // Use ANSI escape sequences instead of system() call
+    std::cout << "\033[2J\033[H" << std::flush;
 #endif
 }
 

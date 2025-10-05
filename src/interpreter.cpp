@@ -1,6 +1,7 @@
 #include "interpreter.h"
 #include "runtime.h"
 #include "io_handler.h"
+#include "type_utils.h"
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
@@ -100,11 +101,10 @@ void Interpreter::visit(VariableExpr& node) {
     // Handle array access
     if (node.index) {
         ValueType arrayVar = getVariable(node.name);
+        int index = TypeUtils::toArrayIndex(evaluate(*node.index));
+        
         if (std::holds_alternative<ArrayValue>(arrayVar)) {
             ArrayValue& array = std::get<ArrayValue>(arrayVar);
-            ValueType indexValue = evaluate(*node.index);
-            int index = std::holds_alternative<int>(indexValue) ? 
-                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
             
             if (array.elements.find(index) != array.elements.end()) {
                 // Convert from simple variant to full ValueType
@@ -124,23 +124,17 @@ void Interpreter::visit(VariableExpr& node) {
             }
         } else if (std::holds_alternative<ByteArrayValue>(arrayVar)) {
             ByteArrayValue& array = std::get<ByteArrayValue>(arrayVar);
-            ValueType indexValue = evaluate(*node.index);
-            int index = std::holds_alternative<int>(indexValue) ? 
-                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            TypeUtils::validateArrayBounds(arrayVar, index);
             std::vector<int> indices = {index};
             lastValue = static_cast<int>(array.at(indices));
         } else if (std::holds_alternative<IntArrayValue>(arrayVar)) {
             IntArrayValue& array = std::get<IntArrayValue>(arrayVar);
-            ValueType indexValue = evaluate(*node.index);
-            int index = std::holds_alternative<int>(indexValue) ? 
-                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            TypeUtils::validateArrayBounds(arrayVar, index);
             std::vector<int> indices = {index};
             lastValue = array.at(indices);
         } else if (std::holds_alternative<DoubleArrayValue>(arrayVar)) {
             DoubleArrayValue& array = std::get<DoubleArrayValue>(arrayVar);
-            ValueType indexValue = evaluate(*node.index);
-            int index = std::holds_alternative<int>(indexValue) ? 
-                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            TypeUtils::validateArrayBounds(arrayVar, index);
             std::vector<int> indices = {index};
             lastValue = array.at(indices);
         } else {
@@ -193,10 +187,8 @@ void Interpreter::visit(BinaryExpr& node) {
         lastValue = divideValues(left, right);
     } else if (node.operator_ == "mod") {
         // Implement modulo operation
-        int leftInt = std::holds_alternative<int>(left) ? 
-            std::get<int>(left) : static_cast<int>(std::get<double>(left));
-        int rightInt = std::holds_alternative<int>(right) ? 
-            std::get<int>(right) : static_cast<int>(std::get<double>(right));
+        int leftInt = TypeUtils::toInt(left);
+        int rightInt = TypeUtils::toInt(right);
             
         if (rightInt == 0) {
             throw RuntimeError("MOD by zero");
@@ -215,9 +207,9 @@ void Interpreter::visit(BinaryExpr& node) {
     } else if (node.operator_ == ">=") {
         lastValue = compareValues(left, right, ">=");
     } else if (node.operator_ == "and") {
-        lastValue = isTruthy(left) && isTruthy(right);
+        lastValue = TypeUtils::toBool(left) && TypeUtils::toBool(right);
     } else if (node.operator_ == "or") {
-        lastValue = isTruthy(left) || isTruthy(right);
+        lastValue = TypeUtils::toBool(left) || TypeUtils::toBool(right);
     } else {
         throw RuntimeError("Unknown binary operator: " + node.operator_);
     }
@@ -231,9 +223,7 @@ void Interpreter::visit(AssignExpr& node) {
         ValueType arrayVar = getVariable(node.variable);
         if (std::holds_alternative<ArrayValue>(arrayVar)) {
             ArrayValue array = std::get<ArrayValue>(arrayVar);
-            ValueType indexValue = evaluate(*node.index);
-            int index = std::holds_alternative<int>(indexValue) ? 
-                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            int index = TypeUtils::toArrayIndex(evaluate(*node.index));
             
             // Convert ValueType to simple variant for storage
             if (std::holds_alternative<int>(value)) {
@@ -249,47 +239,29 @@ void Interpreter::visit(AssignExpr& node) {
             setVariable(node.variable, array);
         } else if (std::holds_alternative<ByteArrayValue>(arrayVar)) {
             ByteArrayValue array = std::get<ByteArrayValue>(arrayVar);
-            ValueType indexValue = evaluate(*node.index);
-            int index = std::holds_alternative<int>(indexValue) ? 
-                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            int index = TypeUtils::toArrayIndex(evaluate(*node.index));
+            TypeUtils::validateArrayBounds(arrayVar, index);
             std::vector<int> indices = {index};
             
-            uint8_t byteValue = 0;
-            if (std::holds_alternative<int>(value)) {
-                byteValue = static_cast<uint8_t>(std::get<int>(value));
-            } else if (std::holds_alternative<double>(value)) {
-                byteValue = static_cast<uint8_t>(std::get<double>(value));
-            }
+            uint8_t byteValue = TypeUtils::getValue<uint8_t>(value);
             array.at(indices) = byteValue;
             setVariable(node.variable, array);
         } else if (std::holds_alternative<IntArrayValue>(arrayVar)) {
             IntArrayValue array = std::get<IntArrayValue>(arrayVar);
-            ValueType indexValue = evaluate(*node.index);
-            int index = std::holds_alternative<int>(indexValue) ? 
-                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            int index = TypeUtils::toArrayIndex(evaluate(*node.index));
+            TypeUtils::validateArrayBounds(arrayVar, index);
             std::vector<int> indices = {index};
             
-            int intValue = 0;
-            if (std::holds_alternative<int>(value)) {
-                intValue = std::get<int>(value);
-            } else if (std::holds_alternative<double>(value)) {
-                intValue = static_cast<int>(std::get<double>(value));
-            }
+            int intValue = TypeUtils::toInt(value);
             array.at(indices) = intValue;
             setVariable(node.variable, array);
         } else if (std::holds_alternative<DoubleArrayValue>(arrayVar)) {
             DoubleArrayValue array = std::get<DoubleArrayValue>(arrayVar);
-            ValueType indexValue = evaluate(*node.index);
-            int index = std::holds_alternative<int>(indexValue) ? 
-                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            int index = TypeUtils::toArrayIndex(evaluate(*node.index));
+            TypeUtils::validateArrayBounds(arrayVar, index);
             std::vector<int> indices = {index};
             
-            double doubleValue = 0.0;
-            if (std::holds_alternative<int>(value)) {
-                doubleValue = static_cast<double>(std::get<int>(value));
-            } else if (std::holds_alternative<double>(value)) {
-                doubleValue = std::get<double>(value);
-            }
+            double doubleValue = TypeUtils::toDouble(value);
             array.at(indices) = doubleValue;
             setVariable(node.variable, array);
         } else {

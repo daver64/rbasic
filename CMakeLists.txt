@@ -27,6 +27,8 @@ set(SOURCES
     src/common.cpp
     src/io_handler.cpp
     src/console_io_handler.cpp
+    src/command_builder.cpp
+    src/type_utils.cpp
 )
 
 # Header files
@@ -40,6 +42,8 @@ set(HEADERS
     include/common.h
     include/io_handler.h
     include/console_io_handler.h
+    include/command_builder.h
+    include/type_utils.h
 )
 
 # Create main executable
@@ -82,6 +86,8 @@ add_executable(rbasic_tests
     src/common.cpp
     src/io_handler.cpp
     src/console_io_handler.cpp
+    src/command_builder.cpp
+    src/type_utils.cpp
 )
 
 target_include_directories(rbasic_tests PRIVATE include)
