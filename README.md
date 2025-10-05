@@ -41,6 +41,7 @@ Session saved to my_session.bas
 - **C-Style Syntax**: Uses braces `{}`, parentheses for conditions, and modern control flow
 - **Transpiler Architecture**: Compiles BASIC to C++ executables or runs directly via interpreter  
 - **Interactive REPL**: Read-Eval-Print Loop for rapid development and testing
+- **Automatic Parallelization**: OpenMP-based automatic multi-core optimization for large array operations
 - **Comprehensive I/O**: Text and binary file operations with full file system support
 - **Typed Arrays**: High-performance `byte_array()`, `int_array()`, `double_array()` for numerical computing
 - **Proper Scoping**: C-style variable scoping within control structures (if/for/while blocks)
@@ -359,9 +360,16 @@ External functionality like graphics, databases, and system integration will be 
 
 ### Compilation Benefits
 - **Development Speed**: Interpreted mode for rapid iteration
-- **Native Performance**: Compiled mode generates C++ for production
+- **Native Performance**: Compiled mode generates optimized C++ for production
+- **Automatic Parallelization**: OpenMP-based multi-core optimization for large arrays (≥1000 elements)
 - **Standalone Executables**: No runtime dependencies for core language
 - **Readable Output**: Generated C++ code is human-readable
+
+### Performance Features
+- **Multi-Core Array Operations**: Automatic parallelization for large array processing
+- **Smart Thresholding**: OpenMP applied only when beneficial (arrays ≥1000 elements)
+- **Cross-Platform Optimization**: OpenMP support on Windows (MinGW64/MSVC), Linux, and macOS
+- **Zero-Overhead Abstraction**: Small arrays use serial execution to avoid threading overhead
 
 ### Intended Use Cases
 - **Learning**: Explore language implementation and transpiler design

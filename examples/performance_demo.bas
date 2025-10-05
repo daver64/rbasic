@@ -1,51 +1,48 @@
-// Comprehensive test showcasing typed arrays for future file I/O
-print("=== Typed Arrays Performance Test ===");
+// Performance demonstration showing automatic OpenMP parallelization
+// Arrays with 1000+ elements automatically use multi-core execution
 
-// Image processing simulation with byte arrays
-var imageBuffer = byte_array(64);  // Small 8x8 image
-print("Created 64-byte image buffer");
+print("=== Performance Demo: Automatic Parallelization ===");
+print();
 
-// Fill with a gradient pattern
-for (var i = 0; i < 64; i = i + 1) {
-    imageBuffer[i] = i * 4; // 0, 4, 8, 12... up to 252
+// Small array - uses serial execution (fast startup)
+print("Creating small array (500 elements) - serial execution...");
+dim small_array(500);
+for (var i = 0; i < 500; i = i + 1) {
+    small_array[i] = i * i;
 }
-print("Image buffer filled with gradient");
+print("Small array completed");
+print();
 
-// Sample a few pixels
-print("Sample pixels:");
-print("Pixel 0:", imageBuffer[0]);   // Should be 0
-print("Pixel 15:", imageBuffer[15]); // Should be 60
-print("Pixel 31:", imageBuffer[31]); // Should be 124
-print("Pixel 63:", imageBuffer[63]); // Should be 252
-
-// Mathematical operations with int arrays
-var fibonacci = int_array(10);
-fibonacci[0] = 1;
-fibonacci[1] = 1;
-
-for (var i = 2; i < 10; i = i + 1) {
-    fibonacci[i] = fibonacci[i-1] + fibonacci[i-2];
+// Large array - automatically uses parallel execution  
+print("Creating large array (5000 elements) - parallel execution...");
+dim large_array(5000);
+for (var i = 0; i < 5000; i = i + 1) {
+    large_array[i] = i * i;  // This runs in parallel automatically!
 }
+print("Large array completed");
+print();
 
-print("Fibonacci sequence:");
-for (var i = 0; i < 10; i = i + 1) {
-    print("fib[", i, "] =", fibonacci[i]);
+// Typed arrays also benefit from parallelization
+print("Testing typed arrays with parallelization...");
+var fast_doubles = double_array(3000);
+for (var i = 0; i < 3000; i = i + 1) {
+    fast_doubles[i] = sin(i * 0.001) * cos(i * 0.002);  // Parallel math!
 }
+print("Typed array with mathematical operations completed");
+print();
 
-// Scientific calculations with double arrays
-var coords = double_array(6); // 2 3D points
-coords[0] = 1.5;  coords[1] = 2.7;  coords[2] = 3.14; // Point 1
-coords[3] = 4.8;  coords[4] = 5.9;  coords[5] = 6.28; // Point 2
+// Verify some results
+print("Verification:");
+print("small_array[10] =", small_array[10]);
+print("large_array[100] =", large_array[100]);
+print("fast_doubles[500] =", fast_doubles[500]);
+print();
 
-print("3D Coordinates:");
-print("Point 1: (", coords[0], ",", coords[1], ",", coords[2], ")");
-print("Point 2: (", coords[3], ",", coords[4], ",", coords[5], ")");
-
-// Calculate distance between points
-var dx = coords[3] - coords[0];
-var dy = coords[4] - coords[1]; 
-var dz = coords[5] - coords[2];
-var distance = sqrt(dx*dx + dy*dy + dz*dz);
-print("Distance between points:", distance);
-
-print("=== Test Complete ===");
+print("=== Parallelization Features ===");
+print("* Automatic - no code changes needed");
+print("* Smart thresholding - only large arrays (>=1000 elements)");
+print("* Cross-platform OpenMP support");
+print("* Works in both interpreter and compiled modes");
+print();
+print("For maximum performance: ./rbasic -c performance_demo.bas -o fast_demo");
+print("Parallelization is completely invisible to the programmer!");

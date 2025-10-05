@@ -17,8 +17,9 @@ This is a C-leaning BASIC language transpiler written in C++. The project suppor
 3. **Interpreter** - Directly executes AST nodes for rapid development
 4. **REPL** - Interactive Read-Eval-Print Loop with multi-line support and meta commands
 5. **Code Generator** - Transpiles AST to optimized C++ source code
-6. **Runtime Library** - Shared function implementations for both execution modes
+6. **Runtime Library** - Shared function implementations for both execution modes with OpenMP parallelization
 7. **Cross-Platform Terminal** - Color support and cursor management for all platforms
+8. **Automatic Parallelization** - OpenMP-based multi-core optimization for large array operations
 
 ## Build Instructions
 Use CMake to build the project. The executable will be placed in the project root.
@@ -33,6 +34,14 @@ Use CMake to build the project. The executable will be placed in the project roo
 - **Linux/macOS**: System GCC or Clang
 - **Automatic Detection**: Chooses best available compiler
 - **Static Linking**: Self-contained executables with MinGW64
+- **OpenMP Parallelization**: Automatic multi-core optimization for both interpreted and compiled modes
+
+## Performance Features
+- **Automatic Parallelization**: OpenMP-based array operations for arrays ≥1000 elements
+- **Invisible to Users**: Parallelization is completely transparent and automatic
+- **Cross-Platform**: OpenMP support on Windows (MinGW64/MSVC), Linux (GCC), and macOS (Clang)
+- **Smart Thresholding**: Serial execution for small arrays to avoid threading overhead
+- **Both Modes**: Parallelization works in interpreter mode and compiled executables
 
 ## Language Features
 rbasic implements a "C-leaning BASIC" with modern syntax:

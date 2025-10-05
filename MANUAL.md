@@ -8,6 +8,7 @@ This manual provides comprehensive documentation for using the rbasic programmin
 
 - ✅ **Complete Language**: All syntax, control flow, functions, and data structures working
 - ✅ **Multidimensional Arrays**: True `array[i,j,k]` syntax working in both execution modes
+- ✅ **Automatic Parallelization**: OpenMP-based multi-core optimization for large array operations
 - ✅ **Triple Execution Modes**: Interpreter (`-i`), compiler (`-c`), and interactive REPL (`-r`) fully functional
 - ✅ **Portable Compilation**: MinGW64 bundled for Windows, falls back to MSVC when needed
 - ✅ **File I/O**: Complete text and binary file operations
@@ -31,6 +32,7 @@ This manual provides comprehensive documentation for using the rbasic programmin
 - [Arrays and Structures](#arrays-and-structures)
 - [Examples](#examples)
 - [Error Handling](#error-handling)
+- [Performance and Optimization](#performance-and-optimization)
 - [Best Practices](#best-practices)
 
 ## Getting Started
@@ -1183,6 +1185,65 @@ if (number == 0 and userInput != "0") {
     print("Invalid number entered!");
 }
 ```
+
+## Performance and Optimization
+
+### Automatic Parallelization
+
+rbasic includes **automatic OpenMP-based parallelization** that provides significant performance improvements for large array operations without requiring any code changes:
+
+#### How It Works
+
+```basic
+// This code automatically uses parallel execution for large arrays
+dim large_array(50000);  // Arrays ≥1000 elements are automatically parallelized
+
+// Array initialization automatically runs on multiple cores
+for (var i = 0; i < 50000; i = i + 1) {
+    large_array[i] = i * i;  // This loop runs in parallel automatically!
+}
+
+// Small arrays remain serial to avoid threading overhead
+dim small_array(500);  // Arrays <1000 elements use serial execution
+for (var i = 0; i < 500; i = i + 1) {
+    small_array[i] = i;  // This runs serially for optimal performance
+}
+```
+
+#### Key Features
+
+- **Completely Invisible**: No code changes needed - parallelization happens automatically
+- **Smart Thresholding**: Only arrays with 1000+ elements use parallel execution
+- **Both Execution Modes**: Works in interpreter (`-i`) and compiled (`-c`) modes
+- **Cross-Platform**: OpenMP support on Windows (MinGW64/MSVC), Linux (GCC), and macOS (Clang)
+- **Error-Free**: No threading bugs since users don't write parallel code directly
+
+#### Performance Tips
+
+```basic
+// For maximum performance with large datasets, use compiled mode
+// ./rbasic -c your_program.bas -o optimized_program
+
+// Typed arrays get better parallelization than generic arrays
+var fast_array = double_array(100000);  // Preferred for numerical work
+dim generic_array(100000);              // Still parallelized, but slower
+
+// Large array operations benefit most from parallelization
+for (var i = 0; i < 100000; i = i + 1) {
+    fast_array[i] = sin(i * 0.001) * cos(i * 0.002);  // Parallel execution!
+}
+```
+
+#### Execution Mode Comparison
+
+| Mode | Array Size | Execution | Performance |
+|------|------------|-----------|-------------|
+| Interpreter | < 1000 elements | Serial | Fast startup |
+| Interpreter | ≥ 1000 elements | Parallel | Good for development |
+| Compiled | < 1000 elements | Serial | Optimized serial |
+| Compiled | ≥ 1000 elements | Parallel | Maximum performance |
+
+**Recommendation**: Use interpreter mode (`-i`) for development and testing, compiled mode (`-c`) for production and performance-critical applications.
 
 ## Best Practices
 
