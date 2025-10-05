@@ -1,0 +1,9 @@
+TEMPERATURE ANALYSIS REPORT
+============================
+
+Data Points: 100
+Sample minimum: 19.814420C
+Sample maximum: 19.814420C
+Sample average: 20.914310C
+
+Processing: 3-point moving average applied

@@ -851,8 +851,17 @@ void Interpreter::visit(CallExpr& node) {
         if (std::holds_alternative<std::string>(filenameVal)) {
             std::string filename = std::get<std::string>(filenameVal);
             try {
-                lastValue = static_cast<int>(std::filesystem::file_size(filename));
+                if (std::filesystem::exists(filename)) {
+                    auto size = std::filesystem::file_size(filename);
+                    lastValue = static_cast<int>(size);
+                } else {
+                    lastValue = -1;  // File doesn't exist
+                }
+            } catch (const std::filesystem::filesystem_error& e) {
+                // Filesystem error - return -1
+                lastValue = -1;
             } catch (...) {
+                // Other error - return -1
                 lastValue = -1;
             }
         } else {
@@ -922,6 +931,7 @@ void Interpreter::visit(CallExpr& node) {
             std::ofstream file(filename);
             if (file.is_open()) {
                 file << content;
+                file.flush();  // Ensure content is written to disk
                 file.close();
                 lastValue = !file.fail();
             } else {
@@ -942,6 +952,7 @@ void Interpreter::visit(CallExpr& node) {
             std::ofstream file(filename, std::ios::app);
             if (file.is_open()) {
                 file << content;
+                file.flush();  // Ensure content is written to disk
                 file.close();
                 lastValue = !file.fail();
             } else {
@@ -990,6 +1001,7 @@ void Interpreter::visit(CallExpr& node) {
             std::ofstream file(filename, std::ios::binary);
             if (file.is_open()) {
                 file.write(reinterpret_cast<const char*>(buffer.elements.data()), buffer.elements.size());
+                file.flush();  // Ensure content is written to disk
                 file.close();
                 lastValue = !file.fail();
             } else {

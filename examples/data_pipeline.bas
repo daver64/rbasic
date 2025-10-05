@@ -17,8 +17,6 @@ var temp = 0.0;
 var avg_temp = 0.0;
 var report = "";
 var temp_int = 0;
-var report_size = 0;
-var binary_size = 0;
 
 // 1. Generate sample data (simulating sensor readings)
 print("\n1. Generating sample data...");
@@ -85,14 +83,14 @@ print("Analysis report saved to analysis_report.txt");
 print("\n6. Creating binary data package...");
 
 // Pack the first 10 filtered values as 32-bit values (simplified encoding)
-for (i = 0; i < 10; i = i + 1) {
-    temp_int = int(filtered_data[i] * 100);  // Store as centidegrees
+for (var j = 0; j < 10; j = j + 1) {
+    temp_int = int(filtered_data[j] * 100);  // Store as centidegrees
     
     // Simple big-endian encoding (4 bytes per value)
-    binary_package[i * 4 + 0] = (temp_int / 16777216) mod 256;  // MSB
-    binary_package[i * 4 + 1] = (temp_int / 65536) mod 256;
-    binary_package[i * 4 + 2] = (temp_int / 256) mod 256;
-    binary_package[i * 4 + 3] = temp_int mod 256;              // LSB
+    binary_package[j * 4 + 0] = (temp_int / 16777216) mod 256;  // MSB
+    binary_package[j * 4 + 1] = (temp_int / 65536) mod 256;
+    binary_package[j * 4 + 2] = (temp_int / 256) mod 256;
+    binary_package[j * 4 + 3] = temp_int mod 256;              // LSB
 }
 
 write_binary_file("sensor_data.bin", binary_package);
@@ -100,6 +98,9 @@ print("Binary data package saved (40 bytes)");
 
 // 7. Verify data integrity
 print("\n7. Verifying data integrity...");
+
+var report_size = 0;
+var binary_size = 0;
 
 if (file_exists("analysis_report.txt") && file_exists("sensor_data.bin")) {
     report_size = file_size("analysis_report.txt");
@@ -110,6 +111,12 @@ if (file_exists("analysis_report.txt") && file_exists("sensor_data.bin")) {
     print("  [OK] All files created successfully");
 } else {
     print("  [ERROR] Some files missing");
+    if (!file_exists("analysis_report.txt")) {
+        print("  Missing: analysis_report.txt");
+    }
+    if (!file_exists("sensor_data.bin")) {
+        print("  Missing: sensor_data.bin");
+    }
 }
 
 // 8. Cleanup
