@@ -38,13 +38,15 @@ terminal_reset_color();
 print("Colors reset to default.");
 
 // Test cursor positioning
+terminal_save_cursor();  // Save current position before moving
 terminal_set_cursor(5, 10);
 terminal_print("Text at row 5, col 10", 3, -1);
-terminal_println("");
 
-// Get cursor position
+// Get cursor position while at the moved location
 var crow = terminal_get_cursor_row();
 var ccol = terminal_get_cursor_col();
+
+terminal_restore_cursor();  // Restore to normal output position
 print("Current cursor position: row " + str(crow) + ", col " + str(ccol));
 
 print("Terminal test complete!");

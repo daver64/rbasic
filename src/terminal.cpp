@@ -23,6 +23,8 @@ bool Terminal::colorSupported = false;
 void* Terminal::hConsole = nullptr;
 void* Terminal::hStdin = nullptr;
 unsigned long Terminal::originalConsoleMode = 0;
+static int savedCursorRow = 0;
+static int savedCursorCol = 0;
 #else
 // Linux: Save original terminal attributes
 static struct termios originalTermios;
@@ -182,6 +184,27 @@ void Terminal::getCursor(int& row, int& col) {
     } else {
         row = col = 0;
     }
+#endif
+}
+
+void Terminal::saveCursor() {
+#ifdef _WIN32
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+        savedCursorRow = csbi.dwCursorPosition.Y;
+        savedCursorCol = csbi.dwCursorPosition.X;
+    }
+#else
+    std::cout << "\033[s" << std::flush; // Save cursor position
+#endif
+}
+
+void Terminal::restoreCursor() {
+#ifdef _WIN32
+    COORD coord = {static_cast<SHORT>(savedCursorCol), static_cast<SHORT>(savedCursorRow)};
+    SetConsoleCursorPosition(hConsole, coord);
+#else
+    std::cout << "\033[u" << std::flush; // Restore cursor position
 #endif
 }
 

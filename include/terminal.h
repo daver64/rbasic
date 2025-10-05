@@ -46,6 +46,10 @@ public:
     // Get current cursor position
     static void getCursor(int& row, int& col);
     
+    // Save/restore cursor position for mixing with regular output
+    static void saveCursor();
+    static void restoreCursor();
+    
     // Set text colors
     static void setColor(Color foreground, Color background = Color::DEFAULT);
     

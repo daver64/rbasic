@@ -904,6 +904,18 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
         return true;
     }
     
+    if (node.name == "terminal_save_cursor") {
+        Terminal::saveCursor();
+        lastValue = 0;
+        return true;
+    }
+    
+    if (node.name == "terminal_restore_cursor") {
+        Terminal::restoreCursor();
+        lastValue = 0;
+        return true;
+    }
+    
     if (node.name == "terminal_set_color") {
         if (args.size() >= 2) {
             Terminal::setColor(static_cast<Color>(TypeUtils::toInt(args[0])), 
