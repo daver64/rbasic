@@ -45,7 +45,7 @@ ValueType Interpreter::getVariable(const std::string& name) {
         return globals[name];
     }
     
-    throw RuntimeError("Undefined variable '" + name + "'");
+    throw RuntimeError("Undefined variable '" + name + "'", getCurrentPosition());
 }
 
 void Interpreter::setVariable(const std::string& name, const ValueType& value) {
@@ -84,6 +84,8 @@ void Interpreter::interpret(Program& program) {
 }
 
 ValueType Interpreter::evaluate(Expression& expr) {
+    // Track source position for error reporting
+    setCurrentPosition(expr.getPosition());
     expr.accept(*this);
     return lastValue;
 }
@@ -294,7 +296,25 @@ void Interpreter::visit(UnaryExpr& node) {
 }
 
 void Interpreter::visit(CallExpr& node) {
-    // Built-in I/O functions - check these first!
+    // Set position for error reporting
+    setCurrentPosition(node.getPosition());
+    
+    // Dispatch to specialized handlers
+    if (handleIOFunctions(node) ||
+        handleMathFunctions(node) ||
+        handleStringFunctions(node) ||
+        handleArrayFunctions(node) ||
+        handleFileFunctions(node) ||
+        handleUserDefinedFunction(node)) {
+        return;
+    }
+    
+    // If we get here, the function was not found
+    throw RuntimeError("Unknown function: " + node.name, getCurrentPosition());
+}
+
+// I/O Functions Handler
+bool Interpreter::handleIOFunctions(CallExpr& node) {
     if (node.name == "print") {
         for (size_t i = 0; i < node.arguments.size(); i++) {
             ValueType value = evaluate(*node.arguments[i]);
@@ -305,7 +325,7 @@ void Interpreter::visit(CallExpr& node) {
         }
         ioHandler->newline();
         lastValue = 0; // print returns 0
-        return;
+        return true;
     }
 
     if (node.name == "debug_print") {
@@ -319,7 +339,7 @@ void Interpreter::visit(CallExpr& node) {
         std::cout << std::endl;
         std::cout.flush();
         lastValue = 0; // debug_print returns 0
-        return;
+        return true;
     }
     
     if (node.name == "input" && node.arguments.size() == 0) {
@@ -342,166 +362,14 @@ void Interpreter::visit(CallExpr& node) {
         }
         
         lastValue = value;
-        return;
+        return true;
     }
+    
+    return false; // Function not handled by this dispatcher
+}
 
-    // Graphics functions
-    if (node.name == "graphics_mode" && node.arguments.size() == 2) {
-        int width = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
-            std::get<int>(evaluate(*node.arguments[0])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
-        int height = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
-            std::get<int>(evaluate(*node.arguments[1])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
-        ioHandler->graphics_mode(width, height);
-        lastValue = 0;
-        return;
-    }
-    
-    if (node.name == "text_mode" && node.arguments.size() == 0) {
-        ioHandler->text_mode();
-        lastValue = 0;
-        return;
-    }
-    
-    if (node.name == "clear_screen" && node.arguments.size() == 0) {
-        ioHandler->clear_screen();
-        lastValue = 0;
-        return;
-    }
-    
-    if (node.name == "set_colour" && node.arguments.size() == 3) {
-        int r = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
-            std::get<int>(evaluate(*node.arguments[0])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
-        int g = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
-            std::get<int>(evaluate(*node.arguments[1])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
-        int b = std::holds_alternative<int>(evaluate(*node.arguments[2])) ? 
-            std::get<int>(evaluate(*node.arguments[2])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[2])));
-        ioHandler->set_colour(r, g, b);
-        lastValue = 0;
-        return;
-    }
-    
-    if (node.name == "draw_pixel" && node.arguments.size() == 2) {
-        int x = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
-            std::get<int>(evaluate(*node.arguments[0])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
-        int y = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
-            std::get<int>(evaluate(*node.arguments[1])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
-        ioHandler->draw_pixel(x, y);
-        lastValue = 0;
-        return;
-    }
-    
-    if (node.name == "draw_line" && node.arguments.size() == 4) {
-        int x1 = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
-            std::get<int>(evaluate(*node.arguments[0])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
-        int y1 = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
-            std::get<int>(evaluate(*node.arguments[1])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
-        int x2 = std::holds_alternative<int>(evaluate(*node.arguments[2])) ? 
-            std::get<int>(evaluate(*node.arguments[2])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[2])));
-        int y2 = std::holds_alternative<int>(evaluate(*node.arguments[3])) ? 
-            std::get<int>(evaluate(*node.arguments[3])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[3])));
-        ioHandler->draw_line(x1, y1, x2, y2);
-        lastValue = 0;
-        return;
-    }
-    
-    if (node.name == "draw_rect" && (node.arguments.size() == 4 || node.arguments.size() == 5)) {
-        int x = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
-            std::get<int>(evaluate(*node.arguments[0])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
-        int y = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
-            std::get<int>(evaluate(*node.arguments[1])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
-        int width = std::holds_alternative<int>(evaluate(*node.arguments[2])) ? 
-            std::get<int>(evaluate(*node.arguments[2])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[2])));
-        int height = std::holds_alternative<int>(evaluate(*node.arguments[3])) ? 
-            std::get<int>(evaluate(*node.arguments[3])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[3])));
-        bool filled = false;
-        if (node.arguments.size() == 5) {
-            ValueType filledValue = evaluate(*node.arguments[4]);
-            filled = std::holds_alternative<bool>(filledValue) ? std::get<bool>(filledValue) : 
-                     (std::holds_alternative<int>(filledValue) ? std::get<int>(filledValue) != 0 : 
-                      std::get<double>(filledValue) != 0.0);
-        }
-        ioHandler->draw_rect(x, y, width, height, filled);
-        lastValue = 0;
-        return;
-    }
-    
-    if (node.name == "draw_text" && node.arguments.size() == 3) {
-        int x = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
-            std::get<int>(evaluate(*node.arguments[0])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
-        int y = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
-            std::get<int>(evaluate(*node.arguments[1])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
-        std::string text = valueToString(evaluate(*node.arguments[2]));
-        ioHandler->draw_text(x, y, text);
-        lastValue = 0;
-        return;
-    }
-    
-    if (node.name == "refresh_screen" && node.arguments.size() == 0) {
-        ioHandler->refresh_screen();
-        lastValue = 0;
-        return;
-    }
-    
-    if (node.name == "key_pressed" && node.arguments.size() == 1) {
-        ValueType keyValue = evaluate(*node.arguments[0]);
-        std::string key;
-        
-        // Handle numeric key codes (ASCII values)
-        if (std::holds_alternative<int>(keyValue)) {
-            int keyCode = std::get<int>(keyValue);
-            if (keyCode >= 32 && keyCode <= 126) { // Printable ASCII range
-                key = std::string(1, static_cast<char>(keyCode));
-            } else {
-                key = std::to_string(keyCode); // Non-printable, keep as string
-            }
-        } else {
-            key = valueToString(keyValue);
-        }
-        
-        bool pressed = ioHandler->key_pressed(key);
-        lastValue = pressed;
-        return;
-    }
-    
-    if (node.name == "quit_requested" && node.arguments.size() == 0) {
-        bool quit = ioHandler->quit_requested();
-        lastValue = quit;
-        return;
-    }
-    
-    if (node.name == "sleep_ms" && node.arguments.size() == 1) {
-        int ms = std::holds_alternative<int>(evaluate(*node.arguments[0])) ? 
-            std::get<int>(evaluate(*node.arguments[0])) : 
-            static_cast<int>(std::get<double>(evaluate(*node.arguments[0])));
-        ioHandler->sleep_ms(ms);
-        lastValue = 0;
-        return;
-    }
-    
-    if (node.name == "get_ticks" && node.arguments.size() == 0) {
-        int ticks = ioHandler->get_ticks();
-        lastValue = ticks;
-        return;
-    }
-
-    // Built-in math functions
+bool Interpreter::handleMathFunctions(CallExpr& node) {
+    // Built-in math functions (single argument)
     if (node.arguments.size() == 1 && 
         (node.name == "sqr" || node.name == "sqrt" || node.name == "abs" || 
          node.name == "sin" || node.name == "cos" || node.name == "tan" ||
@@ -523,60 +391,46 @@ void Interpreter::visit(CallExpr& node) {
         
         if (node.name == "sqr" || node.name == "sqrt") {
             lastValue = std::sqrt(numArg);
-            return;
         } else if (node.name == "abs") {
             lastValue = std::abs(numArg);
-            return;
         } else if (node.name == "sin") {
             lastValue = std::sin(numArg);
-            return;
         } else if (node.name == "cos") {
             lastValue = std::cos(numArg);
-            return;
         } else if (node.name == "tan") {
             lastValue = std::tan(numArg);
-            return;
         } else if (node.name == "asin") {
             lastValue = std::asin(numArg);
-            return;
         } else if (node.name == "acos") {
             lastValue = std::acos(numArg);
-            return;
         } else if (node.name == "atan") {
             lastValue = std::atan(numArg);
-            return;
         } else if (node.name == "log") {
             if (numArg <= 0) {
                 throw RuntimeError("LOG requires a positive argument");
             }
             lastValue = std::log(numArg);
-            return;
         } else if (node.name == "log10") {
             if (numArg <= 0) {
                 throw RuntimeError("LOG10 requires a positive argument");
             }
             lastValue = std::log10(numArg);
-            return;
         } else if (node.name == "exp") {
             lastValue = std::exp(numArg);
-            return;
         } else if (node.name == "floor") {
             lastValue = std::floor(numArg);
-            return;
         } else if (node.name == "ceil") {
             lastValue = std::ceil(numArg);
-            return;
         } else if (node.name == "round") {
             lastValue = std::round(numArg);
-            return;
         } else if (node.name == "int") {
             lastValue = static_cast<int>(numArg);
-            return;
         }
+        return true;
     }
     
-    // Two-argument functions and mid (which can have 2 or 3 arguments)
-    if (node.arguments.size() == 2 || (node.name == "mid" && (node.arguments.size() == 2 || node.arguments.size() == 3))) {
+    // Two-argument math functions
+    if (node.arguments.size() == 2) {
         if (node.name == "pow") {
             ValueType base = evaluate(*node.arguments[0]);
             ValueType exp = evaluate(*node.arguments[1]);
@@ -587,7 +441,7 @@ void Interpreter::visit(CallExpr& node) {
                 static_cast<double>(std::get<int>(exp)) : std::get<double>(exp);
                 
             lastValue = std::pow(baseNum, expNum);
-            return;
+            return true;
         } else if (node.name == "atan2") {
             ValueType y = evaluate(*node.arguments[0]);
             ValueType x = evaluate(*node.arguments[1]);
@@ -598,7 +452,7 @@ void Interpreter::visit(CallExpr& node) {
                 static_cast<double>(std::get<int>(x)) : std::get<double>(x);
                 
             lastValue = std::atan2(yNum, xNum);
-            return;
+            return true;
         } else if (node.name == "mod") {
             ValueType left = evaluate(*node.arguments[0]);
             ValueType right = evaluate(*node.arguments[1]);
@@ -612,7 +466,7 @@ void Interpreter::visit(CallExpr& node) {
                 throw RuntimeError("MOD by zero");
             }
             lastValue = leftInt % rightInt;
-            return;
+            return true;
         } else if (node.name == "min") {
             ValueType left = evaluate(*node.arguments[0]);
             ValueType right = evaluate(*node.arguments[1]);
@@ -623,7 +477,7 @@ void Interpreter::visit(CallExpr& node) {
                 static_cast<double>(std::get<int>(right)) : std::get<double>(right);
                 
             lastValue = std::min(leftNum, rightNum);
-            return;
+            return true;
         } else if (node.name == "max") {
             ValueType left = evaluate(*node.arguments[0]);
             ValueType right = evaluate(*node.arguments[1]);
@@ -634,8 +488,50 @@ void Interpreter::visit(CallExpr& node) {
                 static_cast<double>(std::get<int>(right)) : std::get<double>(right);
                 
             lastValue = std::max(leftNum, rightNum);
-            return;
-        } else if (node.name == "mid") {
+            return true;
+        }
+    }
+    
+    // Zero-argument math constants/functions
+    if (node.arguments.size() == 0) {
+        if (node.name == "pi") {
+            lastValue = 3.141592653589793;
+            return true;
+        }
+    }
+    
+    // Random functions
+    if (node.name == "rnd" || node.name == "random") {
+        if (node.arguments.size() == 0) {
+            lastValue = static_cast<double>(std::rand()) / RAND_MAX;
+            return true;
+        } else if (node.arguments.size() == 1) {
+            ValueType arg = evaluate(*node.arguments[0]);
+            int maxVal = 1;
+            if (std::holds_alternative<int>(arg)) {
+                maxVal = std::get<int>(arg);
+            } else if (std::holds_alternative<double>(arg)) {
+                maxVal = static_cast<int>(std::get<double>(arg));
+            }
+            if (maxVal <= 0) maxVal = 1;
+            lastValue = (std::rand() % maxVal) + 1;  // 1 to maxVal
+            return true;
+        }
+    }
+    
+    if (node.name == "randomise" && node.arguments.size() == 0) {
+        std::srand(static_cast<unsigned>(std::time(nullptr)));
+        lastValue = 0; // randomise doesn't return a value
+        return true;
+    }
+    
+    return false; // Function not handled by this dispatcher
+}
+
+bool Interpreter::handleStringFunctions(CallExpr& node) {
+    // String functions (mid, left, right, len, str, val)
+    if (node.arguments.size() == 2 || (node.name == "mid" && (node.arguments.size() == 2 || node.arguments.size() == 3))) {
+        if (node.name == "mid") {
             if (node.arguments.size() < 2 || node.arguments.size() > 3) {
                 throw RuntimeError("MID requires 2 or 3 arguments");
             }
@@ -664,7 +560,7 @@ void Interpreter::visit(CallExpr& node) {
                     lastValue = str.substr(start);
                 }
             }
-            return;
+            return true;
         } else if (node.name == "left") {
             std::string str = valueToString(evaluate(*node.arguments[0]));
             int length = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
@@ -672,7 +568,7 @@ void Interpreter::visit(CallExpr& node) {
                 static_cast<int>(std::get<double>(evaluate(*node.arguments[1])));
                 
             lastValue = str.substr(0, std::max(0, length));
-            return;
+            return true;
         } else if (node.name == "right") {
             std::string str = valueToString(evaluate(*node.arguments[0]));
             int length = std::holds_alternative<int>(evaluate(*node.arguments[1])) ? 
@@ -681,23 +577,21 @@ void Interpreter::visit(CallExpr& node) {
                 
             int start = std::max(0, static_cast<int>(str.length()) - length);
             lastValue = str.substr(start);
-            return;
+            return true;
         }
     }
     
-    // Single-argument functions
+    // Single-argument string functions
     if (node.arguments.size() == 1) {
         if (node.name == "len") {
             std::string str = valueToString(evaluate(*node.arguments[0]));
             lastValue = static_cast<int>(str.length());
-            return;
+            return true;
         } else if (node.name == "str") {
-            // Convert number to string
             ValueType value = evaluate(*node.arguments[0]);
             lastValue = valueToString(value);
-            return;
+            return true;
         } else if (node.name == "val") {
-            // Convert string to number
             std::string str = valueToString(evaluate(*node.arguments[0]));
             try {
                 if (hasDecimalPoint(str)) {
@@ -708,37 +602,15 @@ void Interpreter::visit(CallExpr& node) {
             } catch (const std::exception&) {
                 lastValue = 0; // Default to 0 if conversion fails
             }
-            return;
-        } else if (node.name == "rnd" || node.name == "random") {
-            ValueType arg = evaluate(*node.arguments[0]);
-            int maxVal = 1;
-            if (std::holds_alternative<int>(arg)) {
-                maxVal = std::get<int>(arg);
-            } else if (std::holds_alternative<double>(arg)) {
-                maxVal = static_cast<int>(std::get<double>(arg));
-            }
-            if (maxVal <= 0) maxVal = 1;
-            lastValue = (std::rand() % maxVal) + 1;  // 1 to maxVal
-            return;
+            return true;
         }
     }
     
-    // Zero-argument functions
-    if (node.arguments.size() == 0) {
-        if (node.name == "rnd" || node.name == "random") {
-            lastValue = static_cast<double>(std::rand()) / RAND_MAX;
-            return;
-        } else if (node.name == "randomise") {
-            std::srand(static_cast<unsigned>(std::time(nullptr)));
-            lastValue = 0; // randomise doesn't return a value
-            return;
-        } else if (node.name == "pi") {
-            lastValue = 3.141592653589793;
-            return;
-        }
-    }
-    
-    // Typed array creation functions
+    return false; // Function not handled by this dispatcher
+}
+
+bool Interpreter::handleArrayFunctions(CallExpr& node) {
+    // Array creation functions
     if (node.name == "byte_array" && node.arguments.size() >= 1) {
         std::vector<int> dims;
         for (auto& arg : node.arguments) {
@@ -754,7 +626,7 @@ void Interpreter::visit(CallExpr& node) {
             dims.push_back(dim);
         }
         lastValue = ByteArrayValue(dims);
-        return;
+        return true;
     }
     
     if (node.name == "int_array" && node.arguments.size() >= 1) {
@@ -772,7 +644,7 @@ void Interpreter::visit(CallExpr& node) {
             dims.push_back(dim);
         }
         lastValue = IntArrayValue(dims);
-        return;
+        return true;
     }
     
     if (node.name == "double_array" && node.arguments.size() >= 1) {
@@ -790,210 +662,27 @@ void Interpreter::visit(CallExpr& node) {
             dims.push_back(dim);
         }
         lastValue = DoubleArrayValue(dims);
-        return;
+        return true;
     }
     
-    // Built-in functions
-    if (node.name == "sqr" && node.arguments.size() == 1) {
-        ValueType arg = evaluate(*node.arguments[0]);
-        if (std::holds_alternative<int>(arg)) {
-            lastValue = std::sqrt(static_cast<double>(std::get<int>(arg)));
-        } else if (std::holds_alternative<double>(arg)) {
-            lastValue = std::sqrt(std::get<double>(arg));
-        } else {
-            throw RuntimeError("SQR requires a numeric argument");
-        }
-        return;
-    }
-    
-    // File I/O functions
-    if (node.name == "file_exists" && node.arguments.size() == 1) {
-        ValueType filenameVal = evaluate(*node.arguments[0]);
-        if (std::holds_alternative<std::string>(filenameVal)) {
-            std::string filename = std::get<std::string>(filenameVal);
-            lastValue = std::filesystem::exists(filename);
-        } else {
-            lastValue = false;
-        }
-        return;
-    }
-    
-    if (node.name == "file_size" && node.arguments.size() == 1) {
-        ValueType filenameVal = evaluate(*node.arguments[0]);
-        if (std::holds_alternative<std::string>(filenameVal)) {
-            std::string filename = std::get<std::string>(filenameVal);
-            try {
-                if (std::filesystem::exists(filename)) {
-                    auto size = std::filesystem::file_size(filename);
-                    lastValue = static_cast<int>(size);
-                } else {
-                    lastValue = -1;  // File doesn't exist
-                }
-            } catch (const std::filesystem::filesystem_error& e) {
-                // Filesystem error - return -1
-                lastValue = -1;
-            } catch (...) {
-                // Other error - return -1
-                lastValue = -1;
-            }
-        } else {
-            lastValue = -1;
-        }
-        return;
-    }
-    
-    if (node.name == "delete_file" && node.arguments.size() == 1) {
-        ValueType filenameVal = evaluate(*node.arguments[0]);
-        if (std::holds_alternative<std::string>(filenameVal)) {
-            std::string filename = std::get<std::string>(filenameVal);
-            try {
-                lastValue = std::filesystem::remove(filename);
-            } catch (...) {
-                lastValue = false;
-            }
-        } else {
-            lastValue = false;
-        }
-        return;
-    }
-    
-    if (node.name == "rename_file" && node.arguments.size() == 2) {
-        ValueType oldnameVal = evaluate(*node.arguments[0]);
-        ValueType newnameVal = evaluate(*node.arguments[1]);
-        if (std::holds_alternative<std::string>(oldnameVal) && std::holds_alternative<std::string>(newnameVal)) {
-            std::string oldname = std::get<std::string>(oldnameVal);
-            std::string newname = std::get<std::string>(newnameVal);
-            try {
-                std::filesystem::rename(oldname, newname);
-                lastValue = true;
-            } catch (...) {
-                lastValue = false;
-            }
-        } else {
-            lastValue = false;
-        }
-        return;
-    }
-    
-    if (node.name == "read_text_file" && node.arguments.size() == 1) {
-        ValueType filenameVal = evaluate(*node.arguments[0]);
-        if (std::holds_alternative<std::string>(filenameVal)) {
-            std::string filename = std::get<std::string>(filenameVal);
-            std::ifstream file(filename);
-            if (file.is_open()) {
-                std::string content((std::istreambuf_iterator<char>(file)),
-                                   std::istreambuf_iterator<char>());
-                file.close();
-                lastValue = content;
-            } else {
-                lastValue = std::string("");
-            }
-        } else {
-            lastValue = std::string("");
-        }
-        return;
-    }
-    
-    if (node.name == "write_text_file" && node.arguments.size() == 2) {
-        ValueType filenameVal = evaluate(*node.arguments[0]);
-        ValueType contentVal = evaluate(*node.arguments[1]);
-        if (std::holds_alternative<std::string>(filenameVal) && std::holds_alternative<std::string>(contentVal)) {
-            std::string filename = std::get<std::string>(filenameVal);
-            std::string content = std::get<std::string>(contentVal);
-            std::ofstream file(filename);
-            if (file.is_open()) {
-                file << content;
-                file.flush();  // Ensure content is written to disk
-                file.close();
-                lastValue = !file.fail();
-            } else {
-                lastValue = false;
-            }
-        } else {
-            lastValue = false;
-        }
-        return;
-    }
-    
-    if (node.name == "append_text_file" && node.arguments.size() == 2) {
-        ValueType filenameVal = evaluate(*node.arguments[0]);
-        ValueType contentVal = evaluate(*node.arguments[1]);
-        if (std::holds_alternative<std::string>(filenameVal) && std::holds_alternative<std::string>(contentVal)) {
-            std::string filename = std::get<std::string>(filenameVal);
-            std::string content = std::get<std::string>(contentVal);
-            std::ofstream file(filename, std::ios::app);
-            if (file.is_open()) {
-                file << content;
-                file.flush();  // Ensure content is written to disk
-                file.close();
-                lastValue = !file.fail();
-            } else {
-                lastValue = false;
-            }
-        } else {
-            lastValue = false;
-        }
-        return;
-    }
-    
-    if (node.name == "load_binary_file" && node.arguments.size() == 1) {
-        ValueType filenameVal = evaluate(*node.arguments[0]);
-        if (std::holds_alternative<std::string>(filenameVal)) {
-            std::string filename = std::get<std::string>(filenameVal);
-            std::ifstream file(filename, std::ios::binary);
-            if (file.is_open()) {
-                // Get file size
-                file.seekg(0, std::ios::end);
-                size_t fileSize = file.tellg();
-                file.seekg(0, std::ios::beg);
-                
-                // Create buffer
-                ByteArrayValue buffer({static_cast<int>(fileSize)});
-                
-                // Read data
-                file.read(reinterpret_cast<char*>(buffer.elements.data()), fileSize);
-                file.close();
-                
-                lastValue = buffer;
-            } else {
-                lastValue = ByteArrayValue();
-            }
-        } else {
-            lastValue = ByteArrayValue();
-        }
-        return;
-    }
-    
-    if (node.name == "write_binary_file" && node.arguments.size() == 2) {
-        ValueType filenameVal = evaluate(*node.arguments[0]);
-        ValueType bufferVal = evaluate(*node.arguments[1]);
-        if (std::holds_alternative<std::string>(filenameVal) && std::holds_alternative<ByteArrayValue>(bufferVal)) {
-            std::string filename = std::get<std::string>(filenameVal);
-            ByteArrayValue& buffer = std::get<ByteArrayValue>(bufferVal);
-            std::ofstream file(filename, std::ios::binary);
-            if (file.is_open()) {
-                file.write(reinterpret_cast<const char*>(buffer.elements.data()), buffer.elements.size());
-                file.flush();  // Ensure content is written to disk
-                file.close();
-                lastValue = !file.fail();
-            } else {
-                lastValue = false;
-            }
-        } else {
-            lastValue = false;
-        }
-        return;
-    }
-    
-    // Note: External functions (graphics, database, etc.) will be handled via FFI
-    
-    // User-defined functions
-    if (functions.find(node.name) != functions.end()) {
-        auto& func = functions[node.name];
+    return false; // Function not handled by this dispatcher
+}
+
+bool Interpreter::handleFileFunctions(CallExpr& node) {
+    // File I/O functions - stub implementation for core console version
+    return false; // No file functions in core console version
+}
+
+bool Interpreter::handleUserDefinedFunction(CallExpr& node) {
+    // User-defined function call
+    auto funcIt = functions.find(node.name);
+    if (funcIt != functions.end()) {
+        const auto& func = *funcIt->second;  // Dereference the unique_ptr
         
-        if (node.arguments.size() != func->parameters.size()) {
+        // Check argument count
+        if (node.arguments.size() != func.parameters.size()) {
             throw RuntimeError("Function " + node.name + " expects " + 
-                             std::to_string(func->parameters.size()) + " arguments, got " + 
+                             std::to_string(func.parameters.size()) + " arguments, got " + 
                              std::to_string(node.arguments.size()));
         }
         
@@ -1008,22 +697,23 @@ void Interpreter::visit(CallExpr& node) {
         pushScope();
         
         // Bind parameters using pre-evaluated arguments
-        for (size_t i = 0; i < func->parameters.size(); i++) {
-            defineVariable(func->parameters[i], argValues[i]);
+        for (size_t i = 0; i < func.parameters.size(); i++) {
+            defineVariable(func.parameters[i], argValues[i]);
         }
         
         // Execute function body
         hasReturned = false;
-        for (auto& stmt : func->body) {
+        for (auto& stmt : func.body) {
             stmt->accept(*this);
             if (hasReturned) break;
         }
         
         popScope();
         hasReturned = false;
-    } else {
-        throw RuntimeError("Unknown function: " + node.name);
+        return true;
     }
+    
+    return false; // Function not handled by this dispatcher
 }
 
 void Interpreter::visit(StructLiteralExpr& node) {

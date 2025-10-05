@@ -11,14 +11,22 @@ class ASTVisitor;
 
 // Base AST Node
 class ASTNode {
+protected:
+    SourcePosition position_;
+    
 public:
+    ASTNode(const SourcePosition& pos = SourcePosition()) : position_(pos) {}
     virtual ~ASTNode() = default;
     virtual void accept(ASTVisitor& visitor) = 0;
+    
+    const SourcePosition& getPosition() const { return position_; }
+    void setPosition(const SourcePosition& pos) { position_ = pos; }
 };
 
 // Expression nodes
 class Expression : public ASTNode {
 public:
+    Expression(const SourcePosition& pos = SourcePosition()) : ASTNode(pos) {}
     virtual ~Expression() = default;
 };
 
@@ -26,7 +34,8 @@ class LiteralExpr : public Expression {
 public:
     ValueType value;
     
-    explicit LiteralExpr(ValueType v) : value(std::move(v)) {}
+    explicit LiteralExpr(ValueType v, const SourcePosition& pos = SourcePosition()) 
+        : Expression(pos), value(std::move(v)) {}
     void accept(ASTVisitor& visitor) override;
 };
 
@@ -36,8 +45,9 @@ public:
     std::unique_ptr<Expression> index; // For array access
     std::string member;                // For struct member access
     
-    explicit VariableExpr(std::string n, std::unique_ptr<Expression> idx = nullptr, std::string mem = "")
-        : name(std::move(n)), index(std::move(idx)), member(std::move(mem)) {}
+    explicit VariableExpr(std::string n, std::unique_ptr<Expression> idx = nullptr, 
+                         std::string mem = "", const SourcePosition& pos = SourcePosition())
+        : Expression(pos), name(std::move(n)), index(std::move(idx)), member(std::move(mem)) {}
     void accept(ASTVisitor& visitor) override;
 };
 
@@ -47,8 +57,9 @@ public:
     std::string operator_;
     std::unique_ptr<Expression> right;
     
-    BinaryExpr(std::unique_ptr<Expression> l, std::string op, std::unique_ptr<Expression> r)
-        : left(std::move(l)), operator_(std::move(op)), right(std::move(r)) {}
+    BinaryExpr(std::unique_ptr<Expression> l, std::string op, std::unique_ptr<Expression> r,
+               const SourcePosition& pos = SourcePosition())
+        : Expression(pos), left(std::move(l)), operator_(std::move(op)), right(std::move(r)) {}
     void accept(ASTVisitor& visitor) override;
 };
 
@@ -96,6 +107,7 @@ public:
 // Statement nodes
 class Statement : public ASTNode {
 public:
+    Statement(const SourcePosition& pos = SourcePosition()) : ASTNode(pos) {}
     virtual ~Statement() = default;
 };
 
@@ -103,8 +115,8 @@ class ExpressionStmt : public Statement {
 public:
     std::unique_ptr<Expression> expression;
     
-    explicit ExpressionStmt(std::unique_ptr<Expression> expr)
-        : expression(std::move(expr)) {}
+    explicit ExpressionStmt(std::unique_ptr<Expression> expr, const SourcePosition& pos = SourcePosition())
+        : Statement(pos), expression(std::move(expr)) {}
     void accept(ASTVisitor& visitor) override;
 };
 

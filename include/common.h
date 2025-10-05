@@ -167,21 +167,69 @@ class Value;
 class FunctionDecl;
 class StructDecl;
 
-// Error handling
+// Source position tracking
+struct SourcePosition {
+    int line;
+    int column;
+    std::string filename;
+    
+    SourcePosition(int l = -1, int c = -1, std::string f = "") 
+        : line(l), column(c), filename(std::move(f)) {}
+    
+    std::string toString() const {
+        std::string result;
+        if (!filename.empty()) {
+            result += filename;
+        }
+        if (line >= 0) {
+            if (!result.empty()) result += ":";
+            result += std::to_string(line);
+            if (column >= 0) {
+                result += ":" + std::to_string(column);
+            }
+        }
+        return result;
+    }
+    
+    bool isValid() const {
+        return line >= 0;
+    }
+};
+
+// Error handling with source position
 class RBasicError : public std::runtime_error {
+protected:
+    SourcePosition position_;
+    
 public:
-    RBasicError(const std::string& message) : std::runtime_error(message) {}
+    RBasicError(const std::string& message, const SourcePosition& pos = SourcePosition()) 
+        : std::runtime_error(formatMessage(message, pos)), position_(pos) {}
+    
+    const SourcePosition& getPosition() const { return position_; }
+    
+private:
+    static std::string formatMessage(const std::string& message, const SourcePosition& pos) {
+        if (pos.isValid()) {
+            return message + " at " + pos.toString();
+        }
+        return message;
+    }
 };
 
 class SyntaxError : public RBasicError {
 public:
-    SyntaxError(const std::string& message, int line = -1) 
-        : RBasicError("Syntax error: " + message + (line >= 0 ? " at line " + std::to_string(line) : "")) {}
+    SyntaxError(const std::string& message, const SourcePosition& pos = SourcePosition()) 
+        : RBasicError("Syntax error: " + message, pos) {}
+    
+    // Backwards compatibility
+    SyntaxError(const std::string& message, int line) 
+        : RBasicError("Syntax error: " + message, SourcePosition(line)) {}
 };
 
 class RuntimeError : public RBasicError {
 public:
-    RuntimeError(const std::string& message) : RBasicError("Runtime error: " + message) {}
+    RuntimeError(const std::string& message, const SourcePosition& pos = SourcePosition()) 
+        : RBasicError("Runtime error: " + message, pos) {}
 };
 
 // Utility functions

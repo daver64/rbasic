@@ -20,6 +20,7 @@ private:
     ValueType lastValue;
     bool hasReturned;
     std::unique_ptr<IOHandler> ioHandler;
+    SourcePosition currentPosition;  // Track current source position for error reporting
     
     void defineVariable(const std::string& name, const ValueType& value);
     ValueType getVariable(const std::string& name);
@@ -36,6 +37,18 @@ public:
     
     // Get the IO handler (for external access if needed)
     IOHandler* getIOHandler() const;
+    
+    // Position tracking for better error messages
+    void setCurrentPosition(const SourcePosition& pos) { currentPosition = pos; }
+    const SourcePosition& getCurrentPosition() const { return currentPosition; }
+    
+    // Function call dispatch methods
+    bool handleIOFunctions(CallExpr& node);
+    bool handleMathFunctions(CallExpr& node);
+    bool handleStringFunctions(CallExpr& node);
+    bool handleArrayFunctions(CallExpr& node);
+    bool handleFileFunctions(CallExpr& node);
+    bool handleUserDefinedFunction(CallExpr& node);
     
     // Visitor methods
     void visit(LiteralExpr& node) override;
