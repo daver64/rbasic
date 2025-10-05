@@ -1,0 +1,20 @@
+{
+    "name": "rbasic-simple",
+    "displayName": "rbasic Simple",
+    "version": "1.0.0",
+    "engines": {
+        "vscode": "^1.0.0"
+    },
+    "contributes": {
+        "languages": [{
+            "id": "rbasic",
+            "extensions": [".bas"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "rbasic",
+            "scopeName": "source.rbasic",
+            "path": "./syntaxes/rbasic.tmLanguage.json"
+        }]
+    }
+}

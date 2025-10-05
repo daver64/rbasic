@@ -1,0 +1,23 @@
+{
+    "name": "rbasic-language",
+    "displayName": "rbasic Language Support", 
+    "version": "1.0.0",
+    "publisher": "rbasic",
+    "engines": {
+        "vscode": "*"
+    },
+    "categories": ["Programming Languages"],
+    "contributes": {
+        "languages": [{
+            "id": "rbasic",
+            "aliases": ["rbasic"],
+            "extensions": [".bas", ".rbasic"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "rbasic",
+            "scopeName": "source.rbasic", 
+            "path": "./syntaxes/rbasic.tmLanguage.json"
+        }]
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "name": "test-extension",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "*"
+    },
+    "contributes": {
+        "languages": [{
+            "id": "test",
+            "extensions": [".test"]
+        }]
+    }
+}
