@@ -7,6 +7,9 @@ build/
 *.out
 *.dll
 *.so
+rbasic
+rbasic_tests
+librbasic_runtime.a
 
 # Object files
 *.o
