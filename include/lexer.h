@@ -31,6 +31,7 @@ enum class TokenType {
     DIM,
     STRUCT,
     TYPE,
+    POINTER,
     AS,
     CALL,
     CONST,

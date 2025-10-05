@@ -47,6 +47,7 @@ private:
     std::unique_ptr<Statement> structDeclaration();
     std::unique_ptr<Statement> dimStatement();
     std::unique_ptr<Statement> declareStatement();
+    std::unique_ptr<Statement> ffiStatement();
     std::unique_ptr<Statement> expressionStatement();
     
     // Helper methods

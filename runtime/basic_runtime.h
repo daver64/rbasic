@@ -26,10 +26,19 @@ struct BasicArray;
 struct BasicByteArray;
 struct BasicIntArray;
 struct BasicDoubleArray;
-// struct BasicLibraryHandle; // Temporarily disabled for Phase 1
+struct BasicPointer;
 
 // Value type for compiled BASIC programs
-using BasicValue = std::variant<int, double, std::string, bool, BasicStruct, BasicArray, BasicByteArray, BasicIntArray, BasicDoubleArray>;
+using BasicValue = std::variant<int, double, std::string, bool, void*, BasicStruct, BasicArray, BasicByteArray, BasicIntArray, BasicDoubleArray>;
+
+// Pointer wrapper for FFI
+struct BasicPointer {
+    void* ptr;
+    std::string typeName;  // Optional type information
+    
+    BasicPointer() : ptr(nullptr) {}
+    BasicPointer(void* p, const std::string& type = "") : ptr(p), typeName(type) {}
+};
 
 // Structure type
 struct BasicStruct {

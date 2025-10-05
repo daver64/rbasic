@@ -11,6 +11,7 @@ rbasic is a "C-leaning BASIC" language that combines traditional BASIC simplicit
 - Strong typing with type annotations
 - Structures and arrays
 - Assignment expressions
+- Foreign Function Interface (FFI) for C library integration
 - Complete function library with 30+ built-in functions
 - Extensible via Foreign Function Interface (FFI)
 
@@ -37,7 +38,7 @@ rbasic is a "C-leaning BASIC" language that combines traditional BASIC simplicit
 
 ```bnf
 <keyword> ::= "var" | "if" | "else" | "for" | "while" | "function" | "return" 
-            | "dim" | "struct" | "and" | "or" | "not"
+            | "dim" | "struct" | "ffi" | "as" | "and" | "or" | "not"
 ```
 
 ### Operators
@@ -76,6 +77,7 @@ rbasic is a "C-leaning BASIC" language that combines traditional BASIC simplicit
 <statement> ::= <variable_declaration>
               | <function_declaration>
               | <struct_declaration>
+              | <ffi_declaration>
               | <assignment_statement>
               | <if_statement>
               | <for_statement>
@@ -118,6 +120,20 @@ rbasic is a "C-leaning BASIC" language that combines traditional BASIC simplicit
 <field_list> ::= <field_declaration> ( "," <field_declaration> )*
 
 <field_declaration> ::= <identifier>
+```
+
+#### FFI Declaration
+
+```bnf
+<ffi_declaration> ::= "ffi" <string> <identifier> "(" <ffi_parameter_list>? ")" 
+                     ( "as" <ffi_type> )? ";"
+
+<ffi_parameter_list> ::= <ffi_parameter> ( "," <ffi_parameter> )*
+
+<ffi_parameter> ::= <identifier> "as" <ffi_type>
+
+<ffi_type> ::= "integer" | "string" | "pointer" 
+             | <identifier> "*"  // C-style pointer syntax
 ```
 
 ### Statements

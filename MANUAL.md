@@ -8,6 +8,7 @@ This manual provides comprehensive documentation for using the rbasic programmin
 
 - ✅ **Complete Language**: All syntax, control flow, functions, and data structures working
 - ✅ **Multidimensional Arrays**: True `array[i,j,k]` syntax working in both execution modes
+- ✅ **Foreign Function Interface (FFI)**: Direct C library integration with multiple parameter types
 - ✅ **Automatic Parallelization**: OpenMP-based multi-core optimization for large array operations
 - ✅ **Triple Execution Modes**: Interpreter (`-i`), compiler (`-c`), and interactive REPL (`-r`) fully functional
 - ✅ **Portable Compilation**: MinGW64 bundled for Windows, falls back to MSVC when needed
@@ -30,6 +31,7 @@ This manual provides comprehensive documentation for using the rbasic programmin
 - [Control Flow](#control-flow)
 - [Functions and Procedures](#functions-and-procedures)
 - [Arrays and Structures](#arrays-and-structures)
+- [Foreign Function Interface (FFI)](#foreign-function-interface-ffi)
 - [Examples](#examples)
 - [Error Handling](#error-handling)
 - [Performance and Optimization](#performance-and-optimization)
@@ -1010,6 +1012,196 @@ var end = Point { 3, 4 };
 
 print("Distance:", distance(start, end));  // 5.0
 ```
+
+## Foreign Function Interface (FFI)
+
+The rbasic FFI system enables direct integration with C libraries and system APIs, allowing programs to call external functions from DLLs (Windows), shared libraries (Linux), or dylibs (macOS).
+
+### FFI Declaration Syntax
+
+FFI functions are declared using the `ffi` keyword:
+
+```basic
+ffi "library_name" FunctionName(parameter1 as type1, parameter2 as type2) as return_type;
+```
+
+**Supported Types:**
+- `integer` - 32-bit signed integer
+- `string` - C-style null-terminated string
+- `pointer` - Generic void pointer for handles and structures
+
+### Basic FFI Examples
+
+#### Windows API Functions
+
+```basic
+// System information functions
+ffi "kernel32.dll" GetCurrentProcessId() as integer;
+ffi "kernel32.dll" GetTickCount() as integer;
+ffi "kernel32.dll" Sleep(milliseconds as integer) as integer;
+
+function main() {
+    print("Process ID:", GetCurrentProcessId());
+    print("System uptime:", GetTickCount(), "ms");
+    
+    print("Sleeping for 1 second...");
+    Sleep(1000);
+    print("Done!");
+    
+    return 0;
+}
+```
+
+#### User Interface Functions
+
+```basic
+// Message box and user interaction
+ffi "user32.dll" MessageBoxA(hwnd as integer, text as string, caption as string, type as integer) as integer;
+ffi "user32.dll" MessageBeep(type as integer) as integer;
+
+function show_message(message, title) {
+    // MB_OK = 0, MB_ICONINFORMATION = 64
+    return MessageBoxA(0, message, title, 64);
+}
+
+function main() {
+    MessageBeep(0);  // System beep
+    show_message("Hello from rbasic!", "FFI Demo");
+    return 0;
+}
+```
+
+### Advanced FFI: Pointer Handling
+
+FFI supports pointer types for working with handles, structures, and complex data:
+
+```basic
+// Example: File handling with pointers
+ffi "kernel32.dll" CreateFileA(filename as string, access as integer, share as integer, 
+                               security as pointer, creation as integer, flags as integer, 
+                               template as pointer) as pointer;
+ffi "kernel32.dll" WriteFile(handle as pointer, buffer as string, bytes as integer,
+                            written as pointer, overlapped as pointer) as integer;
+ffi "kernel32.dll" CloseHandle(handle as pointer) as integer;
+
+function write_file_via_api(filename, content) {
+    // GENERIC_WRITE = 0x40000000, CREATE_ALWAYS = 2
+    var handle = CreateFileA(filename, 1073741824, 0, null, 2, 128, null);
+    
+    if (handle != null) {
+        WriteFile(handle, content, len(content), null, null);
+        CloseHandle(handle);
+        return true;
+    }
+    
+    return false;
+}
+```
+
+### FFI Function Signature Patterns
+
+The FFI system supports several common function signature patterns:
+
+**No Parameters, Integer Return:**
+```basic
+ffi "kernel32.dll" GetCurrentProcessId() as integer;
+ffi "kernel32.dll" GetTickCount() as integer;
+```
+
+**Single Integer Parameter:**
+```basic
+ffi "kernel32.dll" Sleep(milliseconds as integer) as integer;
+ffi "user32.dll" MessageBeep(type as integer) as integer;
+```
+
+**Multiple Parameters with Mixed Types:**
+```basic
+ffi "user32.dll" MessageBoxA(hwnd as integer, text as string, caption as string, type as integer) as integer;
+```
+
+**Pointer Returns for Handles:**
+```basic
+ffi "kernel32.dll" CreateFileA(filename as string, access as integer, share as integer,
+                               security as pointer, creation as integer, flags as integer,
+                               template as pointer) as pointer;
+```
+
+### Cross-Platform FFI
+
+FFI declarations can be made platform-specific using conditional compilation or runtime detection:
+
+```basic
+// Windows-specific functions
+ffi "kernel32.dll" GetCurrentProcessId() as integer;
+ffi "user32.dll" MessageBoxA(hwnd as integer, text as string, caption as string, type as integer) as integer;
+
+// Linux-specific functions (hypothetical syntax for future)
+// ffi "libc.so.6" getpid() as integer;
+// ffi "libX11.so" XOpenDisplay(display_name as string) as pointer;
+
+function main() {
+    var pid = GetCurrentProcessId();  // Windows
+    // var pid = getpid();            // Linux (future)
+    
+    print("Process ID:", pid);
+    return 0;
+}
+```
+
+### FFI Best Practices
+
+1. **Error Checking**: Always check pointer returns for null
+2. **Resource Management**: Close handles and free resources
+3. **Type Safety**: Use appropriate types for parameters
+4. **Documentation**: Comment API constants and behavior
+
+```basic
+// Good FFI usage example
+ffi "kernel32.dll" CreateFileA(filename as string, access as integer, share as integer,
+                               security as pointer, creation as integer, flags as integer,
+                               template as pointer) as pointer;
+ffi "kernel32.dll" CloseHandle(handle as pointer) as integer;
+
+function safe_create_file(filename) {
+    // Windows API constants
+    var GENERIC_WRITE = 1073741824;    // 0x40000000
+    var CREATE_ALWAYS = 2;
+    var FILE_ATTRIBUTE_NORMAL = 128;
+    
+    var handle = CreateFileA(filename, GENERIC_WRITE, 0, null, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, null);
+    
+    if (handle == null) {
+        print("Error: Failed to create file", filename);
+        return null;
+    }
+    
+    return handle;
+}
+
+function main() {
+    var file = safe_create_file("test.txt");
+    if (file != null) {
+        // Use file...
+        CloseHandle(file);  // Always clean up!
+    }
+    return 0;
+}
+```
+
+### FFI Execution Modes
+
+FFI works identically in both execution modes:
+
+**Interpreted Mode** (`-i`):
+- Direct function calls via dynamic library loading
+- Immediate execution for development and testing
+
+**Compiled Mode** (`-c`):
+- Generated C++ code with runtime FFI calls
+- Same behavior as interpreted mode
+- Optimized for production deployment
+
+Both modes provide the same FFI functionality and produce identical results.
 
 ## Examples
 

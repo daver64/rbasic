@@ -139,6 +139,7 @@ TokenType Lexer::getKeywordType(const std::string& text) const {
         {"dim", TokenType::DIM},
         {"struct", TokenType::STRUCT},
         {"type", TokenType::TYPE},
+        {"pointer", TokenType::POINTER},
         {"as", TokenType::AS},
         {"call", TokenType::CALL},
         {"const", TokenType::CONST},

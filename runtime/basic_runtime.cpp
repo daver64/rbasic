@@ -1600,8 +1600,38 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
 }
 
 BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1) {
-    // Implementation for 1-parameter functions
-    throw std::runtime_error("1-parameter FFI functions not yet implemented in compiled mode");
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        auto library = ffi_manager.get_library(library_name);
+        if (!library) {
+            library = ffi_manager.load_library(library_name);
+        }
+        
+        if (!library || !library->is_valid()) {
+            throw std::runtime_error("Failed to load library: " + library_name);
+        }
+        
+        void* funcPtr = library->get_function_address(function_name);
+        if (!funcPtr) {
+            throw std::runtime_error("Function not found: " + function_name);
+        }
+        
+        // Convert argument to integer (most common case for single parameter)
+        int param = 0;
+        if (std::holds_alternative<double>(arg1)) {
+            param = static_cast<int>(std::get<double>(arg1));
+        } else if (std::holds_alternative<int>(arg1)) {
+            param = std::get<int>(arg1);
+        }
+        
+        // Call single-parameter function returning int (or void, returning 0)
+        typedef int (*FuncType1)(int);
+        auto func = reinterpret_cast<FuncType1>(funcPtr);
+        return BasicValue(static_cast<double>(func(param)));
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("FFI call failed: " + std::string(e.what()));
+    }
 }
 
 BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2) {

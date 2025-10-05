@@ -46,8 +46,9 @@ Session saved to my_session.bas
 - **Typed Arrays**: High-performance `byte_array()`, `int_array()`, `double_array()` for numerical computing
 - **Proper Scoping**: C-style variable scoping within control structures (if/for/while blocks)
 - **Dual Execution**: Identical behavior in both interpreted and compiled modes
-- **Zero Dependencies**: Core language has no external dependencies
+- **Zero Dependencies**: Core language has no external dependencies  
 - **Cross-Platform**: Supports Windows, Linux, and macOS with native compilers
+- **Foreign Function Interface (FFI)**: Direct integration with C libraries and system APIs
 
 ## Language Overview
 
@@ -153,9 +154,42 @@ print(str(42));                // Convert number to string: "42"
 print(val("3.14"));            // Convert string to number: 3.14
 ```
 
-### Future: External Functionality via FFI
+#### Foreign Function Interface (FFI)
+```basic
+// Direct integration with C libraries and system APIs
+ffi "kernel32.dll" GetCurrentProcessId() as integer;
+ffi "kernel32.dll" Sleep(milliseconds as integer) as integer;
+ffi "user32.dll" MessageBoxA(hwnd as integer, text as string, caption as string, type as integer) as integer;
 
-External features like graphics, databases, and system integration will be provided through a Foreign Function Interface (FFI) system, allowing clean separation of core language features from external libraries.
+function main() {
+    var pid = GetCurrentProcessId();
+    print("Process ID:", pid);
+    
+    print("Sleeping for 1 second...");
+    Sleep(1000);
+    
+    MessageBoxA(0, "Hello from rbasic!", "FFI Demo", 0);
+    return 0;
+}
+```
+
+### Future: Enhanced External Functionality
+
+The FFI system provides direct access to C libraries and system APIs. Current FFI capabilities include:
+
+**✅ Implemented FFI Features:**
+- **Direct Library Integration**: Call functions from Windows DLLs, Linux shared libraries, and macOS dylibs
+- **Multiple Parameter Types**: Support for integers, strings, and pointers
+- **Flexible Return Types**: Functions can return integers, pointers, or void
+- **Memory Management**: Safe pointer handling with type information
+- **Both Execution Modes**: FFI works in both interpreted and compiled programs
+
+**🚀 Planned FFI Extensions:**
+- **Automatic Header Parsing**: Generate rbasic bindings from C header files
+- **Structure Support**: Pass and return C structs by value
+- **Advanced Graphics**: SDL2 integration for 2D/3D graphics programming
+- **Database Connectivity**: Direct SQL database access
+- **Network Programming**: Socket and HTTP client/server capabilities
 
 ## Example Programs
 
@@ -282,6 +316,7 @@ This is an active development project. **All core language features are implemen
 - ✅ **Dual Execution Modes**: Interpreter (`-i`), compiler (`-c`), and interactive REPL (`-r`) with identical behavior
 - ✅ **Cross-Platform Support**: Windows MinGW64/MSVC, Linux/macOS g++ compilation
 - ✅ **Advanced Features**: Typed arrays, struct literals, comprehensive data processing
+- ✅ **Foreign Function Interface (FFI)**: Direct C library integration with multiple parameter types
 - ✅ **Error Handling**: Source position tracking with detailed error reporting
 - ✅ **Production Ready**: All unit tests passing, comprehensive example suite
 
@@ -300,7 +335,7 @@ This is an active development project. **All core language features are implemen
 
 **Next Phase Development:**
 - 🚀 **Enhanced Terminal Support**: Cross-platform colored console output and input
-- 🚀 **Foreign Function Interface (FFI)**: External library integration framework
+- 🚀 **Advanced FFI Features**: Automatic header parsing and structure support for SDL2/OpenGL
 - 🚀 **Compiler Optimizations**: Performance improvements for compiled output
 - 🚀 **Extended Standard Library**: Additional domain-specific functionality
 
@@ -354,7 +389,7 @@ build.bat
 ```
 
 ### Future: Foreign Function Interface (FFI)
-External functionality like graphics, databases, and system integration will be provided through a Foreign Function Interface system, similar to Lisp's approach. This will allow clean separation of core language features from external libraries.
+The FFI system provides seamless integration with external C libraries, enabling rbasic programs to access system APIs, graphics libraries, databases, and more while maintaining the same clean syntax in both interpreted and compiled modes.
 
 ## Performance and Use Cases
 

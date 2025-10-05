@@ -155,6 +155,14 @@ struct DoubleArrayValue {
     }
 };
 
+struct PointerValue {
+    void* ptr;
+    std::string typeName;  // Optional type information for FFI
+    
+    PointerValue() : ptr(nullptr) {}
+    PointerValue(void* p, const std::string& type = "") : ptr(p), typeName(type) {}
+};
+
 struct StructValue {
     std::string typeName;
     std::map<std::string, std::variant<int, double, std::string, bool>> fields;
@@ -164,7 +172,7 @@ struct StructValue {
 };
 
 // Common types
-using ValueType = std::variant<int, double, std::string, bool, ArrayValue, StructValue, ByteArrayValue, IntArrayValue, DoubleArrayValue>;
+using ValueType = std::variant<int, double, std::string, bool, void*, ArrayValue, StructValue, PointerValue, ByteArrayValue, IntArrayValue, DoubleArrayValue>;
 
 // Type system
 enum class BasicType {
