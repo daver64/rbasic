@@ -13,6 +13,7 @@ private:
     bool usesSDL;
     bool usesSQLite;
     int indentLevel;
+    std::map<std::string, std::unique_ptr<StructDecl>> structs; // Store struct declarations
     
     void indent();
     void writeLine(const std::string& line);

@@ -303,6 +303,17 @@ std::unique_ptr<Statement> Parser::statement() {
 std::unique_ptr<Statement> Parser::varStatement() {
     auto name = consume(TokenType::IDENTIFIER, "Expected variable name");
     
+    // Check for array declaration: var array[size];
+    if (match({TokenType::LEFT_BRACKET})) {
+        auto size = expression();
+        consume(TokenType::RIGHT_BRACKET, "Expected ']' after array size");
+        consume(TokenType::SEMICOLON, "Expected ';' after array declaration");
+        
+        std::vector<std::unique_ptr<Expression>> dimensions;
+        dimensions.push_back(std::move(size));
+        return std::make_unique<DimStmt>(name.value, "variant", std::move(dimensions));
+    }
+    
     // Check for struct member assignment: var struct.member = value
     std::string member = "";
     if (match({TokenType::DOT})) {

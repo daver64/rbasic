@@ -119,6 +119,9 @@ void CodeGenerator::visit(VariableExpr& node) {
         write("get_array_element(variables[\"" + node.name + "\"], ");
         node.index->accept(*this);
         write(")");
+    } else if (!node.member.empty()) {
+        // Struct member access: struct.member
+        write("get_struct_field(std::get<BasicStruct>(variables[\"" + node.name + "\"]), \"" + node.member + "\")");
     } else {
         // Regular variable access
         write("variables[\"" + node.name + "\"]");
@@ -617,11 +620,33 @@ void CodeGenerator::visit(CallExpr& node) {
 }
 
 void CodeGenerator::visit(StructLiteralExpr& node) {
-    // Generate struct construction code
-    write("StructValue(\"" + node.structName + "\")");
-    // Note: For now, we'll generate a simple constructor call
-    // In a full implementation, we'd need to handle field initialization
-    // This is a basic placeholder that matches the interpreter's structure
+    // Generate struct construction code with field initialization
+    std::string tempVar = generateTempVar();
+    
+    // Create a struct constructor call
+    write("([&]() { BasicStruct " + tempVar + " = create_struct(\"" + node.structName + "\"); ");
+    
+    // Get the struct declaration to access field names
+    auto structIt = structs.find(node.structName);
+    if (structIt != structs.end() && structIt->second) {
+        const auto& structDecl = *structIt->second;
+        
+        // Initialize fields with provided values using actual field names
+        for (size_t i = 0; i < node.values.size() && i < structDecl.fields.size(); i++) {
+            write("set_struct_field(" + tempVar + ", \"" + structDecl.fields[i] + "\", ");
+            node.values[i]->accept(*this);
+            write("); ");
+        }
+    } else {
+        // Fallback to generic field names if struct not found
+        for (size_t i = 0; i < node.values.size(); i++) {
+            write("set_struct_field(" + tempVar + ", \"field" + std::to_string(i) + "\", ");
+            node.values[i]->accept(*this);
+            write("); ");
+        }
+    }
+    
+    write("return BasicValue(" + tempVar + "); })()");
 }
 
 void CodeGenerator::visit(ExpressionStmt& node) {
@@ -637,6 +662,11 @@ void CodeGenerator::visit(VarStmt& node) {
         write("set_array_element(variables[\"" + node.variable + "\"], ");
         node.index->accept(*this);
         write(", ");
+        node.value->accept(*this);
+        write(");\n");
+    } else if (!node.member.empty()) {
+        // Struct member assignment: struct.member = value
+        write("set_struct_field(std::get<BasicStruct>(variables[\"" + node.variable + "\"]), \"" + node.member + "\", ");
         node.value->accept(*this);
         write(");\n");
     } else {
@@ -825,7 +855,10 @@ void CodeGenerator::visit(FunctionDecl& node) {
 }
 
 void CodeGenerator::visit(StructDecl& node) {
-    // TODO: Implement struct generation
+    // Store a copy of the struct declaration for later use
+    structs[node.name] = std::make_unique<StructDecl>(node.name, node.fields, node.fieldTypes);
+    
+    // TODO: Implement struct generation if needed
     writeLine("/* Struct: " + node.name + " */");
 }
 

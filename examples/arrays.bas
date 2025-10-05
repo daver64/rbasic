@@ -1,27 +1,27 @@
 // Example showing arrays in rbasic with modern C-style syntax
 
-// Declare arrays using dim statement
-dim numbers(10) as integer;
-dim names(5) as string;
+// Declare arrays using modern syntax
+var numbers[10];
+var names[5];
 
 // Initialize array with numbers
 print("Initializing array with squares:");
-for(var i = 1; i <= 10; i = i + 1) {
-    var numbers[i] = i * i;
+for(var i = 0; i < 10; i = i + 1) {
+    numbers[i] = (i + 1) * (i + 1);
     print("numbers[", i, "] = ", numbers[i]);
 }
 
 print("");
 
-// Initialize string array
-var names[1] = "Alice";
-var names[2] = "Bob";
-var names[3] = "Charlie";
-var names[4] = "Diana";
-var names[5] = "Eve";
+// Initialize string array  
+names[0] = "Alice";
+names[1] = "Bob";
+names[2] = "Charlie";
+names[3] = "Diana";
+names[4] = "Eve";
 
 print("Names in the array:");
-for(var i = 1; i <= 5; i = i + 1) {
+for(var i = 0; i < 5; i = i + 1) {
     print(i, ": ", names[i]);
 }
 
@@ -29,7 +29,7 @@ print("");
 
 // Find sum and average
 var sum = 0;
-for(var i = 1; i <= 10; i = i + 1) {
+for(var i = 0; i < 10; i = i + 1) {
     sum = sum + numbers[i];
 }
 
@@ -38,8 +38,8 @@ print("Sum of squares: ", sum);
 print("Average: ", average);
 
 // Find maximum
-var max = numbers[1];
-for(var i = 2; i <= 10; i = i + 1) {
+var max = numbers[0];
+for(var i = 1; i < 10; i = i + 1) {
     if (numbers[i] > max) {
         max = numbers[i];
     }
