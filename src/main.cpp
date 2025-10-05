@@ -5,10 +5,12 @@
 #include "codegen.h"
 #include "io_handler.h"
 #include "command_builder.h"
+#include "terminal.h"
 
 // Future: FFI support will be added here
 
 #include <iostream>
+#include <cstdlib>
 #include <fstream>
 #include <filesystem>
 
@@ -94,6 +96,11 @@ bool compileToExecutable(const std::string& cppFile, const std::string& outputFi
 }
 
 int main(int argc, char* argv[]) {
+    // Register terminal cleanup to ensure proper state restoration
+    std::atexit([]() {
+        rbasic::Terminal::cleanup();
+    });
+    
     try {
         if (argc < 2) {
             printUsage(argv[0]);

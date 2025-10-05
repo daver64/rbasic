@@ -23,6 +23,10 @@ bool Terminal::colorSupported = false;
 void* Terminal::hConsole = nullptr;
 void* Terminal::hStdin = nullptr;
 unsigned long Terminal::originalConsoleMode = 0;
+#else
+// Linux: Save original terminal attributes
+static struct termios originalTermios;
+static bool termiosWasSaved = false;
 #endif
 
 bool Terminal::initialize() {
@@ -67,6 +71,11 @@ bool Terminal::initialize() {
     if (isatty(STDOUT_FILENO)) {
         colorSupported = true;
     }
+    
+    // Save original terminal attributes for proper cleanup
+    if (tcgetattr(STDIN_FILENO, &originalTermios) == 0) {
+        termiosWasSaved = true;
+    }
 #endif
 
     initialized = true;
@@ -88,8 +97,14 @@ void Terminal::cleanup() {
         SetConsoleMode(hStdin, originalConsoleMode);
     }
 #else
-    // Reset terminal state
+    // Reset terminal state and restore original attributes
     std::cout << "\033[0m" << std::flush; // Reset all attributes
+    
+    // Restore original terminal attributes if we saved them
+    if (termiosWasSaved) {
+        tcsetattr(STDIN_FILENO, TCSANOW, &originalTermios);
+        termiosWasSaved = false;
+    }
 #endif
 
     initialized = false;

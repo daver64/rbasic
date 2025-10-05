@@ -8,6 +8,7 @@
 #include <fstream>
 #include <filesystem>
 #include <vector>
+#include <cstdlib>
 
 #ifdef RBASIC_SDL_SUPPORT
 // Simple SDL state for compiled programs
@@ -63,6 +64,11 @@ void init_runtime() {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
     // Initialize terminal support for compiled programs
     rbasic::Terminal::initialize();
+    
+    // Register cleanup function to be called on exit
+    std::atexit([]() {
+        rbasic::Terminal::cleanup();
+    });
 }
 
 void init_runtime_sdl() {
