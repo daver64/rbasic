@@ -669,8 +669,184 @@ bool Interpreter::handleArrayFunctions(CallExpr& node) {
 }
 
 bool Interpreter::handleFileFunctions(CallExpr& node) {
-    // File I/O functions - stub implementation for core console version
-    return false; // No file functions in core console version
+    // File I/O functions
+    if (node.name == "file_exists" && node.arguments.size() == 1) {
+        ValueType filenameVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<std::string>(filenameVal)) {
+            std::string filename = std::get<std::string>(filenameVal);
+            lastValue = std::filesystem::exists(filename);
+        } else {
+            lastValue = false;
+        }
+        return true;
+    }
+    
+    if (node.name == "file_size" && node.arguments.size() == 1) {
+        ValueType filenameVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<std::string>(filenameVal)) {
+            std::string filename = std::get<std::string>(filenameVal);
+            try {
+                if (std::filesystem::exists(filename)) {
+                    auto size = std::filesystem::file_size(filename);
+                    lastValue = static_cast<int>(size);
+                } else {
+                    lastValue = -1;  // File doesn't exist
+                }
+            } catch (const std::filesystem::filesystem_error& e) {
+                lastValue = -1;  // Filesystem error
+            } catch (...) {
+                lastValue = -1;  // Other error
+            }
+        } else {
+            lastValue = -1;
+        }
+        return true;
+    }
+    
+    if (node.name == "delete_file" && node.arguments.size() == 1) {
+        ValueType filenameVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<std::string>(filenameVal)) {
+            std::string filename = std::get<std::string>(filenameVal);
+            try {
+                lastValue = std::filesystem::remove(filename);
+            } catch (...) {
+                lastValue = false;
+            }
+        } else {
+            lastValue = false;
+        }
+        return true;
+    }
+    
+    if (node.name == "rename_file" && node.arguments.size() == 2) {
+        ValueType oldnameVal = evaluate(*node.arguments[0]);
+        ValueType newnameVal = evaluate(*node.arguments[1]);
+        if (std::holds_alternative<std::string>(oldnameVal) && std::holds_alternative<std::string>(newnameVal)) {
+            std::string oldname = std::get<std::string>(oldnameVal);
+            std::string newname = std::get<std::string>(newnameVal);
+            try {
+                std::filesystem::rename(oldname, newname);
+                lastValue = true;
+            } catch (...) {
+                lastValue = false;
+            }
+        } else {
+            lastValue = false;
+        }
+        return true;
+    }
+    
+    if (node.name == "read_text_file" && node.arguments.size() == 1) {
+        ValueType filenameVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<std::string>(filenameVal)) {
+            std::string filename = std::get<std::string>(filenameVal);
+            std::ifstream file(filename);
+            if (file.is_open()) {
+                std::string content((std::istreambuf_iterator<char>(file)),
+                                   std::istreambuf_iterator<char>());
+                file.close();
+                lastValue = content;
+            } else {
+                lastValue = std::string("");
+            }
+        } else {
+            lastValue = std::string("");
+        }
+        return true;
+    }
+    
+    if (node.name == "write_text_file" && node.arguments.size() == 2) {
+        ValueType filenameVal = evaluate(*node.arguments[0]);
+        ValueType contentVal = evaluate(*node.arguments[1]);
+        if (std::holds_alternative<std::string>(filenameVal) && std::holds_alternative<std::string>(contentVal)) {
+            std::string filename = std::get<std::string>(filenameVal);
+            std::string content = std::get<std::string>(contentVal);
+            std::ofstream file(filename);
+            if (file.is_open()) {
+                file << content;
+                file.flush();  // Ensure content is written to disk
+                file.close();
+                lastValue = !file.fail();
+            } else {
+                lastValue = false;
+            }
+        } else {
+            lastValue = false;
+        }
+        return true;
+    }
+    
+    if (node.name == "append_text_file" && node.arguments.size() == 2) {
+        ValueType filenameVal = evaluate(*node.arguments[0]);
+        ValueType contentVal = evaluate(*node.arguments[1]);
+        if (std::holds_alternative<std::string>(filenameVal) && std::holds_alternative<std::string>(contentVal)) {
+            std::string filename = std::get<std::string>(filenameVal);
+            std::string content = std::get<std::string>(contentVal);
+            std::ofstream file(filename, std::ios::app);
+            if (file.is_open()) {
+                file << content;
+                file.flush();  // Ensure content is written to disk
+                file.close();
+                lastValue = !file.fail();
+            } else {
+                lastValue = false;
+            }
+        } else {
+            lastValue = false;
+        }
+        return true;
+    }
+    
+    if (node.name == "load_binary_file" && node.arguments.size() == 1) {
+        ValueType filenameVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<std::string>(filenameVal)) {
+            std::string filename = std::get<std::string>(filenameVal);
+            std::ifstream file(filename, std::ios::binary);
+            if (file.is_open()) {
+                // Get file size
+                file.seekg(0, std::ios::end);
+                size_t fileSize = file.tellg();
+                file.seekg(0, std::ios::beg);
+                
+                // Create buffer
+                ByteArrayValue buffer({static_cast<int>(fileSize)});
+                
+                // Read data
+                file.read(reinterpret_cast<char*>(buffer.elements.data()), fileSize);
+                file.close();
+                
+                lastValue = buffer;
+            } else {
+                lastValue = ByteArrayValue();
+            }
+        } else {
+            lastValue = ByteArrayValue();
+        }
+        return true;
+    }
+    
+    if (node.name == "write_binary_file" && node.arguments.size() == 2) {
+        ValueType filenameVal = evaluate(*node.arguments[0]);
+        ValueType bufferVal = evaluate(*node.arguments[1]);
+        if (std::holds_alternative<std::string>(filenameVal) && std::holds_alternative<ByteArrayValue>(bufferVal)) {
+            std::string filename = std::get<std::string>(filenameVal);
+            ByteArrayValue& buffer = std::get<ByteArrayValue>(bufferVal);
+            std::ofstream file(filename, std::ios::binary);
+            if (file.is_open()) {
+                file.write(reinterpret_cast<const char*>(buffer.elements.data()), buffer.elements.size());
+                file.flush();  // Ensure content is written to disk
+                file.close();
+                lastValue = !file.fail();
+            } else {
+                lastValue = false;
+            }
+        } else {
+            lastValue = false;
+        }
+        return true;
+    }
+    
+    return false; // Function not handled by this dispatcher
 }
 
 bool Interpreter::handleUserDefinedFunction(CallExpr& node) {

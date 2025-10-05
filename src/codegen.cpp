@@ -683,7 +683,7 @@ void CodeGenerator::visit(StructDecl& node) {
     // Store a copy of the struct declaration for later use
     structs[node.name] = std::make_unique<StructDecl>(node.name, node.fields, node.fieldTypes);
     
-    // TODO: Implement struct generation if needed
+    // Generate struct comment for documentation
     writeLine("/* Struct: " + node.name + " */");
 }
 
