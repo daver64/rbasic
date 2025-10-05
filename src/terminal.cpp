@@ -29,6 +29,8 @@ static int savedCursorCol = 0;
 // Linux: Save original terminal attributes
 static struct termios originalTermios;
 static bool termiosWasSaved = false;
+static int savedCursorRow = 0;
+static int savedCursorCol = 0;
 #endif
 
 bool Terminal::initialize() {
@@ -166,21 +168,61 @@ void Terminal::getCursor(int& row, int& col) {
         row = col = 0;
     }
 #else
-    // ANSI escape sequence to get cursor position
-    std::cout << "\033[6n" << std::flush;
-    
-    // Read the response: ESC[row;colR
-    char ch;
-    std::string response;
-    while (std::cin.get(ch) && ch != 'R') {
-        response += ch;
+    // For Linux, we need to use raw terminal I/O to avoid interfering with stdout
+    // Save terminal settings
+    struct termios oldTermios;
+    if (tcgetattr(STDIN_FILENO, &oldTermios) != 0) {
+        row = col = 0;
+        return;
     }
     
-    // Parse the response
-    size_t semicolon = response.find(';');
-    if (semicolon != std::string::npos) {
-        row = std::stoi(response.substr(2, semicolon - 2)) - 1; // Convert to 0-based
-        col = std::stoi(response.substr(semicolon + 1)) - 1;
+    // Set terminal to raw mode for reading response
+    struct termios newTermios = oldTermios;
+    newTermios.c_lflag &= ~(ICANON | ECHO);
+    newTermios.c_cc[VMIN] = 0;
+    newTermios.c_cc[VTIME] = 1; // 100ms timeout
+    
+    if (tcsetattr(STDIN_FILENO, TCSANOW, &newTermios) != 0) {
+        row = col = 0;
+        return;
+    }
+    
+    // Request cursor position using write() to avoid stdout interference
+    if (write(STDOUT_FILENO, "\033[6n", 4) != 4) {
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldTermios);
+        row = col = 0;
+        return;
+    }
+    
+    // Read response character by character using read()
+    char buffer[32];
+    int bufferPos = 0;
+    char ch;
+    
+    // Look for ESC[ sequence start
+    while (bufferPos < 31) {
+        if (read(STDIN_FILENO, &ch, 1) != 1) break;
+        buffer[bufferPos++] = ch;
+        
+        // Stop when we get the 'R' terminator
+        if (ch == 'R') break;
+    }
+    
+    // Restore terminal settings immediately
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldTermios);
+    
+    buffer[bufferPos] = '\0';
+    
+    // Parse response: ESC[row;colR
+    if (bufferPos >= 6 && buffer[0] == '\033' && buffer[1] == '[') {
+        char* semicolon = strchr(buffer + 2, ';');
+        if (semicolon) {
+            *semicolon = '\0';
+            row = atoi(buffer + 2) - 1; // Convert to 0-based
+            col = atoi(semicolon + 1) - 1;
+        } else {
+            row = col = 0;
+        }
     } else {
         row = col = 0;
     }
@@ -195,7 +237,8 @@ void Terminal::saveCursor() {
         savedCursorCol = csbi.dwCursorPosition.X;
     }
 #else
-    std::cout << "\033[s" << std::flush; // Save cursor position
+    // For Linux, get the current cursor position and save it
+    getCursor(savedCursorRow, savedCursorCol);
 #endif
 }
 
@@ -204,7 +247,8 @@ void Terminal::restoreCursor() {
     COORD coord = {static_cast<SHORT>(savedCursorCol), static_cast<SHORT>(savedCursorRow)};
     SetConsoleCursorPosition(hConsole, coord);
 #else
-    std::cout << "\033[u" << std::flush; // Restore cursor position
+    // For Linux, set cursor to saved position
+    setCursor(savedCursorRow, savedCursorCol);
 #endif
 }
 
