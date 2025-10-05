@@ -612,14 +612,50 @@ for (var i = 0; i < 10; i = i + 1) {
 
 ### Arrays
 
-#### Declaring Arrays
+**Important: All arrays in rbasic are 0-indexed (like C/C++), not 1-indexed like traditional BASIC.**
+
+#### Generic Arrays (Declaring Arrays)
 
 ```basic
-dim numbers(5);     // Array with 5 elements
-dim names(10);      // Array with 10 elements
+dim numbers(5);     // Array with 5 elements (indices 0-4)
+dim names(10);      // Array with 10 elements (indices 0-9)
 ```
 
-#### Using Arrays
+#### Typed Arrays (High Performance)
+
+For better performance with homogeneous data, use typed arrays:
+
+```basic
+// Create typed arrays - much faster than generic arrays
+var bytes = byte_array(256);      // Byte array (0-255 values), indices 0-255
+var numbers = int_array(100);     // Integer array, indices 0-99
+var decimals = double_array(50);  // Double precision array, indices 0-49
+
+// Typed arrays support multi-dimensional as well
+var image = byte_array(640, 480); // 2D byte array for image data
+var matrix = double_array(4, 4);  // 4x4 matrix of doubles
+
+// Assignment with automatic type conversion (0-indexed!)
+bytes[0] = 255;                   // First element
+bytes[255] = 128;                 // Last element  
+numbers[0] = 42;                  // First integer
+decimals[0] = 3.14159;           // First double
+
+// Access returns the appropriate type
+var b = bytes[0];     // Returns int (byte as int 0-255)
+var n = numbers[0];   // Returns int
+var d = decimals[0];  // Returns double
+```
+
+**Performance Note**: Typed arrays are significantly faster than generic arrays because they avoid variant type overhead. Use them for:
+- Large data sets
+- Numerical computations  
+- File I/O buffers
+- Image/audio processing
+
+**Zero-Indexing Note**: Unlike traditional BASIC languages, rbasic uses 0-based indexing for all arrays, consistent with C/C++ and most modern languages. This makes interfacing with external libraries and file formats much more natural.
+
+#### Using Generic Arrays
 
 ```basic
 dim scores(3);

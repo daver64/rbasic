@@ -120,6 +120,27 @@ void Interpreter::visit(VariableExpr& node) {
                 // Return default value based on context - for now, return 0
                 lastValue = 0;
             }
+        } else if (std::holds_alternative<ByteArrayValue>(arrayVar)) {
+            ByteArrayValue& array = std::get<ByteArrayValue>(arrayVar);
+            ValueType indexValue = evaluate(*node.index);
+            int index = std::holds_alternative<int>(indexValue) ? 
+                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            std::vector<int> indices = {index};
+            lastValue = static_cast<int>(array.at(indices));
+        } else if (std::holds_alternative<IntArrayValue>(arrayVar)) {
+            IntArrayValue& array = std::get<IntArrayValue>(arrayVar);
+            ValueType indexValue = evaluate(*node.index);
+            int index = std::holds_alternative<int>(indexValue) ? 
+                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            std::vector<int> indices = {index};
+            lastValue = array.at(indices);
+        } else if (std::holds_alternative<DoubleArrayValue>(arrayVar)) {
+            DoubleArrayValue& array = std::get<DoubleArrayValue>(arrayVar);
+            ValueType indexValue = evaluate(*node.index);
+            int index = std::holds_alternative<int>(indexValue) ? 
+                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            std::vector<int> indices = {index};
+            lastValue = array.at(indices);
         } else {
             throw RuntimeError("Variable '" + node.name + "' is not an array");
         }
@@ -223,6 +244,51 @@ void Interpreter::visit(AssignExpr& node) {
                 array.elements[index] = std::get<bool>(value);
             }
             
+            setVariable(node.variable, array);
+        } else if (std::holds_alternative<ByteArrayValue>(arrayVar)) {
+            ByteArrayValue array = std::get<ByteArrayValue>(arrayVar);
+            ValueType indexValue = evaluate(*node.index);
+            int index = std::holds_alternative<int>(indexValue) ? 
+                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            std::vector<int> indices = {index};
+            
+            uint8_t byteValue = 0;
+            if (std::holds_alternative<int>(value)) {
+                byteValue = static_cast<uint8_t>(std::get<int>(value));
+            } else if (std::holds_alternative<double>(value)) {
+                byteValue = static_cast<uint8_t>(std::get<double>(value));
+            }
+            array.at(indices) = byteValue;
+            setVariable(node.variable, array);
+        } else if (std::holds_alternative<IntArrayValue>(arrayVar)) {
+            IntArrayValue array = std::get<IntArrayValue>(arrayVar);
+            ValueType indexValue = evaluate(*node.index);
+            int index = std::holds_alternative<int>(indexValue) ? 
+                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            std::vector<int> indices = {index};
+            
+            int intValue = 0;
+            if (std::holds_alternative<int>(value)) {
+                intValue = std::get<int>(value);
+            } else if (std::holds_alternative<double>(value)) {
+                intValue = static_cast<int>(std::get<double>(value));
+            }
+            array.at(indices) = intValue;
+            setVariable(node.variable, array);
+        } else if (std::holds_alternative<DoubleArrayValue>(arrayVar)) {
+            DoubleArrayValue array = std::get<DoubleArrayValue>(arrayVar);
+            ValueType indexValue = evaluate(*node.index);
+            int index = std::holds_alternative<int>(indexValue) ? 
+                std::get<int>(indexValue) : static_cast<int>(std::get<double>(indexValue));
+            std::vector<int> indices = {index};
+            
+            double doubleValue = 0.0;
+            if (std::holds_alternative<int>(value)) {
+                doubleValue = static_cast<double>(std::get<int>(value));
+            } else if (std::holds_alternative<double>(value)) {
+                doubleValue = std::get<double>(value);
+            }
+            array.at(indices) = doubleValue;
             setVariable(node.variable, array);
         } else {
             throw RuntimeError("Variable '" + node.variable + "' is not an array");
@@ -696,6 +762,61 @@ void Interpreter::visit(CallExpr& node) {
             lastValue = 3.141592653589793;
             return;
         }
+    }
+    
+    // Typed array creation functions
+    if (node.name == "byte_array" && node.arguments.size() >= 1) {
+        std::vector<int> dims;
+        for (auto& arg : node.arguments) {
+            ValueType dimVal = evaluate(*arg);
+            int dim = 0;
+            if (std::holds_alternative<int>(dimVal)) {
+                dim = std::get<int>(dimVal);
+            } else if (std::holds_alternative<double>(dimVal)) {
+                dim = static_cast<int>(std::get<double>(dimVal));
+            } else {
+                throw RuntimeError("Array dimensions must be numeric");
+            }
+            dims.push_back(dim);
+        }
+        lastValue = ByteArrayValue(dims);
+        return;
+    }
+    
+    if (node.name == "int_array" && node.arguments.size() >= 1) {
+        std::vector<int> dims;
+        for (auto& arg : node.arguments) {
+            ValueType dimVal = evaluate(*arg);
+            int dim = 0;
+            if (std::holds_alternative<int>(dimVal)) {
+                dim = std::get<int>(dimVal);
+            } else if (std::holds_alternative<double>(dimVal)) {
+                dim = static_cast<int>(std::get<double>(dimVal));
+            } else {
+                throw RuntimeError("Array dimensions must be numeric");
+            }
+            dims.push_back(dim);
+        }
+        lastValue = IntArrayValue(dims);
+        return;
+    }
+    
+    if (node.name == "double_array" && node.arguments.size() >= 1) {
+        std::vector<int> dims;
+        for (auto& arg : node.arguments) {
+            ValueType dimVal = evaluate(*arg);
+            int dim = 0;
+            if (std::holds_alternative<int>(dimVal)) {
+                dim = std::get<int>(dimVal);
+            } else if (std::holds_alternative<double>(dimVal)) {
+                dim = static_cast<int>(std::get<double>(dimVal));
+            } else {
+                throw RuntimeError("Array dimensions must be numeric");
+            }
+            dims.push_back(dim);
+        }
+        lastValue = DoubleArrayValue(dims);
+        return;
     }
     
     // Built-in functions

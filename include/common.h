@@ -15,6 +15,121 @@ struct ArrayValue {
     std::map<int, std::variant<int, double, std::string, bool>> elements;
 };
 
+// Typed arrays for interpreter
+struct ByteArrayValue {
+    std::vector<uint8_t> elements;
+    std::vector<int> dimensions;
+    
+    ByteArrayValue() = default;
+    ByteArrayValue(const std::vector<int>& dims) : dimensions(dims) {
+        int totalSize = 1;
+        for (int dim : dims) {
+            totalSize *= dim;
+        }
+        elements.resize(totalSize, 0);
+    }
+    
+    uint8_t& at(const std::vector<int>& indices) {
+        int index = 0;
+        int multiplier = 1;
+        
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
+            index += indices[i] * multiplier;  // 0-indexed arrays
+            multiplier *= dimensions[i];
+        }
+        
+        return elements[index];
+    }
+    
+    const uint8_t& at(const std::vector<int>& indices) const {
+        int index = 0;
+        int multiplier = 1;
+        
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
+            index += indices[i] * multiplier;  // 0-indexed arrays
+            multiplier *= dimensions[i];
+        }
+        
+        return elements[index];
+    }
+};
+
+struct IntArrayValue {
+    std::vector<int> elements;
+    std::vector<int> dimensions;
+    
+    IntArrayValue() = default;
+    IntArrayValue(const std::vector<int>& dims) : dimensions(dims) {
+        int totalSize = 1;
+        for (int dim : dims) {
+            totalSize *= dim;
+        }
+        elements.resize(totalSize, 0);
+    }
+    
+    int& at(const std::vector<int>& indices) {
+        int index = 0;
+        int multiplier = 1;
+        
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
+            index += indices[i] * multiplier;  // 0-indexed arrays
+            multiplier *= dimensions[i];
+        }
+        
+        return elements[index];
+    }
+    
+    const int& at(const std::vector<int>& indices) const {
+        int index = 0;
+        int multiplier = 1;
+        
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
+            index += indices[i] * multiplier;  // 0-indexed arrays
+            multiplier *= dimensions[i];
+        }
+        
+        return elements[index];
+    }
+};
+
+struct DoubleArrayValue {
+    std::vector<double> elements;
+    std::vector<int> dimensions;
+    
+    DoubleArrayValue() = default;
+    DoubleArrayValue(const std::vector<int>& dims) : dimensions(dims) {
+        int totalSize = 1;
+        for (int dim : dims) {
+            totalSize *= dim;
+        }
+        elements.resize(totalSize, 0.0);
+    }
+    
+    double& at(const std::vector<int>& indices) {
+        int index = 0;
+        int multiplier = 1;
+        
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
+            index += indices[i] * multiplier;  // 0-indexed arrays
+            multiplier *= dimensions[i];
+        }
+        
+        return elements[index];
+    }
+    
+    const double& at(const std::vector<int>& indices) const {
+        int index = 0;
+        int multiplier = 1;
+        
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
+            index += indices[i] * multiplier;  // 0-indexed arrays
+            multiplier *= dimensions[i];
+        }
+        
+        return elements[index];
+    }
+};
+
 struct StructValue {
     std::string typeName;
     std::map<std::string, std::variant<int, double, std::string, bool>> fields;
@@ -24,7 +139,7 @@ struct StructValue {
 };
 
 // Common types
-using ValueType = std::variant<int, double, std::string, bool, ArrayValue, StructValue>;
+using ValueType = std::variant<int, double, std::string, bool, ArrayValue, StructValue, ByteArrayValue, IntArrayValue, DoubleArrayValue>;
 
 // Type system
 enum class BasicType {

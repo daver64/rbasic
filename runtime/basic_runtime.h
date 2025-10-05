@@ -20,9 +20,12 @@
 // Forward declarations
 struct BasicStruct;
 struct BasicArray;
+struct BasicByteArray;
+struct BasicIntArray;
+struct BasicDoubleArray;
 
 // Value type for compiled BASIC programs
-using BasicValue = std::variant<int, double, std::string, bool, BasicStruct, BasicArray>;
+using BasicValue = std::variant<int, double, std::string, bool, BasicStruct, BasicArray, BasicByteArray, BasicIntArray, BasicDoubleArray>;
 
 // Structure type
 struct BasicStruct {
@@ -52,7 +55,7 @@ struct BasicArray {
         int multiplier = 1;
         
         for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
-            index += (indices[i] - 1) * multiplier;  // BASIC arrays are 1-indexed
+            index += indices[i] * multiplier;  // 0-indexed arrays
             multiplier *= dimensions[i];
         }
         
@@ -64,7 +67,122 @@ struct BasicArray {
         int multiplier = 1;
         
         for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
-            index += (indices[i] - 1) * multiplier;  // BASIC arrays are 1-indexed
+            index += indices[i] * multiplier;  // 0-indexed arrays
+            multiplier *= dimensions[i];
+        }
+        
+        return elements[index];
+    }
+};
+
+// Typed arrays for better performance with homogeneous data
+struct BasicByteArray {
+    std::vector<uint8_t> elements;
+    std::vector<int> dimensions;
+    
+    BasicByteArray() = default;
+    BasicByteArray(const std::vector<int>& dims) : dimensions(dims) {
+        int totalSize = 1;
+        for (int dim : dims) {
+            totalSize *= dim;
+        }
+        elements.resize(totalSize, 0);
+    }
+    
+    uint8_t& at(const std::vector<int>& indices) {
+        int index = 0;
+        int multiplier = 1;
+        
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
+            index += indices[i] * multiplier;  // 0-indexed arrays
+            multiplier *= dimensions[i];
+        }
+        
+        return elements[index];
+    }
+    
+    const uint8_t& at(const std::vector<int>& indices) const {
+        int index = 0;
+        int multiplier = 1;
+        
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
+            index += indices[i] * multiplier;  // 0-indexed arrays
+            multiplier *= dimensions[i];
+        }
+        
+        return elements[index];
+    }
+};
+
+struct BasicIntArray {
+    std::vector<int> elements;
+    std::vector<int> dimensions;
+    
+    BasicIntArray() = default;
+    BasicIntArray(const std::vector<int>& dims) : dimensions(dims) {
+        int totalSize = 1;
+        for (int dim : dims) {
+            totalSize *= dim;
+        }
+        elements.resize(totalSize, 0);
+    }
+    
+    int& at(const std::vector<int>& indices) {
+        int index = 0;
+        int multiplier = 1;
+        
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
+            index += indices[i] * multiplier;  // 0-indexed arrays
+            multiplier *= dimensions[i];
+        }
+        
+        return elements[index];
+    }
+    
+    const int& at(const std::vector<int>& indices) const {
+        int index = 0;
+        int multiplier = 1;
+        
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
+            index += indices[i] * multiplier;  // 0-indexed arrays
+            multiplier *= dimensions[i];
+        }
+        
+        return elements[index];
+    }
+};
+
+struct BasicDoubleArray {
+    std::vector<double> elements;
+    std::vector<int> dimensions;
+    
+    BasicDoubleArray() = default;
+    BasicDoubleArray(const std::vector<int>& dims) : dimensions(dims) {
+        int totalSize = 1;
+        for (int dim : dims) {
+            totalSize *= dim;
+        }
+        elements.resize(totalSize, 0.0);
+    }
+    
+    double& at(const std::vector<int>& indices) {
+        int index = 0;
+        int multiplier = 1;
+        
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
+            index += indices[i] * multiplier;  // 0-indexed arrays
+            multiplier *= dimensions[i];
+        }
+        
+        return elements[index];
+    }
+    
+    const double& at(const std::vector<int>& indices) const {
+        int index = 0;
+        int multiplier = 1;
+        
+        for (int i = static_cast<int>(dimensions.size()) - 1; i >= 0; i--) {
+            index += indices[i] * multiplier;  // 0-indexed arrays
             multiplier *= dimensions[i];
         }
         
@@ -122,6 +240,24 @@ BasicValue pi_val();
 BasicArray create_array(const std::vector<int>& dimensions);
 BasicValue get_array_element(const BasicArray& array, const std::vector<int>& indices);
 void set_array_element(BasicArray& array, const std::vector<int>& indices, const BasicValue& value);
+
+// Typed array functions
+BasicByteArray byte_array(const std::vector<int>& dimensions);
+BasicIntArray int_array(const std::vector<int>& dimensions);
+BasicDoubleArray double_array(const std::vector<int>& dimensions);
+
+// Typed array element access
+uint8_t get_byte_array_element(const BasicByteArray& array, const std::vector<int>& indices);
+void set_byte_array_element(BasicByteArray& array, const std::vector<int>& indices, uint8_t value);
+int get_int_array_element(const BasicIntArray& array, const std::vector<int>& indices);
+void set_int_array_element(BasicIntArray& array, const std::vector<int>& indices, int value);
+double get_double_array_element(const BasicDoubleArray& array, const std::vector<int>& indices);
+void set_double_array_element(BasicDoubleArray& array, const std::vector<int>& indices, double value);
+
+// Wrapper functions for code generator (with func_ prefix)
+BasicValue func_byte_array(int size);
+BasicValue func_int_array(int size);
+BasicValue func_double_array(int size);
 
 // Simple 1D array access helpers
 BasicValue get_array_element(BasicValue& arrayVar, BasicValue index);

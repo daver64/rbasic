@@ -262,6 +262,57 @@ void set_array_element(BasicArray& array, const std::vector<int>& indices, const
     array.at(indices) = value;
 }
 
+// Typed array functions
+BasicByteArray byte_array(const std::vector<int>& dimensions) {
+    return BasicByteArray(dimensions);
+}
+
+BasicIntArray int_array(const std::vector<int>& dimensions) {
+    return BasicIntArray(dimensions);
+}
+
+BasicDoubleArray double_array(const std::vector<int>& dimensions) {
+    return BasicDoubleArray(dimensions);
+}
+
+// Typed array element access
+uint8_t get_byte_array_element(const BasicByteArray& array, const std::vector<int>& indices) {
+    return array.at(indices);
+}
+
+void set_byte_array_element(BasicByteArray& array, const std::vector<int>& indices, uint8_t value) {
+    array.at(indices) = value;
+}
+
+int get_int_array_element(const BasicIntArray& array, const std::vector<int>& indices) {
+    return array.at(indices);
+}
+
+void set_int_array_element(BasicIntArray& array, const std::vector<int>& indices, int value) {
+    array.at(indices) = value;
+}
+
+double get_double_array_element(const BasicDoubleArray& array, const std::vector<int>& indices) {
+    return array.at(indices);
+}
+
+void set_double_array_element(BasicDoubleArray& array, const std::vector<int>& indices, double value) {
+    array.at(indices) = value;
+}
+
+// Wrapper functions for code generator (with func_ prefix)
+BasicValue func_byte_array(int size) {
+    return BasicByteArray({size});
+}
+
+BasicValue func_int_array(int size) {
+    return BasicIntArray({size});
+}
+
+BasicValue func_double_array(int size) {
+    return BasicDoubleArray({size});
+}
+
 BasicStruct create_struct(const std::string& typeName) {
     return BasicStruct(typeName);
 }
@@ -617,6 +668,24 @@ BasicValue get_array_element(BasicValue& arrayVar, BasicValue index) {
         if (idx >= 0 && idx < static_cast<int>(array.elements.size())) {
             return array.elements[idx]; // Use 0-based indexing directly
         }
+    } else if (std::holds_alternative<BasicByteArray>(arrayVar)) {
+        BasicByteArray& array = std::get<BasicByteArray>(arrayVar);
+        int idx = to_int(index);
+        if (idx >= 0 && idx < static_cast<int>(array.elements.size())) {
+            return BasicValue(static_cast<int>(array.elements[idx]));
+        }
+    } else if (std::holds_alternative<BasicIntArray>(arrayVar)) {
+        BasicIntArray& array = std::get<BasicIntArray>(arrayVar);
+        int idx = to_int(index);
+        if (idx >= 0 && idx < static_cast<int>(array.elements.size())) {
+            return BasicValue(array.elements[idx]);
+        }
+    } else if (std::holds_alternative<BasicDoubleArray>(arrayVar)) {
+        BasicDoubleArray& array = std::get<BasicDoubleArray>(arrayVar);
+        int idx = to_int(index);
+        if (idx >= 0 && idx < static_cast<int>(array.elements.size())) {
+            return BasicValue(array.elements[idx]);
+        }
     }
     return BasicValue(0); // Default value
 }
@@ -627,6 +696,24 @@ void set_array_element(BasicValue& arrayVar, BasicValue index, BasicValue value)
         int idx = to_int(index);
         if (idx >= 0 && idx < static_cast<int>(array.elements.size())) {
             array.elements[idx] = value; // Use 0-based indexing directly
+        }
+    } else if (std::holds_alternative<BasicByteArray>(arrayVar)) {
+        BasicByteArray& array = std::get<BasicByteArray>(arrayVar);
+        int idx = to_int(index);
+        if (idx >= 0 && idx < static_cast<int>(array.elements.size())) {
+            array.elements[idx] = static_cast<uint8_t>(to_int(value));
+        }
+    } else if (std::holds_alternative<BasicIntArray>(arrayVar)) {
+        BasicIntArray& array = std::get<BasicIntArray>(arrayVar);
+        int idx = to_int(index);
+        if (idx >= 0 && idx < static_cast<int>(array.elements.size())) {
+            array.elements[idx] = to_int(value);
+        }
+    } else if (std::holds_alternative<BasicDoubleArray>(arrayVar)) {
+        BasicDoubleArray& array = std::get<BasicDoubleArray>(arrayVar);
+        int idx = to_int(index);
+        if (idx >= 0 && idx < static_cast<int>(array.elements.size())) {
+            array.elements[idx] = to_double(value);
         }
     }
 }

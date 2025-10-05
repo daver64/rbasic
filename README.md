@@ -67,7 +67,8 @@ cmake .. && cmake --build .
 - **Function-Call I/O**: `print("Hello")`, `var input = input()`
 - **Assignment Expressions**: `var y = (x = x + 1) * 2`
 - **Modern Comments**: `//` line comments and `/* */` block comments
-- **Arrays**: `dim array(size)` declaration with `array[index]` access
+- **Arrays**: `dim array(size)` declaration with `array[index]` access (0-indexed like C/C++)
+- **Typed Arrays**: High-performance `byte_array()`, `int_array()`, `double_array()` functions
 
 ### Built-in Functions
 
