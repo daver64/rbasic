@@ -23,7 +23,6 @@ Use CMake to build the project. The executable will be placed in the project roo
 ## Usage
 - Interpret: `rbasic -i program.bas` (rapid prototyping)
 - Transpile: `rbasic -c program.bas -o program` (production deployment)
-- Graphics: `rbasic -i program.bas --io sdl` (SDL graphics mode)
 
 ## Language Features
 rbasic implements a "C-leaning BASIC" with modern syntax:
@@ -32,7 +31,7 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 - Modern comments: `//` line comments and `/* */` block comments
 - Assignment expressions: `var y = (x = x + 1) * 2`
 - Structured data: Arrays with `dim array(size)` and `array[index]` access
-- Graphics programming: SDL2-based drawing primitives and interactive features
+- Future external features: Graphics, databases, and system integration via FFI
 
 ## Syntax Features
 - Modern variable declarations: `var name = value;`
@@ -42,11 +41,8 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 - C++ style braces for code blocks
 - Structures and arrays support
 
-## Graphics System
-- Automatic SDL2 integration when graphics functions are used
-- Interpreted mode uses SDL IOHandler for immediate visual feedback
-- Compiled mode links SDL libraries automatically for standalone graphics programs
-- Non-graphics programs have zero SDL dependencies
-- Complete drawing API: pixels, lines, rectangles, text, colours, animation
+## Future: Foreign Function Interface
 
 The project is designed as a transpiler where both interpreter and compiled output produce identical results by sharing the same AST representation and runtime function implementations. This enables rapid prototyping in interpreted mode and high-performance deployment via compilation.
+
+External functionality like graphics, databases, and system integration will be provided through a Foreign Function Interface (FFI) system, allowing clean separation of core language features from external libraries.

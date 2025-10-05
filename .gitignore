@@ -10,6 +10,7 @@ build/
 rbasic
 rbasic_tests
 librbasic_runtime.a
+hello
 
 # Object files
 *.o

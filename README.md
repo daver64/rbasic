@@ -9,6 +9,7 @@
 - **Core Language Features**: Variables, functions, arrays, control structures, and built-in functions
 - **Dual Execution**: Designed for identical behavior in both interpreted and compiled modes
 - **Zero Dependencies**: Core language has no external dependencies
+- **Cross-Platform**: Supports Windows, Linux, and macOS with native compilers
 
 ## Language Overview
 
@@ -32,6 +33,8 @@ for (var i = 0; i <= limit; i = i + 1) {
 }
 ```
 
+📖 **[Complete Language Grammar (BNF)](BNF.md)** - Detailed syntax specification and language reference
+
 ## Installation and Usage
 
 ### Prerequisites
@@ -52,18 +55,6 @@ cmake .. && cmake --build .
 # Compile to standalone executable  
 ./rbasic -c hello.bas -o hello
 ./hello
-```
-
-### Experimental Features
-
-Graphics and database support are available as experimental features:
-
-```bash
-# Enable experimental SDL2 graphics support
-cmake -DENABLE_SDL_SUPPORT=ON ..
-
-# Enable experimental SQLite database support  
-cmake -DENABLE_SQLITE_SUPPORT=ON ..
 ```
 
 ## Language Features
@@ -103,21 +94,9 @@ print(str(42));                // Convert number to string: "42"
 print(val("3.14"));            // Convert string to number: 3.14
 ```
 
-### Experimental Features
+### Future: External Functionality via FFI
 
-**Graphics (SDL2)** - Enable with `-DENABLE_SDL_SUPPORT=ON`
-```basic
-graphics_mode(800, 600);       // Create window (experimental)
-set_colour(255, 0, 0);         // Set drawing color (experimental)
-draw_pixel(100, 100);          // Draw pixel (experimental)
-refresh_screen();              // Update display (experimental)
-```
-
-**Database (SQLite)** - Enable with `-DENABLE_SQLITE_SUPPORT=ON`
-```basic
-db_open("data.db");            // Open database (experimental)
-db_exec("CREATE TABLE...");    // Execute SQL (experimental)
-```
+External features like graphics, databases, and system integration will be provided through a Foreign Function Interface (FFI) system, allowing clean separation of core language features from external libraries.
 
 ## Example Programs
 
@@ -192,10 +171,12 @@ This is an active development project. Core language features are implemented an
 - ✅ Built-in mathematical and string functions
 - ✅ Basic I/O operations
 - ✅ Interpreter and compiler modes
+- ✅ Cross-platform compilation (Windows MSVC, Linux/macOS g++)
 
-**Experimental Features:**
-- 🧪 Graphics support (SDL2-based)
-- 🧪 Database support (SQLite-based)
+**Future Development:**
+- 🚀 Foreign Function Interface (FFI) for external library integration
+- 🚀 Selectable compiler backends
+- 🚀 Enhanced optimization features
 
 The transpiler is suitable for educational use, prototyping, and experimenting with language design.
 
@@ -205,7 +186,7 @@ The transpiler is suitable for educational use, prototyping, and experimenting w
 rbasic/
 ├── CMakeLists.txt         # Build configuration
 ├── README.md              # This documentation
-├── BNF.md                 # Complete language grammar
+├── [BNF.md](BNF.md)       # Complete language grammar
 ├── include/               # Header files
 ├── src/                   # Implementation
 ├── runtime/               # Standalone runtime library
@@ -266,6 +247,12 @@ rbasic is designed for developers interested in:
 - **Cross-Platform Development**: Single source for multiple targets
 
 The project welcomes contributions, bug reports, and suggestions for improving the core language implementation.
+
+## Documentation
+
+- **[Language Grammar (BNF)](BNF.md)** - Complete syntax specification and built-in functions
+- **[Examples](examples/)** - Sample programs demonstrating language features
+- **[VS Code Extension](vscode-extension/)** - Syntax highlighting and editor support
 
 ## License
 

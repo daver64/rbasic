@@ -11,9 +11,8 @@ rbasic is a "C-leaning BASIC" language that combines traditional BASIC simplicit
 - Strong typing with type annotations
 - Structures and arrays
 - Assignment expressions
-- British spelling conventions (colour, randomise, etc.)
 - Complete function library with 30+ built-in functions
-- Full graphics programming support via SDL2
+- Extensible via Foreign Function Interface (FFI)
 
 ## Lexical Elements
 
@@ -264,21 +263,11 @@ The following built-in functions are available in rbasic:
 - `str(x)` - Convert to string
 - `val(str)` - Convert string to number
 
-### Graphics Functions (SDL mode)
-- `graphics_mode(width, height)` - Initialise graphics
-- `text_mode()` - Return to text mode
-- `set_colour(r, g, b)` - Set drawing colour (British spelling)
-- `draw_pixel(x, y)` - Draw pixel
-- `draw_line(x1, y1, x2, y2)` - Draw line
-- `draw_rect(x, y, w, h, filled)` - Draw rectangle
-- `draw_circle(x, y, radius, filled)` - Draw circle
-- `draw_text(x, y, text)` - Render text
-- `refresh_screen()` - Update display
+### Future: External Functions via FFI
+External functionality such as graphics, databases, and system integration will be available through a Foreign Function Interface system.
 
 ### System Functions
-- `sleep_ms(ms)` - Sleep milliseconds
-- `key_pressed(key)` - Check if key pressed
-- `quit_requested()` - Check if window closed
+- `sleep_ms(ms)` - Sleep milliseconds (Note: Core sleep function, not graphics-dependent)
 
 ## Example Programs
 

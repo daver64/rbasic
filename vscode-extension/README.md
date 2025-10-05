@@ -36,9 +36,8 @@ This folder contains the VS Code extension files for rbasic syntax highlighting 
 - **Built-in Functions**: 
   - Math: `sqrt`, `sin`, `cos`, `randomise`, `pi`
   - String: `len`, `left`, `right`, `mid`, `str`, `val`
-  - Graphics: `graphics_mode`, `set_colour`, `draw_rect`, `draw_circle`, `draw_text`
-  - I/O: `print`, `input`, `clear_screen`, `sleep_ms`
-  - System: `key_pressed`, `quit_requested`, `get_ticks`
+  - I/O: `print`, `input`, `sleep_ms`
+  - Future: External functions via FFI system
 - **Data Types**: `integer`, `double`, `string`, `boolean`, `thread`, `mutex`
 - **Operators**: `+`, `-`, `*`, `/`, `==`, `!=`, `<=`, `>=`, `and`, `or`, `not`
 - **Literals**: Numbers, strings, booleans (`true`, `false`)
@@ -62,12 +61,9 @@ function fibonacci(n as integer) as integer {
 var result = fibonacci(10);
 print("Fibonacci(10) =", result);
 
-// Graphics example with British spelling
-graphics_mode(800, 600);
-set_colour(255, 0, 0);  // Red colour
-draw_rect(100, 100, 200, 150, true);
-draw_text(110, 110, "Hello, rbasic!");
-refresh_screen();
+// Future: External functionality via FFI
+// graphics_mode(800, 600);  // Will be available via FFI
+// draw_text(110, 110, "Hello, rbasic!");  // Will be available via FFI
 ```
 
 ## Manual Installation Steps
