@@ -11,6 +11,7 @@
 #include <sys/ioctl.h>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #endif
 
 namespace rbasic {
