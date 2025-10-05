@@ -784,6 +784,45 @@ void Interpreter::visit(CallExpr& node) {
     }
 }
 
+void Interpreter::visit(StructLiteralExpr& node) {
+    // Check if struct type exists
+    auto structIt = structs.find(node.structName);
+    if (structIt == structs.end()) {
+        throw RuntimeError("Unknown struct type: " + node.structName);
+    }
+    
+    // Create struct instance with field values
+    StructValue structValue(node.structName);
+    const auto& structDecl = *structIt->second;
+    
+    if (node.values.size() != structDecl.fields.size()) {
+        throw RuntimeError("Struct '" + node.structName + "' expects " + 
+                          std::to_string(structDecl.fields.size()) + " values, got " + 
+                          std::to_string(node.values.size()));
+    }
+    
+    // Initialize fields with provided values
+    for (size_t i = 0; i < node.values.size(); i++) {
+        ValueType value = evaluate(*node.values[i]);
+        const std::string& fieldName = structDecl.fields[i];
+        
+        // Convert ValueType to the variant type used in StructValue
+        if (std::holds_alternative<int>(value)) {
+            structValue.fields[fieldName] = std::get<int>(value);
+        } else if (std::holds_alternative<double>(value)) {
+            structValue.fields[fieldName] = std::get<double>(value);
+        } else if (std::holds_alternative<std::string>(value)) {
+            structValue.fields[fieldName] = std::get<std::string>(value);
+        } else if (std::holds_alternative<bool>(value)) {
+            structValue.fields[fieldName] = std::get<bool>(value);
+        } else {
+            throw RuntimeError("Unsupported value type for struct field");
+        }
+    }
+    
+    lastValue = structValue;
+}
+
 void Interpreter::visit(ExpressionStmt& node) {
     evaluate(*node.expression);
 }
@@ -897,44 +936,21 @@ void Interpreter::visit(IfStmt& node) {
     }
 }
 
-void Interpreter::visit(ForStmt& node) {
-    ValueType startVal = evaluate(*node.start);
-    ValueType endVal = evaluate(*node.end);
-    ValueType stepVal = evaluate(*node.step);
-    
-    int start = std::holds_alternative<int>(startVal) ? 
-        std::get<int>(startVal) : static_cast<int>(std::get<double>(startVal));
-    int end = std::holds_alternative<int>(endVal) ? 
-        std::get<int>(endVal) : static_cast<int>(std::get<double>(endVal));
-    int step = std::holds_alternative<int>(stepVal) ? 
-        std::get<int>(stepVal) : static_cast<int>(std::get<double>(stepVal));
-    
-    for (int i = start; i <= end; i += step) {
-        // Execute for loop without creating new scope for now
-        defineVariable(node.variable, i);
-        
-        for (auto& stmt : node.body) {
-            stmt->accept(*this);
-            if (hasReturned) {
-                return;
-            }
-        }
-    }
-}
-
 void Interpreter::visit(ModernForStmt& node) {
+    // Create new scope for the for loop to isolate loop variables
+    pushScope();
+    
     // Execute initialization: var i = 1 or i = 1
     ValueType initValue = evaluate(*node.initialization);
     setVariable(node.variable, initValue);  // Use setVariable to handle both new and existing variables
     
     // Loop while condition is true
     while (isTruthy(evaluate(*node.condition))) {
-        // Execute body without creating new scope for now
-        
         // Execute body
         for (auto& stmt : node.body) {
             stmt->accept(*this);
             if (hasReturned) {
+                popScope();
                 return;
             }
         }
@@ -943,6 +959,9 @@ void Interpreter::visit(ModernForStmt& node) {
         // The increment expression should update the variable
         evaluate(*node.increment);
     }
+    
+    // Pop the for loop scope
+    popScope();
 }
 
 void Interpreter::visit(WhileStmt& node) {

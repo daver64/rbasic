@@ -27,6 +27,10 @@ void CallExpr::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
 }
 
+void StructLiteralExpr::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
 // Statement implementations
 void ExpressionStmt::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
@@ -41,10 +45,6 @@ void PrintStmt::accept(ASTVisitor& visitor) {
 }
 
 void IfStmt::accept(ASTVisitor& visitor) {
-    visitor.visit(*this);
-}
-
-void ForStmt::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
 }
 

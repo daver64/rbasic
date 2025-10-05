@@ -11,7 +11,7 @@ using namespace rbasic;
 void test_integration() {
     // Test simple variable assignment and arithmetic
     {
-        std::string code = "var x = 10; var y = x + 5; print y;";
+        std::string code = "var x = 10; var y = x + 5; print(y);";
         
         Lexer lexer(code);
         auto tokens = lexer.tokenize();
@@ -35,11 +35,11 @@ void test_integration() {
     {
         std::string code = R"(
             var x = 5;
-            if x > 3 then
-                print "greater";
-            else
-                print "not greater";
-            end if;
+            if (x > 3) {
+                print("greater");
+            } else {
+                print("not greater");
+            }
         )";
         
         Lexer lexer(code);
@@ -63,7 +63,7 @@ void test_integration() {
         std::string code = R"(
             var name = "World";
             var greeting = "Hello, " + name + "!";
-            print greeting;
+            print(greeting);
         )";
         
         Lexer lexer(code);

@@ -15,8 +15,8 @@ function isPrime(n) {
         return false;
     }
     
-    for(var i = 2; i <= sqrt(n); i = i + 1) {
-        if (n mod i == 0) {
+    for(var j = 2; j <= sqrt(n); j = j + 1) {
+        if (n mod j == 0) {
             return false;
         }
     }

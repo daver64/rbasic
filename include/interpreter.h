@@ -44,13 +44,13 @@ public:
     void visit(AssignExpr& node) override;
     void visit(UnaryExpr& node) override;
     void visit(CallExpr& node) override;
+    void visit(StructLiteralExpr& node) override;
     
     void visit(ExpressionStmt& node) override;
     void visit(VarStmt& node) override;
     void visit(PrintStmt& node) override;
     void visit(InputStmt& node) override;
     void visit(IfStmt& node) override;
-    void visit(ForStmt& node) override;
     void visit(ModernForStmt& node) override;
     void visit(WhileStmt& node) override;
     void visit(ReturnStmt& node) override;

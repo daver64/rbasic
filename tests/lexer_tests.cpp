@@ -20,27 +20,30 @@ void test_lexer() {
         assert(tokens[4].type == TokenType::SEMICOLON);
     }
     
-    // Test string literals
+    // Test string literals  
     {
-        Lexer lexer("print \"Hello, World!\";");
+        Lexer lexer("print(\"Hello, World!\");");
         auto tokens = lexer.tokenize();
         
-        assert(tokens.size() == 4); // print, "Hello, World!", ;, EOF
+        assert(tokens.size() == 6); // print, (, "Hello, World!", ), ;, EOF
         assert(tokens[0].type == TokenType::PRINT);
-        assert(tokens[1].type == TokenType::STRING);
-        assert(tokens[1].value == "Hello, World!");
-        assert(tokens[2].type == TokenType::SEMICOLON);
+        assert(tokens[1].type == TokenType::LPAREN);
+        assert(tokens[2].type == TokenType::STRING);
+        assert(tokens[2].value == "Hello, World!");
+        assert(tokens[3].type == TokenType::RPAREN);
+        assert(tokens[4].type == TokenType::SEMICOLON);
     }
     
-    // Test keywords (case insensitive)
+    // Test keywords (lowercase as per current C-style syntax)
     {
-        Lexer lexer("IF THEN ELSE END");
+        Lexer lexer("if var for while function");
         auto tokens = lexer.tokenize();
         
         assert(tokens[0].type == TokenType::IF);
-        assert(tokens[1].type == TokenType::THEN);
-        assert(tokens[2].type == TokenType::ELSE);
-        assert(tokens[3].type == TokenType::END);
+        assert(tokens[1].type == TokenType::VAR);
+        assert(tokens[2].type == TokenType::FOR);
+        assert(tokens[3].type == TokenType::WHILE);
+        assert(tokens[4].type == TokenType::FUNCTION);
     }
     
     // Test operators

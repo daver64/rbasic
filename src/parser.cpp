@@ -202,6 +202,25 @@ std::unique_ptr<Expression> Parser::call() {
             } else {
                 throw SyntaxError("Invalid function call");
             }
+        } else if (match({TokenType::LEFT_BRACE})) {
+            // Handle struct literal: StructName { value1, value2, ... }
+            std::vector<std::unique_ptr<Expression>> values;
+            
+            if (!check(TokenType::RIGHT_BRACE)) {
+                do {
+                    values.push_back(expression());
+                } while (match({TokenType::COMMA}));
+            }
+            
+            consume(TokenType::RIGHT_BRACE, "Expected '}' after struct values");
+            
+            if (auto var = dynamic_cast<VariableExpr*>(expr.get())) {
+                std::string name = var->name;
+                expr.release(); // Release ownership
+                expr = std::make_unique<StructLiteralExpr>(name, std::move(values));
+            } else {
+                throw SyntaxError("Invalid struct literal");
+            }
         } else if (match({TokenType::LEFT_BRACKET})) {
             auto index = expression();
             consume(TokenType::RIGHT_BRACKET, "Expected ']' after array index");
@@ -433,25 +452,27 @@ std::unique_ptr<Statement> Parser::functionDeclaration() {
 std::unique_ptr<Statement> Parser::structDeclaration() {
     auto name = consume(TokenType::IDENTIFIER, "Expected struct name");
     
+    consume(TokenType::LEFT_BRACE, "Expected '{' after struct name");
+    
     std::vector<std::string> fields;
     std::vector<std::string> fieldTypes;
     
-    while (!check(TokenType::END) && !isAtEnd()) {
+    while (!check(TokenType::RIGHT_BRACE) && !isAtEnd()) {
         auto field = consume(TokenType::IDENTIFIER, "Expected field name");
         fields.push_back(field.value);
+        fieldTypes.push_back("variant"); // Default type for modern syntax
         
-        if (match({TokenType::AS})) {
-            auto type = consume(TokenType::IDENTIFIER, "Expected field type");
-            fieldTypes.push_back(type.value);
+        if (match({TokenType::COMMA})) {
+            // Continue to next field
+        } else if (check(TokenType::RIGHT_BRACE)) {
+            // End of struct body
+            break;
         } else {
-            fieldTypes.push_back("variant");
+            throw std::runtime_error("Expected ',' or '}' after field name");
         }
-        
-        consume(TokenType::SEMICOLON, "Expected ';' after field declaration");
     }
     
-    consume(TokenType::END, "Expected 'end' after struct body");
-    consume(TokenType::STRUCT, "Expected 'struct' after 'end'");
+    consume(TokenType::RIGHT_BRACE, "Expected '}' after struct body");
     consume(TokenType::SEMICOLON, "Expected ';' after struct declaration");
     
     return std::make_unique<StructDecl>(name.value, std::move(fields), std::move(fieldTypes));

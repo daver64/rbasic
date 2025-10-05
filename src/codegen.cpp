@@ -616,6 +616,14 @@ void CodeGenerator::visit(CallExpr& node) {
     write(")");
 }
 
+void CodeGenerator::visit(StructLiteralExpr& node) {
+    // Generate struct construction code
+    write("StructValue(\"" + node.structName + "\")");
+    // Note: For now, we'll generate a simple constructor call
+    // In a full implementation, we'd need to handle field initialization
+    // This is a basic placeholder that matches the interpreter's structure
+}
+
 void CodeGenerator::visit(ExpressionStmt& node) {
     indent();
     node.expression->accept(*this);
@@ -679,30 +687,6 @@ void CodeGenerator::visit(IfStmt& node) {
         }
         indentLevel--;
     }
-    
-    writeLine("}");
-}
-
-void CodeGenerator::visit(ForStmt& node) {
-    std::string loopVar = generateTempVar();
-    
-    indent();
-    write("for (int " + loopVar + " = to_int(");
-    node.start->accept(*this);
-    write("); " + loopVar + " <= to_int(");
-    node.end->accept(*this);
-    write("); " + loopVar + " += to_int(");
-    node.step->accept(*this);
-    write(")) {\n");
-    
-    indentLevel++;
-    indent();
-    write("variables[\"" + node.variable + "\"] = BasicValue(" + loopVar + ");\n");
-    
-    for (auto& stmt : node.body) {
-        stmt->accept(*this);
-    }
-    indentLevel--;
     
     writeLine("}");
 }
