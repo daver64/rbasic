@@ -61,6 +61,10 @@ rbasic::IOHandler* get_io_handler() {
 }
 
 void init_runtime() {
+    // Sync C++ iostream with C stdio for better compatibility (especially with MinGW64 + PowerShell)
+    std::ios::sync_with_stdio(true);
+    std::cin.tie(&std::cout);
+    
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
     // Initialize terminal support for compiled programs
     rbasic::Terminal::initialize();

@@ -57,20 +57,39 @@ void writeFile(const std::string& filename, const std::string& content) {
     file << content;
 }
 
-bool compileToExecutable(const std::string& cppFile, const std::string& outputFile) {
+bool compileToExecutable(const std::string& cppFile, const std::string& outputFile, const char* exePath) {
     try {
         CommandBuilder builder;
         
 #ifdef _WIN32
-        // Windows: Use Microsoft Visual C++ compiler
-        builder.compiler("cl")
-               .compileFlags({"/EHsc", "/std:c++17"})
-               .input(cppFile)
-               .output(outputFile)
-               .library("runtime\\Release\\rbasic_runtime.lib")
-               .linkFlags({"/SUBSYSTEM:CONSOLE", "kernel32.lib", "user32.lib"});
+        // Windows: Check for bundled MinGW64 first, fallback to MSVC
+        std::filesystem::path executablePath = std::filesystem::path(exePath).parent_path();
+        std::filesystem::path mingwPath = executablePath / "mingw64" / "bin" / "g++.exe";
         
-        std::cout << "Compiling with MSVC..." << std::endl;
+        bool useMingw = std::filesystem::exists(mingwPath);
+        
+        if (useMingw) {
+            // Use bundled MinGW64 compiler
+            std::string mingwCompiler = mingwPath.string();
+            builder.compiler(mingwCompiler)
+                   .compileFlags({"-std=c++17", "-O2", "-static-libgcc", "-static-libstdc++", "-mconsole"})
+                   .input(cppFile)
+                   .output(outputFile + ".exe")
+                   .library("runtime\\librbasic_runtime.a")
+                   .linkFlags({"-Wl,--subsystem,console", "-lkernel32", "-luser32"});
+            
+            std::cout << "Compiling with bundled MinGW64..." << std::endl;
+        } else {
+            // Fallback to Microsoft Visual C++ compiler
+            builder.compiler("cl")
+                   .compileFlags({"/EHsc", "/std:c++17"})
+                   .input(cppFile)
+                   .output(outputFile)
+                   .library("runtime\\Release\\rbasic_runtime.lib")
+                   .linkFlags({"/SUBSYSTEM:CONSOLE", "kernel32.lib", "user32.lib"});
+            
+            std::cout << "Compiling with MSVC..." << std::endl;
+        }
 #else
         // Linux/Unix: Use g++ compiler
         builder.compiler("g++")
@@ -200,7 +219,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Generated C++ code written to: " << tempCppFile << std::endl;
             
             // Compile to executable
-            if (compileToExecutable(tempCppFile, outputFile)) {
+            if (compileToExecutable(tempCppFile, outputFile, argv[0])) {
                 // Clean up temporary file unless user wants to keep it
                 if (!keepCppFile) {
                     std::filesystem::remove(tempCppFile);

@@ -7,6 +7,7 @@
 #include <map>
 #include <variant>
 #include <stdexcept>
+#include <cstdint>
 
 namespace rbasic {
 

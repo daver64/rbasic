@@ -97,13 +97,13 @@ void CodeGenerator::generateMain() {
 // Visitor implementations
 void CodeGenerator::visit(LiteralExpr& node) {
     if (std::holds_alternative<int>(node.value)) {
-        write(std::to_string(std::get<int>(node.value)));
+        write("BasicValue(" + std::to_string(std::get<int>(node.value)) + ")");
     } else if (std::holds_alternative<double>(node.value)) {
-        write(std::to_string(std::get<double>(node.value)));
+        write("BasicValue(" + std::to_string(std::get<double>(node.value)) + ")");
     } else if (std::holds_alternative<std::string>(node.value)) {
-        write("\"" + escapeString(std::get<std::string>(node.value)) + "\"");
+        write("BasicValue(\"" + escapeString(std::get<std::string>(node.value)) + "\")");
     } else if (std::holds_alternative<bool>(node.value)) {
-        write(std::get<bool>(node.value) ? "true" : "false");
+        write("BasicValue(" + std::string(std::get<bool>(node.value) ? "true" : "false") + ")");
     }
 }
 

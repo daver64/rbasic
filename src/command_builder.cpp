@@ -91,6 +91,18 @@ bool CommandBuilder::isValidPath(const std::string& path) const {
     return path.find_first_of(dangerous) == std::string::npos;
 }
 
+bool CommandBuilder::isGccLikeCompiler() const {
+    // Check if the compiler is GCC, G++, MinGW, or Clang
+    std::string compilerName = compiler_;
+    std::transform(compilerName.begin(), compilerName.end(), compilerName.begin(), 
+                  [](char c) { return static_cast<char>(std::tolower(c)); });
+    
+    return compilerName.find("gcc") != std::string::npos ||
+           compilerName.find("g++") != std::string::npos ||
+           compilerName.find("clang") != std::string::npos ||
+           compilerName.find("mingw") != std::string::npos;
+}
+
 std::string CommandBuilder::build() const {
     if (compiler_.empty()) {
         throw std::runtime_error("Compiler not specified");
@@ -119,11 +131,18 @@ std::string CommandBuilder::build() const {
     
     // Add output specification
     if (!outputFile_.empty()) {
+        if (isGccLikeCompiler()) {
+            // Use GCC/MinGW syntax
+            cmd << " -o " << escapeArgument(outputFile_);
+        } else {
 #ifdef _WIN32
-        cmd << " /Fe:" << escapeArgument(outputFile_);
+            // Use MSVC syntax
+            cmd << " /Fe:" << escapeArgument(outputFile_);
 #else
-        cmd << " -o " << escapeArgument(outputFile_);
+            // Default to GCC syntax on non-Windows
+            cmd << " -o " << escapeArgument(outputFile_);
 #endif
+        }
     }
     
     // Add libraries
@@ -134,20 +153,28 @@ std::string CommandBuilder::build() const {
         cmd << " " << escapeArgument(lib);
     }
     
-#ifdef _WIN32
-    // Add /link and link flags for MSVC
+    // Add link flags
     if (!linkFlags_.empty()) {
-        cmd << " /link";
-        for (const auto& flag : linkFlags_) {
-            cmd << " " << escapeArgument(flag);
+        if (isGccLikeCompiler()) {
+            // Use GCC/MinGW syntax - link flags come directly
+            for (const auto& flag : linkFlags_) {
+                cmd << " " << escapeArgument(flag);
+            }
+        } else {
+#ifdef _WIN32
+            // Use MSVC syntax - link flags after /link
+            cmd << " /link";
+            for (const auto& flag : linkFlags_) {
+                cmd << " " << escapeArgument(flag);
+            }
+#else
+            // Default to GCC syntax on non-Windows
+            for (const auto& flag : linkFlags_) {
+                cmd << " " << escapeArgument(flag);
+            }
+#endif
         }
     }
-#else
-    // Add link flags for Unix
-    for (const auto& flag : linkFlags_) {
-        cmd << " " << escapeArgument(flag);
-    }
-#endif
     
     return cmd.str();
 }

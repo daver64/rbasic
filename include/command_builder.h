@@ -30,6 +30,7 @@ public:
 private:
     std::string escapeArgument(const std::string& arg) const;
     bool isValidPath(const std::string& path) const;
+    bool isGccLikeCompiler() const;  // Detect GCC/MinGW vs MSVC
 };
 
 } // namespace rbasic
