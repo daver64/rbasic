@@ -8,6 +8,9 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <cstdint>  // For uint8_t
+#include <fstream>  // For file operations
+#include <filesystem>  // For filesystem operations
 
 #ifdef RBASIC_SDL_SUPPORT
 #include <SDL.h>

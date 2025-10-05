@@ -71,6 +71,14 @@ set_target_properties(rbasic_runtime PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/runtime
 )
 
+# Link with required libraries
+if(NOT WIN32)
+    # On Linux/Unix, link with stdc++fs for filesystem support (GCC < 9)
+    target_link_libraries(rbasic stdc++fs)
+    target_link_libraries(rbasic_runtime stdc++fs)
+    target_link_libraries(rbasic_tests stdc++fs)
+endif()
+
 # Enable testing
 enable_testing()
 

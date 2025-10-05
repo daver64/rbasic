@@ -72,7 +72,8 @@ bool compileToExecutable(const std::string& cppFile, const std::string& outputFi
                .compileFlags({"-std=c++17", "-O2"})
                .input(cppFile)
                .output(outputFile)
-               .library("runtime/librbasic_runtime.a");
+               .library("runtime/librbasic_runtime.a")
+               .linkFlags({"-lstdc++fs"});  // Link with filesystem library
         
         std::cout << "Compiling with g++..." << std::endl;
 #endif
