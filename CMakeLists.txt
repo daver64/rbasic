@@ -76,7 +76,6 @@ if(NOT WIN32)
     # On Linux/Unix, link with stdc++fs for filesystem support (GCC < 9)
     target_link_libraries(rbasic stdc++fs)
     target_link_libraries(rbasic_runtime stdc++fs)
-    target_link_libraries(rbasic_tests stdc++fs)
 endif()
 
 # Enable testing
@@ -101,6 +100,11 @@ add_executable(rbasic_tests
 )
 
 target_include_directories(rbasic_tests PRIVATE include)
+
+# Link rbasic_tests with required libraries
+if(NOT WIN32)
+    target_link_libraries(rbasic_tests stdc++fs)
+endif()
 
 # Compiler-specific options (set after all targets are defined)
 if(MSVC)
