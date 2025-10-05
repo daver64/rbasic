@@ -69,6 +69,7 @@ cmake .. && cmake --build .
 - **Modern Comments**: `//` line comments and `/* */` block comments
 - **Arrays**: `dim array(size)` declaration with `array[index]` access (0-indexed like C/C++)
 - **Typed Arrays**: High-performance `byte_array()`, `int_array()`, `double_array()` functions
+- **File I/O**: Complete text and binary file operations with `read_text_file()`, `write_binary_file()`, etc.
 
 ### Built-in Functions
 

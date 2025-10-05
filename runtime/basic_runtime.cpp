@@ -4,6 +4,9 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <fstream>
+#include <filesystem>
+#include <vector>
 
 #ifdef RBASIC_SDL_SUPPORT
 // Simple SDL state for compiled programs
@@ -833,5 +836,289 @@ BasicValue db_escape(const std::string& str) {
     return escaped;
 }
 #endif
+
+// File I/O functions
+bool file_exists(const std::string& filename) {
+    return std::filesystem::exists(filename);
+}
+
+BasicValue file_size(const std::string& filename) {
+    try {
+        return static_cast<int>(std::filesystem::file_size(filename));
+    } catch (...) {
+        return -1; // Error
+    }
+}
+
+bool delete_file(const std::string& filename) {
+    try {
+        return std::filesystem::remove(filename);
+    } catch (...) {
+        return false;
+    }
+}
+
+bool rename_file(const std::string& oldname, const std::string& newname) {
+    try {
+        std::filesystem::rename(oldname, newname);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+// Text file I/O
+BasicValue read_text_file(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        return std::string(""); // Return empty string on error
+    }
+    
+    std::string content((std::istreambuf_iterator<char>(file)),
+                        std::istreambuf_iterator<char>());
+    file.close();
+    return content;
+}
+
+bool write_text_file(const std::string& filename, const std::string& content) {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        return false;
+    }
+    
+    file << content;
+    file.close();
+    return !file.fail();
+}
+
+bool append_text_file(const std::string& filename, const std::string& content) {
+    std::ofstream file(filename, std::ios::app);
+    if (!file.is_open()) {
+        return false;
+    }
+    
+    file << content;
+    file.close();
+    return !file.fail();
+}
+
+// Binary file I/O with typed arrays
+bool read_binary_file(const std::string& filename, BasicByteArray& buffer) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        return false;
+    }
+    
+    // Get file size
+    file.seekg(0, std::ios::end);
+    size_t fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+    
+    // Resize buffer if needed
+    if (buffer.elements.size() < fileSize) {
+        buffer.elements.resize(fileSize);
+        buffer.dimensions = {static_cast<int>(fileSize)};
+    }
+    
+    // Read data
+    file.read(reinterpret_cast<char*>(buffer.elements.data()), fileSize);
+    file.close();
+    
+    return !file.fail();
+}
+
+bool write_binary_file(const std::string& filename, const BasicByteArray& buffer) {
+    std::ofstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        return false;
+    }
+    
+    file.write(reinterpret_cast<const char*>(buffer.elements.data()), buffer.elements.size());
+    file.close();
+    
+    return !file.fail();
+}
+
+BasicValue load_binary_file(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        return BasicByteArray(); // Return empty array on error
+    }
+    
+    // Get file size
+    file.seekg(0, std::ios::end);
+    size_t fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+    
+    // Create buffer
+    BasicByteArray buffer({static_cast<int>(fileSize)});
+    
+    // Read data
+    file.read(reinterpret_cast<char*>(buffer.elements.data()), fileSize);
+    file.close();
+    
+    return buffer;
+}
+
+// CSV/structured data I/O
+bool save_int_array_csv(const std::string& filename, const BasicIntArray& array) {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        return false;
+    }
+    
+    for (size_t i = 0; i < array.elements.size(); ++i) {
+        if (i > 0) file << ",";
+        file << array.elements[i];
+    }
+    file << "\n";
+    file.close();
+    
+    return !file.fail();
+}
+
+bool save_double_array_csv(const std::string& filename, const BasicDoubleArray& array) {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        return false;
+    }
+    
+    for (size_t i = 0; i < array.elements.size(); ++i) {
+        if (i > 0) file << ",";
+        file << array.elements[i];
+    }
+    file << "\n";
+    file.close();
+    
+    return !file.fail();
+}
+
+BasicValue load_int_array_csv(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        return BasicIntArray(); // Return empty array on error
+    }
+    
+    std::string line;
+    std::getline(file, line);
+    file.close();
+    
+    // Parse CSV line
+    std::vector<int> values;
+    std::stringstream ss(line);
+    std::string token;
+    
+    while (std::getline(ss, token, ',')) {
+        try {
+            values.push_back(std::stoi(token));
+        } catch (...) {
+            values.push_back(0); // Default value on parse error
+        }
+    }
+    
+    // Create array
+    BasicIntArray result({static_cast<int>(values.size())});
+    std::copy(values.begin(), values.end(), result.elements.begin());
+    
+    return result;
+}
+
+BasicValue load_double_array_csv(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        return BasicDoubleArray(); // Return empty array on error
+    }
+    
+    std::string line;
+    std::getline(file, line);
+    file.close();
+    
+    // Parse CSV line
+    std::vector<double> values;
+    std::stringstream ss(line);
+    std::string token;
+    
+    while (std::getline(ss, token, ',')) {
+        try {
+            values.push_back(std::stod(token));
+        } catch (...) {
+            values.push_back(0.0); // Default value on parse error
+        }
+    }
+    
+    // Create array
+    BasicDoubleArray result({static_cast<int>(values.size())});
+    std::copy(values.begin(), values.end(), result.elements.begin());
+    
+    return result;
+}
+
+// Wrapper functions for code generator (file I/O)
+BasicValue func_file_exists(const std::string& filename) {
+    return file_exists(filename);
+}
+
+BasicValue func_file_size(const std::string& filename) {
+    return file_size(filename);
+}
+
+BasicValue func_delete_file(const std::string& filename) {
+    return delete_file(filename);
+}
+
+BasicValue func_rename_file(const std::string& oldname, const std::string& newname) {
+    return rename_file(oldname, newname);
+}
+
+BasicValue func_read_text_file(const std::string& filename) {
+    return read_text_file(filename);
+}
+
+BasicValue func_write_text_file(const BasicValue& filenameVal, const BasicValue& contentVal) {
+    if (std::holds_alternative<std::string>(filenameVal) && std::holds_alternative<std::string>(contentVal)) {
+        return write_text_file(std::get<std::string>(filenameVal), std::get<std::string>(contentVal));
+    }
+    return false;
+}
+
+BasicValue func_append_text_file(const BasicValue& filenameVal, const BasicValue& contentVal) {
+    if (std::holds_alternative<std::string>(filenameVal) && std::holds_alternative<std::string>(contentVal)) {
+        return append_text_file(std::get<std::string>(filenameVal), std::get<std::string>(contentVal));
+    }
+    return false;
+}
+
+BasicValue func_load_binary_file(const std::string& filename) {
+    return load_binary_file(filename);
+}
+
+BasicValue func_write_binary_file(const BasicValue& filenameVal, const BasicValue& buffer) {
+    if (std::holds_alternative<std::string>(filenameVal) && std::holds_alternative<BasicByteArray>(buffer)) {
+        return write_binary_file(std::get<std::string>(filenameVal), std::get<BasicByteArray>(buffer));
+    }
+    return false;
+}
+
+BasicValue func_load_int_array_csv(const std::string& filename) {
+    return load_int_array_csv(filename);
+}
+
+BasicValue func_load_double_array_csv(const std::string& filename) {
+    return load_double_array_csv(filename);
+}
+
+BasicValue func_save_int_array_csv(const BasicValue& filenameVal, const BasicValue& array) {
+    if (std::holds_alternative<std::string>(filenameVal) && std::holds_alternative<BasicIntArray>(array)) {
+        return save_int_array_csv(std::get<std::string>(filenameVal), std::get<BasicIntArray>(array));
+    }
+    return false;
+}
+
+BasicValue func_save_double_array_csv(const BasicValue& filenameVal, const BasicValue& array) {
+    if (std::holds_alternative<std::string>(filenameVal) && std::holds_alternative<BasicDoubleArray>(array)) {
+        return save_double_array_csv(std::get<std::string>(filenameVal), std::get<BasicDoubleArray>(array));
+    }
+    return false;
+}
 
 } // namespace basic_runtime

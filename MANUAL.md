@@ -653,6 +653,99 @@ var d = decimals[0];  // Returns double
 - File I/O buffers
 - Image/audio processing
 
+## File I/O Operations
+
+rbasic provides comprehensive file I/O capabilities optimized for both text and binary data:
+
+### File Management
+
+```basic
+// Check if file exists
+if (file_exists("data.txt")) {
+    print("File found!");
+}
+
+// Get file size in bytes
+var size = file_size("data.txt");
+print("File size:", size, "bytes");
+
+// Copy files (read + write)
+var content = read_text_file("source.txt");
+write_text_file("copy.txt", content);
+
+// Rename files
+rename_file("old_name.txt", "new_name.txt");
+
+// Delete files
+delete_file("unwanted.txt");
+```
+
+### Text File I/O
+
+```basic
+// Write text to file
+var text = "Hello, World!\nSecond line.";
+write_text_file("output.txt", text);
+
+// Read entire text file
+var content = read_text_file("input.txt");
+print("File contents:", content);
+
+// Append to existing file
+append_text_file("log.txt", "New log entry\n");
+```
+
+### Binary File I/O with Typed Arrays
+
+```basic
+// Create binary data
+var data = byte_array(1024);  // 1KB buffer
+for (var i = 0; i < 1024; i = i + 1) {
+    data[i] = i mod 256;  // Fill with pattern
+}
+
+// Write binary file
+write_binary_file("data.bin", data);
+
+// Load binary file (auto-sized)
+var loaded = load_binary_file("data.bin");
+print("Loaded", len(loaded), "bytes");
+
+// Process binary data
+for (var i = 0; i < 10; i = i + 1) {
+    print("Byte", i, "=", loaded[i]);
+}
+```
+
+### Performance Benefits
+
+File I/O with typed arrays provides significant advantages:
+
+- **Zero-Copy Operations**: Direct memory access without variant overhead
+- **Large File Support**: Efficient handling of multi-megabyte files
+- **Type Safety**: Automatic bounds checking and type validation
+- **Cross-Platform**: Works identically on Windows, Linux, and macOS
+
+### Example: Image Processing Pipeline
+
+```basic
+// Load image data
+var image = load_binary_file("photo.raw");
+var width = 640;
+var height = 480;
+
+// Simple brightness adjustment
+for (var i = 0; i < width * height; i = i + 1) {
+    var pixel = image[i];
+    pixel = pixel + 50;  // Brighten
+    if (pixel > 255) pixel = 255;  // Clamp
+    image[i] = pixel;
+}
+
+// Save processed image
+write_binary_file("photo_bright.raw", image);
+```
+
 **Zero-Indexing Note**: Unlike traditional BASIC languages, rbasic uses 0-based indexing for all arrays, consistent with C/C++ and most modern languages. This makes interfacing with external libraries and file formats much more natural.
 
 #### Using Generic Arrays

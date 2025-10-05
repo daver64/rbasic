@@ -259,6 +259,43 @@ BasicValue func_byte_array(int size);
 BasicValue func_int_array(int size);
 BasicValue func_double_array(int size);
 
+// File I/O functions
+bool file_exists(const std::string& filename);
+BasicValue file_size(const std::string& filename);
+bool delete_file(const std::string& filename);
+bool rename_file(const std::string& oldname, const std::string& newname);
+
+// Text file I/O
+BasicValue read_text_file(const std::string& filename);
+bool write_text_file(const std::string& filename, const std::string& content);
+bool append_text_file(const std::string& filename, const std::string& content);
+
+// Binary file I/O with typed arrays
+bool read_binary_file(const std::string& filename, BasicByteArray& buffer);
+bool write_binary_file(const std::string& filename, const BasicByteArray& buffer);
+BasicValue load_binary_file(const std::string& filename);  // Returns ByteArray
+
+// CSV/structured data I/O
+bool save_int_array_csv(const std::string& filename, const BasicIntArray& array);
+bool save_double_array_csv(const std::string& filename, const BasicDoubleArray& array);
+BasicValue load_int_array_csv(const std::string& filename);
+BasicValue load_double_array_csv(const std::string& filename);
+
+// Wrapper functions for code generator (file I/O)
+BasicValue func_file_exists(const std::string& filename);
+BasicValue func_file_size(const std::string& filename);
+BasicValue func_delete_file(const std::string& filename);
+BasicValue func_rename_file(const std::string& oldname, const std::string& newname);
+BasicValue func_read_text_file(const std::string& filename);
+BasicValue func_write_text_file(const BasicValue& filenameVal, const BasicValue& contentVal);
+BasicValue func_append_text_file(const BasicValue& filenameVal, const BasicValue& contentVal);
+BasicValue func_load_binary_file(const std::string& filename);
+BasicValue func_write_binary_file(const BasicValue& filenameVal, const BasicValue& buffer);
+BasicValue func_load_int_array_csv(const std::string& filename);
+BasicValue func_load_double_array_csv(const std::string& filename);
+BasicValue func_save_int_array_csv(const BasicValue& filenameVal, const BasicValue& array);
+BasicValue func_save_double_array_csv(const BasicValue& filenameVal, const BasicValue& array);
+
 // Simple 1D array access helpers
 BasicValue get_array_element(BasicValue& arrayVar, BasicValue index);
 void set_array_element(BasicValue& arrayVar, BasicValue index, BasicValue value);
