@@ -1,6 +1,4 @@
-# rbasic - C-Leaning BASIC Language Transpiler
-
-**rbasic** is a modern BASIC### Interactive REPL Mode
+# rbasic - C-Leanin### Interactive REPL Mode
 
 rbasic includes a powerful Read-Eval-Print Loop for interactive development:
 
@@ -9,7 +7,15 @@ rbasic includes a powerful Read-Eval-Print Loop for interactive development:
 ./rbasic -r
 
 # REPL supports:
-# - Multi-line statements with automatic brace detection
+# - Multi-line statements w**✅ Implemented FFI Features:**
+- **Direct Library Integration**: Call functions from Windows DLLs, Linux shared libraries, and macOS dylibs
+- **Multiple Parameter Types**: Support for integers, strings, pointers, and complex parameter patterns
+- **Advanced Memory Management**: Buffer allocation, pointer dereferencing, and struct manipulation
+- **SDL2 Integration Ready**: Comprehensive support for SDL structures (SDL_Rect, SDL_Event) and constants
+- **Database Ready**: SQLite constants and parameter patterns for database operations
+- **Both Execution Modes**: FFI works identically in both interpreted and compiled programs
+- **Constant System**: Built-in SDL2, SQLite, and Windows API constants
+- **Pointer Safety**: Null checking and safe pointer operationstomatic brace detection
 # - Variable persistence between commands
 # - Function definitions and immediate execution
 # - Meta commands for file operations and help
@@ -34,13 +40,59 @@ rbasic> :save my_session.bas
 Session saved to my_session.bas
 ```
 
-### Language Featureslanguage transpiler that implements C-style syntax while maintaining BASIC's simplicity. It supports both interpretation for rapid development and compilation to native C++ executables.
+### Import System
+
+rbasic supports modular programming with a complete import system:
+
+```basic
+// math_lib.bas - Reusable mathematical functions
+var math_version = 1;
+print("Math library loaded successfully!");
+
+function add_numbers(a as double, b as double) as double {
+    return a + b;
+}
+
+function multiply_numbers(x as double, y as double) as double {
+    return x * y;
+}
+
+function square(num as double) as double {
+    return num * num;
+}
+```
+
+```basic
+// main.bas - Using the math library
+import "math_lib.bas";
+
+var result1 = add_numbers(10, 20);      // 30
+var result2 = multiply_numbers(5, 6);   // 30
+var result3 = square(7);                // 49
+
+print("Results:", result1, result2, result3);
+print("Library version:", math_version);
+```
+
+**Import Features:**
+- **Cross-Module Functions**: Call functions defined in imported files
+- **Variable Access**: Access variables from imported modules
+- **Path Resolution**: Automatic search in multiple directories (current, executable, lib/, stdlib/)
+- **Duplicate Prevention**: Each file imported only once per program
+- **Circular Detection**: Prevents infinite import loops with clear error messages
+- **Identical Behavior**: Works in both interpreter and compile modes
+- **Compile-Time Resolution**: Imports resolved and inlined during compilation (C-style preprocessing)
+
+### Language Features BASIC Language Transpiler
+
+**rbasic** is a modern BASIC language transpiler that implements C-style syntax while maintaining BASIC's simplicity. It supports both interpretation for rapid development and compilation to native C++ executables.
 
 ## Key Features
 
 - **C-Style Syntax**: Uses braces `{}`, parentheses for conditions, and modern control flow
 - **Transpiler Architecture**: Compiles BASIC to C++ executables or runs directly via interpreter  
 - **Interactive REPL**: Read-Eval-Print Loop for rapid development and testing
+- **Import System**: Modular programming with `import "file.bas"` for code organization
 - **Automatic Parallelization**: OpenMP-based automatic multi-core optimization for large array operations
 - **Comprehensive I/O**: Text and binary file operations with full file system support
 - **Typed Arrays**: High-performance `byte_array()`, `int_array()`, `double_array()` for numerical computing
@@ -156,19 +208,43 @@ print(val("3.14"));            // Convert string to number: 3.14
 
 #### Foreign Function Interface (FFI)
 ```basic
-// Direct integration with C libraries and system APIs
-ffi "kernel32.dll" GetCurrentProcessId() as integer;
-ffi "kernel32.dll" Sleep(milliseconds as integer) as integer;
-ffi "user32.dll" MessageBoxA(hwnd as integer, text as string, caption as string, type as integer) as integer;
+// Modern FFI with comprehensive library support
+ffi "SDL2.dll" SDL_Init(flags as integer) as integer;
+ffi "SDL2.dll" SDL_CreateWindow(title as string, x as integer, y as integer, 
+                                width as integer, height as integer, flags as integer) as pointer;
+ffi "SDL2.dll" SDL_PollEvent(event as pointer) as integer;
 
 function main() {
-    var pid = GetCurrentProcessId();
-    print("Process ID:", pid);
+    // Initialize SDL2 graphics
+    var result = SDL_Init(SDL_INIT_VIDEO);
+    if (result != 0) {
+        print("SDL2 initialization failed");
+        return 1;
+    }
     
-    print("Sleeping for 1 second...");
-    Sleep(1000);
+    // Create window with constants
+    var window = SDL_CreateWindow("rbasic Graphics", 
+                                  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                  800, 600, SDL_WINDOW_SHOWN);
     
-    MessageBoxA(0, "Hello from rbasic!", "FFI Demo", 0);
+    if (is_null(window)) {
+        print("Window creation failed");
+        return 1;
+    }
+    
+    // Event handling with struct support
+    var event = create_sdl_event();
+    var running = true;
+    
+    while (running) {
+        while (SDL_PollEvent(event) != 0) {
+            var event_type = get_event_type(event);
+            if (event_type == SDL_QUIT) {
+                running = false;
+            }
+        }
+    }
+    
     return 0;
 }
 ```
@@ -316,7 +392,8 @@ This is an active development project. **All core language features are implemen
 - ✅ **Dual Execution Modes**: Interpreter (`-i`), compiler (`-c`), and interactive REPL (`-r`) with identical behavior
 - ✅ **Cross-Platform Support**: Windows MinGW64/MSVC, Linux/macOS g++ compilation
 - ✅ **Advanced Features**: Typed arrays, struct literals, comprehensive data processing
-- ✅ **Foreign Function Interface (FFI)**: Direct C library integration with multiple parameter types
+- ✅ **Import System**: Complete modular programming with `import "file.bas"` syntax
+- ✅ **Foreign Function Interface (FFI)**: Direct C library integration with comprehensive pointer and struct support
 - ✅ **Error Handling**: Source position tracking with detailed error reporting
 - ✅ **Production Ready**: All unit tests passing, comprehensive example suite
 

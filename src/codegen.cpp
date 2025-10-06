@@ -767,18 +767,12 @@ void CodeGenerator::visit(DimStmt& node) {
 }
 
 void CodeGenerator::visit(ImportStmt& node) {
-    // Handle import during compilation by generating an include or inlined code
-    // For now, generate a comment and let the runtime handle it
-    writeLine("// Import statement: " + node.filename);
-    writeLine("// Note: Import functionality handled at runtime in compiled mode");
+    // Import statements are resolved at compile time before parsing,
+    // so we can safely skip them in the generated code since the
+    // imported content has already been inlined.
     
-    // In a future version, we could:
-    // 1. Parse the imported file and inline its code
-    // 2. Generate #include statements for C++ headers
-    // 3. Generate module loading code
-    
-    // For the stdlib concept, imports will be handled by the build system
-    // or by pre-processed concatenation of library files
+    // Generate a comment for reference
+    writeLine("// Import statement resolved at compile time: " + node.filename);
 }
 
 void CodeGenerator::visit(FFIFunctionDecl& node) {

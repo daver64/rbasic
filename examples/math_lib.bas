@@ -1,12 +1,15 @@
-// math_lib.bas - A simple math library for testing imports (working version)
+// math_lib.bas - A simple math library for testing imports
 
-function get_pi() as double {
-    return 3.14159;
+function add_numbers(a as int, b as int) as int {
+    return a + b;
 }
 
-function double_number() as int {
-    var input = 5;  // For now, use fixed values 
-    return input * 2;
+function multiply_numbers(x as int, y as int) as int {
+    return x * y;
+}
+
+function square(num as int) as int {
+    return num * num;
 }
 
 var math_version = 1;

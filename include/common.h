@@ -282,4 +282,17 @@ inline bool hasDecimalPoint(const std::string& str) {
     return false;
 }
 
+// Import resolution for compilation
+struct ImportResolutionResult {
+    std::string resolvedSource;
+    std::vector<std::string> importedFiles;
+    bool success;
+    std::string errorMessage;
+    
+    ImportResolutionResult(bool s = false) : success(s) {}
+};
+
+ImportResolutionResult resolveImports(const std::string& source, const std::string& baseFile = "");
+std::string resolveImportPath(const std::string& filename, const std::string& currentFile = "");
+
 } // namespace rbasic

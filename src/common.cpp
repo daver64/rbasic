@@ -1,6 +1,11 @@
 #include "common.h"
 #include <sstream>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
+#include <set>
+#include <algorithm>
+#include <functional>
 
 namespace rbasic {
 
@@ -134,6 +139,172 @@ ValueType compareValues(const ValueType& left, const ValueType& right, const std
     if (op == ">=") return leftStr >= rightStr;
     
     return false;
+}
+
+// Import resolution implementation
+std::string resolveImportPath(const std::string& filename, const std::string& currentFile) {
+    // Same path resolution logic as interpreter
+    std::vector<std::string> searchPaths;
+    
+    // 1. Relative to current file directory (if we have one)
+    if (!currentFile.empty()) {
+        std::filesystem::path currentPath(currentFile);
+        if (currentPath.has_parent_path()) {
+            searchPaths.push_back(currentPath.parent_path().string());
+        }
+    }
+    
+    // 2. Current working directory
+    searchPaths.push_back(".");
+    
+    // 3. Executable directory
+    try {
+        auto execPath = std::filesystem::canonical("/proc/self/exe");
+        if (execPath.has_parent_path()) {
+            searchPaths.push_back(execPath.parent_path().string());
+        }
+    } catch (...) {
+        // Fallback for systems without /proc/self/exe
+        searchPaths.push_back(".");
+    }
+    
+    // 4. Common library paths
+    searchPaths.push_back("lib");
+    searchPaths.push_back("stdlib");
+    searchPaths.push_back("library");
+    
+    // Try each search path
+    for (const auto& searchPath : searchPaths) {
+        std::filesystem::path fullPath = std::filesystem::path(searchPath) / filename;
+        if (std::filesystem::exists(fullPath)) {
+            return std::filesystem::canonical(fullPath).string();
+        }
+    }
+    
+    return ""; // Not found
+}
+
+ImportResolutionResult resolveImports(const std::string& source, const std::string& baseFile) {
+    ImportResolutionResult result(true);
+    std::set<std::string> processedFiles;
+    std::vector<std::string> fileStack; // For circular import detection
+    
+    std::function<bool(const std::string&, const std::string&, std::string&)> processFile = 
+        [&](const std::string& content, const std::string& currentFile, std::string& output) -> bool {
+        
+        // Canonicalize current file path for proper tracking
+        std::string canonicalCurrentFile;
+        if (!currentFile.empty()) {
+            try {
+                canonicalCurrentFile = std::filesystem::canonical(currentFile).string();
+            } catch (...) {
+                canonicalCurrentFile = currentFile;
+            }
+            
+            // Check for circular imports
+            if (std::find(fileStack.begin(), fileStack.end(), canonicalCurrentFile) != fileStack.end()) {
+                result.errorMessage = "Circular import detected: " + canonicalCurrentFile;
+                result.success = false;
+                return false;
+            }
+            fileStack.push_back(canonicalCurrentFile);
+        }
+        
+        std::istringstream stream(content);
+        std::string line;
+        int lineNumber = 0;
+        
+        while (std::getline(stream, line)) {
+            lineNumber++;
+            
+            // Simple import detection - look for 'import "filename";'
+            std::string trimmed = line;
+            trimmed.erase(0, trimmed.find_first_not_of(" \t"));
+            trimmed.erase(trimmed.find_last_not_of(" \t") + 1);
+            
+            if (trimmed.length() > 7 && trimmed.substr(0, 6) == "import") {
+                // Parse import statement: import "filename";
+                size_t firstQuote = trimmed.find('"');
+                size_t lastQuote = trimmed.rfind('"');
+                
+                if (firstQuote != std::string::npos && lastQuote != std::string::npos && 
+                    firstQuote < lastQuote) {
+                    
+                    std::string importFile = trimmed.substr(firstQuote + 1, lastQuote - firstQuote - 1);
+                    std::string resolvedPath = resolveImportPath(importFile, currentFile);
+                    
+                    if (resolvedPath.empty()) {
+                        result.errorMessage = "Import file not found: " + importFile + 
+                                           " (at " + currentFile + ":" + std::to_string(lineNumber) + ")";
+                        result.success = false;
+                        return false;
+                    }
+                    
+                    // Canonicalize path to avoid duplicate imports
+                    std::string canonicalPath;
+                    try {
+                        canonicalPath = std::filesystem::canonical(resolvedPath).string();
+                    } catch (...) {
+                        canonicalPath = resolvedPath;
+                    }
+                    
+                    // Skip if already processed
+                    if (processedFiles.find(canonicalPath) != processedFiles.end()) {
+                        output += "// " + line + " (already imported)\n";
+                        continue;
+                    }
+                    
+                    // Mark as processed and add to imported files list
+                    processedFiles.insert(canonicalPath);
+                    result.importedFiles.push_back(canonicalPath);
+                    
+                    // Read and process the imported file
+                    std::ifstream importStream(canonicalPath);
+                    if (!importStream.is_open()) {
+                        result.errorMessage = "Failed to read import file: " + canonicalPath;
+                        result.success = false;
+                        return false;
+                    }
+                    
+                    std::string importContent((std::istreambuf_iterator<char>(importStream)),
+                                            std::istreambuf_iterator<char>());
+                    importStream.close();
+                    
+                    // Add comment indicating the imported file
+                    output += "// === BEGIN IMPORT: " + importFile + " ===\n";
+                    
+                    // Recursively process the imported file
+                    if (!processFile(importContent, canonicalPath, output)) {
+                        return false;
+                    }
+                    
+                    output += "// === END IMPORT: " + importFile + " ===\n";
+                } else {
+                    result.errorMessage = "Invalid import syntax: " + line + 
+                                       " (at " + currentFile + ":" + std::to_string(lineNumber) + ")";
+                    result.success = false;
+                    return false;
+                }
+            } else {
+                // Regular line, copy as-is
+                output += line + "\n";
+            }
+        }
+        
+        // Remove current file from processing stack
+        if (!canonicalCurrentFile.empty()) {
+            fileStack.pop_back();
+        }
+        
+        return true;
+    };
+    
+    // Process the main file
+    if (!processFile(source, baseFile, result.resolvedSource)) {
+        result.success = false;
+    }
+    
+    return result;
 }
 
 } // namespace rbasic

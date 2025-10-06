@@ -2,14 +2,19 @@
 
 import "math_lib.bas";
 
-var pi_value = get_pi();
-print("Pi value: ");
-print(pi_value);
+var result1 = add_numbers(5, 3);
+print("5 + 3 = ");
+print(result1);
 print("\n");
 
-var doubled = double_number();
-print("Double number result: ");
-print(doubled);
+var result2 = multiply_numbers(4, 7);
+print("4 * 7 = ");
+print(result2);
+print("\n");
+
+var result3 = square(6);
+print("6^2 = ");
+print(result3);
 print("\n");
 
 print("Math version: ");

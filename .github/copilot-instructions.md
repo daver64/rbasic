@@ -13,20 +13,22 @@ This is a C-leaning BASIC language transpiler written in C++. The project suppor
 
 ## Key Components
 1. **Lexer** - Tokenizes BASIC source code with C-style syntax support
-2. **Parser** - Builds Abstract Syntax Tree (AST) from tokens
-3. **Interpreter** - Directly executes AST nodes for rapid development
+2. **Parser** - Builds Abstract Syntax Tree (AST) from tokens with import statement support
+3. **Interpreter** - Directly executes AST nodes for rapid development with runtime import resolution
 4. **REPL** - Interactive Read-Eval-Print Loop with multi-line support and meta commands
 5. **Code Generator** - Transpiles AST to optimized C++ source code
 6. **Runtime Library** - Shared function implementations for both execution modes with OpenMP parallelization
 7. **Cross-Platform Terminal** - Color support and cursor management for all platforms
 8. **Automatic Parallelization** - OpenMP-based multi-core optimization for large array operations
+9. **Import System** - Complete modular programming with compile-time and runtime import resolution
+10. **Foreign Function Interface (FFI)** - Production-ready C library integration with comprehensive API support
 
 ## Build Instructions
 Use CMake to build the project. The executable will be placed in the project root.
 
 ## Usage
-- Interpret: `rbasic -i program.bas` (rapid prototyping)
-- Transpile: `rbasic -c program.bas -o program` (production deployment)
+- Interpret: `rbasic -i program.bas` (rapid prototyping with runtime imports)
+- Transpile: `rbasic -c program.bas -o program` (production deployment with resolved imports)
 - Interactive: `rbasic -r` (REPL mode for development and testing)
 
 ## Compilation Support
@@ -51,15 +53,27 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 - Assignment expressions: `var y = (x = x + 1) * 2`
 - Structured data: Arrays with `dim array(size)` and `array[index]` access
 - Interactive development: Full REPL with session management
-- Future external features: Graphics, databases, and system integration via FFI
+- Modular programming: Complete import system with `import "file.bas"` syntax
+- External integration: Production-ready FFI system for C libraries
+
+## Import System Features
+- **Modular Programming**: `import "filename.bas"` syntax for code organization
+- **Cross-Module Access**: Functions and variables accessible across imported files
+- **Path Resolution**: Multi-directory search (current, executable, lib/, stdlib/)
+- **Duplicate Prevention**: Each file imported only once per program
+- **Circular Detection**: Prevents infinite import loops with clear error messages
+- **Compile-Time Resolution**: Imports resolved and inlined during compilation (C-style preprocessing)
+- **Runtime Resolution**: Dynamic import loading in interpreter mode
+- **Identical Behavior**: Same output in both interpreter and compile modes
 
 ## Syntax Features
 - Modern variable declarations: `var name = value;`
 - Required semicolons for statement termination
-- Lowercase keywords (var, if, then, else, for, while, function, etc.)
+- Lowercase keywords (var, if, then, else, for, while, function, import, etc.)
 - Typed parameters and return values in functions
 - C++ style braces for code blocks
 - Structures and arrays support
+- Import statements: `import "library.bas";`
 
 ## REPL Features
 - Multi-line statement detection with automatic brace counting
@@ -67,9 +81,55 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 - Meta commands: `:help`, `:load`, `:save`, `:clear`, `:exit`
 - Session management for saving and loading work
 - Immediate execution and feedback
+- Import support in interactive mode
 
-## Future: Foreign Function Interface
+## Foreign Function Interface (FFI)
 
-The project is designed as a transpiler where interpreter, REPL, and compiled output produce identical results by sharing the same AST representation and runtime function implementations. This enables rapid prototyping in interpreted/REPL mode and high-performance deployment via compilation.
+The FFI system is production-ready and provides comprehensive C library integration:
 
-External functionality like graphics, databases, and system integration will be provided through a Foreign Function Interface (FFI) system, allowing clean separation of core language features from external libraries.
+### Core FFI Features
+- **Library Loading**: Dynamic loading of Windows DLLs, Linux .so, and macOS .dylib files
+- **Function Calling**: Support for 0-8 parameter functions with flexible types
+- **Memory Management**: Safe buffer allocation, pointer dereferencing, and cleanup
+- **Type System**: Comprehensive support for integers, strings, pointers, and structures
+
+### Advanced FFI Features
+- **Buffer Operations**: `alloc_buffer()`, `alloc_int_buffer()`, `alloc_pointer_buffer()`
+- **Pointer Operations**: `deref_int()`, `deref_pointer()`, `deref_string()`
+- **Structure Support**: SDL2 structures (`create_sdl_rect()`, `create_sdl_event()`)
+- **Constant System**: Built-in constants for SDL2, SQLite, Windows API
+- **Null Handling**: `is_null()`, `not_null()` for safe pointer operations
+
+### Library Integration Ready
+- **SDL2**: Complete structure support, event handling, graphics primitives
+- **SQLite**: Database constants, prepared statement patterns
+- **Windows API**: System calls, message boxes, process management
+- **OpenGL**: Ready for graphics programming integration
+
+### Usage Examples
+```basic
+// SDL2 Graphics
+ffi "SDL2.dll" SDL_Init(flags as integer) as integer;
+var window = SDL_CreateWindow("Game", 100, 100, 800, 600, SDL_WINDOW_SHOWN);
+
+// SQLite Database
+ffi "sqlite3.dll" sqlite3_open(filename as string, db as pointer) as integer;
+var db_ptr = alloc_pointer_buffer();
+var result = sqlite3_open("data.db", db_ptr);
+
+// Windows API
+ffi "user32.dll" MessageBoxA(hwnd as integer, text as string, caption as string, type as integer) as integer;
+MessageBoxA(0, "Hello from rbasic!", "FFI Demo", MB_OK);
+```
+
+## Architecture Philosophy
+
+The project is designed as a transpiler where interpreter, REPL, and compiled output produce identical results by sharing the same AST representation and runtime function implementations. This enables:
+
+1. **Rapid Prototyping**: Use interpreter/REPL mode for development
+2. **High-Performance Deployment**: Compile to optimized C++ executables
+3. **Modular Development**: Import system enables standard library ecosystem
+4. **External Integration**: FFI provides seamless C library access
+5. **Cross-Platform Consistency**: Same behavior on Windows, Linux, and macOS
+
+The architecture supports building a comprehensive standard library ecosystem where modules can be developed, tested, and deployed across all execution modes with identical behavior.

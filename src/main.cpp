@@ -192,6 +192,26 @@ int main(int argc, char* argv[]) {
         // Read and parse the BASIC program
         std::string source = readFile(inputFile);
         
+        // For compile mode, resolve all imports first
+        if (mode == "compile") {
+            std::cout << "=== Resolving imports for " << inputFile << " ===\n";
+            
+            auto importResult = resolveImports(source, inputFile);
+            if (!importResult.success) {
+                std::cerr << "Import resolution failed: " << importResult.errorMessage << std::endl;
+                return 1;
+            }
+            
+            if (!importResult.importedFiles.empty()) {
+                std::cout << "Resolved " << importResult.importedFiles.size() << " import(s):\n";
+                for (const auto& file : importResult.importedFiles) {
+                    std::cout << "  - " << file << "\n";
+                }
+            }
+            
+            source = importResult.resolvedSource;
+        }
+        
         Lexer lexer(source);
         auto tokens = lexer.tokenize();
         

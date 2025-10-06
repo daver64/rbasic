@@ -8,7 +8,8 @@ This manual provides comprehensive documentation for using the rbasic programmin
 
 - ✅ **Complete Language**: All syntax, control flow, functions, and data structures working
 - ✅ **Multidimensional Arrays**: True `array[i,j,k]` syntax working in both execution modes
-- ✅ **Foreign Function Interface (FFI)**: Direct C library integration with multiple parameter types
+- ✅ **Import System**: Complete modular programming with `import "file.bas"` syntax
+- ✅ **Foreign Function Interface (FFI)**: Production-ready C library integration with comprehensive pointer and struct support
 - ✅ **Automatic Parallelization**: OpenMP-based multi-core optimization for large array operations
 - ✅ **Triple Execution Modes**: Interpreter (`-i`), compiler (`-c`), and interactive REPL (`-r`) fully functional
 - ✅ **Portable Compilation**: MinGW64 bundled for Windows, falls back to MSVC when needed
@@ -31,6 +32,7 @@ This manual provides comprehensive documentation for using the rbasic programmin
 - [Control Flow](#control-flow)
 - [Functions and Procedures](#functions-and-procedures)
 - [Arrays and Structures](#arrays-and-structures)
+- [Import System](#import-system)
 - [Foreign Function Interface (FFI)](#foreign-function-interface-ffi)
 - [Examples](#examples)
 - [Error Handling](#error-handling)
@@ -1013,9 +1015,202 @@ var end = Point { 3, 4 };
 print("Distance:", distance(start, end));  // 5.0
 ```
 
+## Import System
+
+rbasic supports modular programming through a comprehensive import system that allows code organization across multiple files. The import system works identically in both interpreter and compile modes.
+
+### Import Syntax
+
+Import files using the `import` statement:
+
+```basic
+import "filename.bas";
+```
+
+### Basic Import Example
+
+**math_lib.bas** - Mathematical utility functions:
+```basic
+// Math library with reusable functions
+var math_version = 1;
+print("Math library loaded successfully!");
+
+function add_numbers(a as double, b as double) as double {
+    return a + b;
+}
+
+function multiply_numbers(x as double, y as double) as double {
+    return x * y;
+}
+
+function square(num as double) as double {
+    return num * num;
+}
+```
+
+**main.bas** - Using the math library:
+```basic
+import "math_lib.bas";
+
+function main() {
+    print("Using imported math functions:");
+    
+    var sum = add_numbers(10, 20);
+    var product = multiply_numbers(5, 6);
+    var squared = square(7);
+    
+    print("10 + 20 =", sum);        // 30
+    print("5 * 6 =", product);      // 30  
+    print("7^2 =", squared);        // 49
+    
+    print("Math library version:", math_version);
+    
+    return 0;
+}
+```
+
+### Import Features
+
+#### Cross-Module Function Calls
+Functions defined in imported files are directly callable:
+
+```basic
+// graphics_lib.bas
+function draw_rectangle(x, y, width, height) {
+    print("Drawing rectangle at", x, y, "size", width, "x", height);
+}
+
+// main.bas
+import "graphics_lib.bas";
+draw_rectangle(10, 20, 100, 50);  // Works directly
+```
+
+#### Cross-Module Variable Access
+Variables from imported files are accessible:
+
+```basic
+// config.bas
+var app_name = "My Application";
+var version = "1.0";
+var debug_mode = true;
+
+// main.bas
+import "config.bas";
+print("Running", app_name, "version", version);
+if (debug_mode) {
+    print("Debug mode enabled");
+}
+```
+
+#### Path Resolution
+The import system searches for files in multiple locations:
+
+1. **Relative to importing file** - Files in the same directory
+2. **Current working directory** - Where rbasic was executed
+3. **Executable directory** - Where rbasic.exe is located  
+4. **Library paths** - `lib/`, `stdlib/`, `library/` directories
+
+**Example directory structure:**
+```
+project/
+├── main.bas
+├── lib/
+│   ├── math_utils.bas
+│   └── string_utils.bas
+└── stdlib/
+    ├── graphics.bas
+    └── database.bas
+```
+
+```basic
+// These all work from main.bas
+import "lib/math_utils.bas";       // Relative path
+import "stdlib/graphics.bas";       // Library path
+import "config.bas";               // Same directory
+```
+
+#### Duplicate Import Prevention
+Each file is imported only once, even if multiple files import it:
+
+```basic
+// utils.bas
+print("Utils loaded");
+
+// math.bas  
+import "utils.bas";  // Loads utils.bas
+
+// main.bas
+import "utils.bas";  // Skipped (already loaded)
+import "math.bas";   // Loads math.bas, utils.bas already loaded
+```
+
+#### Circular Import Detection
+The system detects and prevents circular import loops:
+
+```basic
+// file_a.bas
+import "file_b.bas";  // Error: Circular import detected
+
+// file_b.bas
+import "file_a.bas";
+```
+
+### Advanced Import Patterns
+
+#### Standard Library Architecture
+Create reusable library modules:
+
+```basic
+// stdlib/text_processing.bas
+function trim_whitespace(text) {
+    // Implementation here
+    return trimmed_text;
+}
+
+function split_string(text, delimiter) {
+    // Implementation here
+    return string_array;
+}
+
+// stdlib/file_utils.bas
+import "text_processing.bas";
+
+function load_config_file(filename) {
+    var content = read_text_file(filename);
+    return split_string(trim_whitespace(content), "\n");
+}
+
+// main.bas
+import "stdlib/file_utils.bas";
+var config = load_config_file("settings.conf");
+```
+
+#### Execution Mode Differences
+
+**Interpreter Mode** (`rbasic -i`):
+- Imports resolved at runtime
+- Fast iteration during development
+- Dynamic import loading
+
+**Compile Mode** (`rbasic -c`):
+- Imports resolved at compile time  
+- All imports inlined into single source file
+- C-style preprocessing approach
+- Self-contained executables
+
+Both modes produce identical output and behavior.
+
+### Import Best Practices
+
+1. **Use clear file organization**: Group related functions in logical modules
+2. **Avoid deep nesting**: Keep import chains reasonably shallow
+3. **Document dependencies**: Comment what each import provides
+4. **Use library directories**: Organize reusable code in `lib/` or `stdlib/`
+5. **Consistent naming**: Use descriptive filenames that match their purpose
+
 ## Foreign Function Interface (FFI)
 
-The rbasic FFI system enables direct integration with C libraries and system APIs, allowing programs to call external functions from DLLs (Windows), shared libraries (Linux), or dylibs (macOS).
+The rbasic FFI system provides production-ready integration with C libraries and system APIs. It supports comprehensive pointer operations, structure manipulation, and works identically in both interpreted and compiled modes.
 
 ### FFI Declaration Syntax
 
@@ -1027,8 +1222,181 @@ ffi "library_name" FunctionName(parameter1 as type1, parameter2 as type2) as ret
 
 **Supported Types:**
 - `integer` - 32-bit signed integer
-- `string` - C-style null-terminated string
+- `string` - C-style null-terminated string  
 - `pointer` - Generic void pointer for handles and structures
+
+### Advanced FFI Features
+
+#### Buffer Management and Pointer Operations
+
+```basic
+// Allocate different types of buffers
+var int_buffer = alloc_int_buffer();       // Single int storage
+var ptr_buffer = alloc_pointer_buffer();   // Single pointer storage  
+var byte_buffer = alloc_buffer(1024);      // 1KB byte buffer
+
+// Pointer dereferencing
+var int_value = deref_int(int_buffer);     // Read int from buffer
+var ptr_value = deref_pointer(ptr_buffer); // Read pointer from buffer
+var str_value = deref_string(ptr_value);   // Read string from pointer
+
+// Null pointer checking
+if (is_null(ptr_value)) {
+    print("Pointer is null");
+} else {
+    print("Pointer is valid");
+}
+```
+
+#### SDL2 Integration Support
+
+The FFI system includes comprehensive SDL2 support:
+
+```basic
+// SDL2 initialization and window creation
+ffi "SDL2.dll" SDL_Init(flags as integer) as integer;
+ffi "SDL2.dll" SDL_CreateWindow(title as string, x as integer, y as integer,
+                                width as integer, height as integer, flags as integer) as pointer;
+ffi "SDL2.dll" SDL_CreateRenderer(window as pointer, index as integer, flags as integer) as pointer;
+ffi "SDL2.dll" SDL_PollEvent(event as pointer) as integer;
+ffi "SDL2.dll" SDL_Quit() as integer;
+
+function sdl_graphics_demo() {
+    // Initialize with built-in constants
+    var result = SDL_Init(SDL_INIT_VIDEO);
+    if (result != 0) {
+        print("SDL2 initialization failed");
+        return 1;
+    }
+    
+    // Create window with predefined constants
+    var window = SDL_CreateWindow("rbasic Graphics Demo",
+                                  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                  800, 600, SDL_WINDOW_SHOWN);
+    
+    if (is_null(window)) {
+        print("Window creation failed");
+        SDL_Quit();
+        return 1;
+    }
+    
+    // Create renderer
+    var renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    
+    // Event handling with structures
+    var event = create_sdl_event();
+    var running = true;
+    
+    while (running) {
+        while (SDL_PollEvent(event) != 0) {
+            var event_type = get_event_type(event);
+            if (event_type == SDL_QUIT) {
+                running = false;
+            } else if (event_type == SDL_KEYDOWN) {
+                var key_code = get_key_code(event);
+                if (key_code == SDLK_ESCAPE) {
+                    running = false;
+                }
+            }
+        }
+    }
+    
+    SDL_Quit();
+    return 0;
+}
+```
+
+#### SQLite Database Integration
+
+```basic
+// SQLite database operations
+ffi "sqlite3.dll" sqlite3_open(filename as string, db as pointer) as integer;
+ffi "sqlite3.dll" sqlite3_prepare_v2(db as pointer, sql as string, length as integer,
+                                     stmt as pointer, tail as pointer) as integer;
+ffi "sqlite3.dll" sqlite3_step(stmt as pointer) as integer;
+ffi "sqlite3.dll" sqlite3_close(db as pointer) as integer;
+
+function database_demo() {
+    var db_ptr = alloc_pointer_buffer();
+    var result = sqlite3_open("example.db", db_ptr);
+    
+    if (result != SQLITE_OK) {
+        print("Cannot open database");
+        return 1;
+    }
+    
+    var db = deref_pointer(db_ptr);
+    
+    // Create table
+    var stmt_ptr = alloc_pointer_buffer();
+    var sql = "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)";
+    
+    result = sqlite3_prepare_v2(db, sql, len(sql), stmt_ptr, null);
+    if (result == SQLITE_OK) {
+        var stmt = deref_pointer(stmt_ptr);
+        sqlite3_step(stmt);
+        print("Table created successfully");
+    }
+    
+    sqlite3_close(db);
+    return 0;
+}
+```
+
+### Built-in Constants
+
+The FFI system includes extensive constant definitions:
+
+#### SDL2 Constants
+```basic
+// Initialization flags
+SDL_INIT_VIDEO, SDL_INIT_AUDIO, SDL_INIT_EVERYTHING
+
+// Window flags  
+SDL_WINDOW_SHOWN, SDL_WINDOW_RESIZABLE, SDL_WINDOW_FULLSCREEN
+
+// Event types
+SDL_QUIT, SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN
+
+// Key codes
+SDLK_ESCAPE, SDLK_SPACE, SDLK_RETURN, SDLK_UP, SDLK_DOWN
+
+// Renderer flags
+SDL_RENDERER_ACCELERATED, SDL_RENDERER_PRESENTVSYNC
+```
+
+#### SQLite Constants
+```basic
+// Result codes
+SQLITE_OK, SQLITE_ERROR, SQLITE_DONE, SQLITE_ROW
+
+// Open flags
+SQLITE_OPEN_READONLY, SQLITE_OPEN_READWRITE, SQLITE_OPEN_CREATE
+```
+
+#### Windows API Constants
+```basic
+// MessageBox types
+MB_OK, MB_OKCANCEL, MB_YESNO
+MB_ICONERROR, MB_ICONWARNING, MB_ICONINFORMATION
+```
+
+### Structure Support
+
+#### SDL Structures
+
+```basic
+// Create and manipulate SDL structures
+var rect = create_sdl_rect(10, 20, 100, 50);
+print("Rectangle x:", get_rect_field(rect, "x"));    // 10
+print("Rectangle y:", get_rect_field(rect, "y"));    // 20  
+print("Rectangle w:", get_rect_field(rect, "w"));    // 100
+print("Rectangle h:", get_rect_field(rect, "h"));    // 50
+
+// SDL event structure
+var event = create_sdl_event();
+// Use with SDL_PollEvent, SDL_WaitEvent, etc.
+```
 
 ### Basic FFI Examples
 

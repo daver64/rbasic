@@ -75,7 +75,10 @@
         "ranges": "cpp",
         "functional": "cpp",
         "random": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "any": "cpp",
+        "array": "cpp",
+        "future": "cpp"
     },
     "git.ignoreLimitWarning": true
 }
