@@ -9,6 +9,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+
+// BasicValue is already available from basic_runtime.h
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -1030,6 +1032,114 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
             Terminal::setEcho(TypeUtils::toBool(args[0]));
         }
         lastValue = 0;
+        return true;
+    }
+    
+    // Buffer allocation functions
+    if (node.name == "alloc_int_buffer" && node.arguments.size() == 0) {
+        // Runtime returns BasicValue, we need to convert to ValueType
+        void* ptr = std::get<void*>(basic_runtime::alloc_int_buffer());
+        lastValue = ptr;
+        return true;
+    }
+    
+    if (node.name == "alloc_pointer_buffer" && node.arguments.size() == 0) {
+        void* ptr = std::get<void*>(basic_runtime::alloc_pointer_buffer());
+        lastValue = ptr;
+        return true;
+    }
+    
+    if (node.name == "alloc_buffer" && node.arguments.size() == 1) {
+        ValueType sizeVal = evaluate(*node.arguments[0]);
+        int size = std::get<int>(sizeVal);
+        void* ptr = std::get<void*>(basic_runtime::alloc_buffer(size));
+        lastValue = ptr;
+        return true;
+    }
+    
+    if (node.name == "deref_int" && node.arguments.size() == 1) {
+        ValueType ptrVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<void*>(ptrVal)) {
+            BasicValue bv = std::get<void*>(ptrVal);
+            BasicValue result = basic_runtime::deref_int(bv);
+            lastValue = std::get<double>(result);
+        }
+        return true;
+    }
+    
+    if (node.name == "deref_pointer" && node.arguments.size() == 1) {
+        ValueType ptrVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<void*>(ptrVal)) {
+            BasicValue bv = std::get<void*>(ptrVal);
+            BasicValue result = basic_runtime::deref_pointer(bv);
+            lastValue = std::get<void*>(result);
+        }
+        return true;
+    }
+    
+    if (node.name == "deref_string" && node.arguments.size() == 1) {
+        ValueType ptrVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<void*>(ptrVal)) {
+            BasicValue bv = std::get<void*>(ptrVal);
+            BasicValue result = basic_runtime::deref_string(bv);
+            lastValue = std::get<std::string>(result);
+        }
+        return true;
+    }
+    
+    // SDL struct helper functions
+    if (node.name == "create_sdl_rect" && node.arguments.size() == 4) {
+        ValueType xVal = evaluate(*node.arguments[0]);
+        ValueType yVal = evaluate(*node.arguments[1]);
+        ValueType wVal = evaluate(*node.arguments[2]);
+        ValueType hVal = evaluate(*node.arguments[3]);
+        
+        int x = std::get<int>(xVal);
+        int y = std::get<int>(yVal);
+        int w = std::get<int>(wVal);
+        int h = std::get<int>(hVal);
+        
+        BasicValue result = basic_runtime::create_sdl_rect(x, y, w, h);
+        lastValue = std::get<void*>(result);
+        return true;
+    }
+    
+    if (node.name == "create_sdl_event" && node.arguments.size() == 0) {
+        BasicValue result = basic_runtime::create_sdl_event();
+        lastValue = std::get<void*>(result);
+        return true;
+    }
+    
+    if (node.name == "get_event_type" && node.arguments.size() == 1) {
+        ValueType eventVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<void*>(eventVal)) {
+            BasicValue bv = std::get<void*>(eventVal);
+            BasicValue result = basic_runtime::get_event_type(bv);
+            lastValue = std::get<double>(result);
+        }
+        return true;
+    }
+    
+    if (node.name == "get_key_code" && node.arguments.size() == 1) {
+        ValueType eventVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<void*>(eventVal)) {
+            BasicValue bv = std::get<void*>(eventVal);
+            BasicValue result = basic_runtime::get_key_code(bv);
+            lastValue = std::get<double>(result);
+        }
+        return true;
+    }
+    
+    if (node.name == "get_rect_field" && node.arguments.size() == 2) {
+        ValueType rectVal = evaluate(*node.arguments[0]);
+        ValueType fieldVal = evaluate(*node.arguments[1]);
+        std::string field = std::get<std::string>(fieldVal);
+        
+        if (std::holds_alternative<void*>(rectVal)) {
+            BasicValue bv = std::get<void*>(rectVal);
+            BasicValue result = basic_runtime::get_rect_field(bv, field);
+            lastValue = std::get<double>(result);
+        }
         return true;
     }
     

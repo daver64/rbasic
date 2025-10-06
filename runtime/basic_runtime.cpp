@@ -1948,4 +1948,246 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
     }
 }
 
+// ===== BUFFER ALLOCATION AND OUTPUT PARAMETER FUNCTIONS =====
+
+BasicValue alloc_int_buffer() {
+    // Allocate memory for a single int
+    int* buffer = new int(0);  // Initialize to 0
+    return BasicValue(static_cast<void*>(buffer));
+}
+
+BasicValue alloc_pointer_buffer() {
+    // Allocate memory for a single void* pointer
+    void** buffer = new void*(nullptr);  // Initialize to nullptr
+    return BasicValue(static_cast<void*>(buffer));
+}
+
+BasicValue alloc_buffer(int size) {
+    // Allocate a byte buffer of specified size
+    if (size <= 0) {
+        throw std::runtime_error("Buffer size must be positive");
+    }
+    
+    uint8_t* buffer = new uint8_t[size]();  // Zero-initialize
+    return BasicValue(static_cast<void*>(buffer));
+}
+
+BasicValue deref_int(const BasicValue& ptr) {
+    // Dereference int* to get int value
+    if (!std::holds_alternative<void*>(ptr)) {
+        throw std::runtime_error("deref_int requires a pointer");
+    }
+    
+    void* raw_ptr = std::get<void*>(ptr);
+    if (!raw_ptr) {
+        throw std::runtime_error("Cannot dereference null pointer");
+    }
+    
+    int* int_ptr = static_cast<int*>(raw_ptr);
+    return BasicValue(static_cast<double>(*int_ptr));
+}
+
+BasicValue deref_pointer(const BasicValue& ptr) {
+    // Dereference void** to get void* value
+    if (!std::holds_alternative<void*>(ptr)) {
+        throw std::runtime_error("deref_pointer requires a pointer");
+    }
+    
+    void* raw_ptr = std::get<void*>(ptr);
+    if (!raw_ptr) {
+        throw std::runtime_error("Cannot dereference null pointer");
+    }
+    
+    void** ptr_ptr = static_cast<void**>(raw_ptr);
+    return BasicValue(*ptr_ptr);
+}
+
+BasicValue deref_string(const BasicValue& ptr) {
+    // Dereference char* to get string value
+    if (!std::holds_alternative<void*>(ptr) && !std::holds_alternative<std::string>(ptr)) {
+        throw std::runtime_error("deref_string requires a pointer");
+    }
+    
+    if (std::holds_alternative<std::string>(ptr)) {
+        return ptr;  // Already a string
+    }
+    
+    void* raw_ptr = std::get<void*>(ptr);
+    if (!raw_ptr) {
+        return BasicValue(std::string(""));  // Return empty string for null
+    }
+    
+    const char* str_ptr = static_cast<const char*>(raw_ptr);
+    return BasicValue(std::string(str_ptr));
+}
+
+void set_int_buffer(const BasicValue& ptr, int value) {
+    // Set value in int* buffer
+    if (!std::holds_alternative<void*>(ptr)) {
+        throw std::runtime_error("set_int_buffer requires a pointer");
+    }
+    
+    void* raw_ptr = std::get<void*>(ptr);
+    if (!raw_ptr) {
+        throw std::runtime_error("Cannot write to null pointer");
+    }
+    
+    int* int_ptr = static_cast<int*>(raw_ptr);
+    *int_ptr = value;
+}
+
+void set_pointer_buffer(const BasicValue& ptr, const BasicValue& value) {
+    // Set value in void** buffer
+    if (!std::holds_alternative<void*>(ptr)) {
+        throw std::runtime_error("set_pointer_buffer requires a pointer");
+    }
+    
+    void* raw_ptr = std::get<void*>(ptr);
+    if (!raw_ptr) {
+        throw std::runtime_error("Cannot write to null pointer");
+    }
+    
+    void** ptr_ptr = static_cast<void**>(raw_ptr);
+    
+    if (std::holds_alternative<void*>(value)) {
+        *ptr_ptr = std::get<void*>(value);
+    } else {
+        throw std::runtime_error("set_pointer_buffer value must be a pointer");
+    }
+}
+
+// ===== SDL STRUCT HELPERS =====
+
+BasicValue create_sdl_rect(int x, int y, int w, int h) {
+    // Create SDL_Rect structure (4 ints: x, y, w, h)
+    struct SDLRect {
+        int x, y, w, h;
+    };
+    
+    SDLRect* rect = new SDLRect{x, y, w, h};
+    return BasicValue(static_cast<void*>(rect));
+}
+
+BasicValue create_sdl_event() {
+    // Create SDL_Event buffer (56 bytes on most platforms)
+    constexpr size_t SDL_EVENT_SIZE = 56;
+    uint8_t* event_buffer = new uint8_t[SDL_EVENT_SIZE]();  // Zero-initialize
+    return BasicValue(static_cast<void*>(event_buffer));
+}
+
+BasicValue get_event_type(const BasicValue& event) {
+    // Get event.type from SDL_Event (first 4 bytes as uint32)
+    if (!std::holds_alternative<void*>(event)) {
+        throw std::runtime_error("get_event_type requires a pointer");
+    }
+    
+    void* raw_ptr = std::get<void*>(event);
+    if (!raw_ptr) {
+        throw std::runtime_error("Cannot read from null event pointer");
+    }
+    
+    uint32_t* type_ptr = static_cast<uint32_t*>(raw_ptr);
+    return BasicValue(static_cast<double>(*type_ptr));
+}
+
+BasicValue get_key_code(const BasicValue& event) {
+    // Get key code from SDL_Event
+    // SDL_Event structure: type(4) + timestamp(4) + key.state(1) + repeat(1) + padding(2) + keysym.scancode(4) + keysym.sym(4)
+    // keysym.sym is at offset 16 from start
+    if (!std::holds_alternative<void*>(event)) {
+        throw std::runtime_error("get_key_code requires a pointer");
+    }
+    
+    void* raw_ptr = std::get<void*>(event);
+    if (!raw_ptr) {
+        throw std::runtime_error("Cannot read from null event pointer");
+    }
+    
+    uint8_t* event_bytes = static_cast<uint8_t*>(raw_ptr);
+    uint32_t* key_sym = reinterpret_cast<uint32_t*>(event_bytes + 16);
+    return BasicValue(static_cast<double>(*key_sym));
+}
+
+BasicValue get_rect_field(const BasicValue& rect, const std::string& field) {
+    // Get x, y, w, h from SDL_Rect
+    if (!std::holds_alternative<void*>(rect)) {
+        throw std::runtime_error("get_rect_field requires a pointer");
+    }
+    
+    void* raw_ptr = std::get<void*>(rect);
+    if (!raw_ptr) {
+        throw std::runtime_error("Cannot read from null rect pointer");
+    }
+    
+    struct SDLRect {
+        int x, y, w, h;
+    };
+    
+    SDLRect* rect_ptr = static_cast<SDLRect*>(raw_ptr);
+    
+    if (field == "x") {
+        return BasicValue(static_cast<double>(rect_ptr->x));
+    } else if (field == "y") {
+        return BasicValue(static_cast<double>(rect_ptr->y));
+    } else if (field == "w") {
+        return BasicValue(static_cast<double>(rect_ptr->w));
+    } else if (field == "h") {
+        return BasicValue(static_cast<double>(rect_ptr->h));
+    } else {
+        throw std::runtime_error("Invalid rect field: " + field + " (valid: x, y, w, h)");
+    }
+}
+
+// ===== WRAPPER FUNCTIONS FOR CODE GENERATOR =====
+
+BasicValue func_alloc_int_buffer() {
+    return alloc_int_buffer();
+}
+
+BasicValue func_alloc_pointer_buffer() {
+    return alloc_pointer_buffer();
+}
+
+BasicValue func_alloc_buffer(const BasicValue& size) {
+    int sizeInt = to_int(size);
+    return alloc_buffer(sizeInt);
+}
+
+BasicValue func_deref_int(const BasicValue& ptr) {
+    return deref_int(ptr);
+}
+
+BasicValue func_deref_pointer(const BasicValue& ptr) {
+    return deref_pointer(ptr);
+}
+
+BasicValue func_deref_string(const BasicValue& ptr) {
+    return deref_string(ptr);
+}
+
+BasicValue func_create_sdl_rect(const BasicValue& x, const BasicValue& y, const BasicValue& w, const BasicValue& h) {
+    int xInt = to_int(x);
+    int yInt = to_int(y);
+    int wInt = to_int(w);
+    int hInt = to_int(h);
+    return create_sdl_rect(xInt, yInt, wInt, hInt);
+}
+
+BasicValue func_create_sdl_event() {
+    return create_sdl_event();
+}
+
+BasicValue func_get_event_type(const BasicValue& event) {
+    return get_event_type(event);
+}
+
+BasicValue func_get_key_code(const BasicValue& event) {
+    return get_key_code(event);
+}
+
+BasicValue func_get_rect_field(const BasicValue& rect, const BasicValue& field) {
+    std::string fieldStr = to_string(field);
+    return get_rect_field(rect, fieldStr);
+}
+
 } // namespace basic_runtime

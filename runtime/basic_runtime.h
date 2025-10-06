@@ -328,6 +328,21 @@ BasicValue func_load_double_array_csv(const std::string& filename);
 BasicValue func_save_int_array_csv(const BasicValue& filenameVal, const BasicValue& array);
 BasicValue func_save_double_array_csv(const BasicValue& filenameVal, const BasicValue& array);
 
+// Buffer allocation wrapper functions for code generator
+BasicValue func_alloc_int_buffer();
+BasicValue func_alloc_pointer_buffer();
+BasicValue func_alloc_buffer(const BasicValue& size);
+BasicValue func_deref_int(const BasicValue& ptr);
+BasicValue func_deref_pointer(const BasicValue& ptr);
+BasicValue func_deref_string(const BasicValue& ptr);
+
+// SDL struct wrapper functions for code generator
+BasicValue func_create_sdl_rect(const BasicValue& x, const BasicValue& y, const BasicValue& w, const BasicValue& h);
+BasicValue func_create_sdl_event();
+BasicValue func_get_event_type(const BasicValue& event);
+BasicValue func_get_key_code(const BasicValue& event);
+BasicValue func_get_rect_field(const BasicValue& rect, const BasicValue& field);
+
 // Terminal wrapper functions for code generator (with func_ prefix)
 BasicValue func_terminal_init();
 BasicValue func_terminal_cleanup();
@@ -367,6 +382,23 @@ void set_array_element(BasicValue& arrayVar, const std::vector<BasicValue>& indi
 BasicStruct create_struct(const std::string& typeName);
 BasicValue get_struct_field(const BasicStruct& struct_, const std::string& fieldName);
 void set_struct_field(BasicStruct& struct_, const std::string& fieldName, const BasicValue& value);
+
+// Buffer allocation and output parameter functions
+BasicValue alloc_int_buffer();              // Allocates int* for output parameters
+BasicValue alloc_pointer_buffer();          // Allocates void** for output parameters  
+BasicValue alloc_buffer(int size);          // Allocates byte buffer of specified size
+BasicValue deref_int(const BasicValue& ptr);     // Dereferences int* to get int value
+BasicValue deref_pointer(const BasicValue& ptr); // Dereferences void** to get void* value
+BasicValue deref_string(const BasicValue& ptr);  // Dereferences char* to get string value
+void set_int_buffer(const BasicValue& ptr, int value);        // Sets value in int* buffer
+void set_pointer_buffer(const BasicValue& ptr, const BasicValue& value); // Sets value in void** buffer
+
+// SDL struct helpers
+BasicValue create_sdl_rect(int x, int y, int w, int h);  // Creates SDL_Rect buffer
+BasicValue create_sdl_event();                           // Creates SDL_Event buffer (56 bytes)
+BasicValue get_event_type(const BasicValue& event);     // Gets event.type from SDL_Event
+BasicValue get_key_code(const BasicValue& event);       // Gets key code from SDL_Event
+BasicValue get_rect_field(const BasicValue& rect, const std::string& field); // Gets x,y,w,h from SDL_Rect
 
 // Type conversion
 int to_int(const BasicValue& value);
