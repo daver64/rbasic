@@ -6,6 +6,10 @@ void InputStmt::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
 }
 
+void ImportStmt::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
 void FFIFunctionDecl::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
 }

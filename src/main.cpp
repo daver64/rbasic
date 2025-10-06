@@ -205,6 +205,7 @@ int main(int argc, char* argv[]) {
             auto ioHandler = createIOHandler(ioType);
             
             Interpreter interpreter(std::move(ioHandler));
+            interpreter.setCurrentFile(inputFile);
             interpreter.interpret(*program);
         } else if (mode == "compile") {
             std::cout << "=== Compiling " << inputFile << " ===\n";

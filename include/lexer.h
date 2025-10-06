@@ -39,6 +39,7 @@ enum class TokenType {
     LIB,
     FFI,
     FROM,
+    IMPORT,
     MOD,
     
     // Operators

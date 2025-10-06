@@ -245,6 +245,16 @@ public:
     void accept(ASTVisitor& visitor) override;
 };
 
+// Import Statement  
+class ImportStmt : public Statement {
+public:
+    std::string filename;
+    
+    explicit ImportStmt(std::string file)
+        : filename(std::move(file)) {}
+    void accept(ASTVisitor& visitor) override;
+};
+
 // FFI Function Declaration
 class FFIFunctionDecl : public Statement {
 public:
@@ -294,6 +304,7 @@ public:
     virtual void visit(StructDecl& node) = 0;
     virtual void visit(DimStmt& node) = 0;
     virtual void visit(InputStmt& node) = 0;
+    virtual void visit(ImportStmt& node) = 0;
     virtual void visit(FFIFunctionDecl& node) = 0;
     
     virtual void visit(Program& node) = 0;

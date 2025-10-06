@@ -766,6 +766,21 @@ void CodeGenerator::visit(DimStmt& node) {
     }
 }
 
+void CodeGenerator::visit(ImportStmt& node) {
+    // Handle import during compilation by generating an include or inlined code
+    // For now, generate a comment and let the runtime handle it
+    writeLine("// Import statement: " + node.filename);
+    writeLine("// Note: Import functionality handled at runtime in compiled mode");
+    
+    // In a future version, we could:
+    // 1. Parse the imported file and inline its code
+    // 2. Generate #include statements for C++ headers
+    // 3. Generate module loading code
+    
+    // For the stdlib concept, imports will be handled by the build system
+    // or by pre-processed concatenation of library files
+}
+
 void CodeGenerator::visit(FFIFunctionDecl& node) {
     // Store the FFI function declaration for use in call generation
     ffiFunctions[node.name] = std::make_unique<FFIFunctionDecl>(node.name, node.library, node.returnType, node.parameters);

@@ -4,6 +4,7 @@
 #include "ast.h"
 #include "io_handler.h"
 #include <map>
+#include <set>
 #include <stack>
 #include <vector>
 #include <memory>
@@ -18,6 +19,9 @@ private:
     std::map<std::string, std::unique_ptr<StructDecl>> structs;
     std::map<std::string, std::unique_ptr<FFIFunctionDecl>> ffiFunctions; // Store FFI function declarations
     std::map<std::string, std::map<std::string, ValueType>> structInstances;
+    std::set<std::string> importedFiles;     // Track imported files to prevent re-importing
+    std::set<std::string> importStack;       // Track current import chain for circular detection
+    std::string currentFile;                 // Track current file being processed
     ValueType lastValue;
     bool hasReturned;
     std::unique_ptr<IOHandler> ioHandler;
@@ -30,11 +34,18 @@ private:
     void pushScope();
     void popScope();
     
+    // Import resolution helper
+    std::string resolveImportPath(const std::string& filename);
+    std::string getCurrentExecutablePath();
+    
 public:
     Interpreter(std::unique_ptr<IOHandler> io = nullptr);
     
     void interpret(Program& program);
     ValueType evaluate(Expression& expr);
+    
+    // Set current file for import path resolution
+    void setCurrentFile(const std::string& filepath) { currentFile = filepath; }
     
     // Get the IO handler (for external access if needed)
     IOHandler* getIOHandler() const;
@@ -73,6 +84,7 @@ public:
     void visit(VarStmt& node) override;
     void visit(PrintStmt& node) override;
     void visit(InputStmt& node) override;
+    void visit(ImportStmt& node) override;
     void visit(IfStmt& node) override;
     void visit(ModernForStmt& node) override;
     void visit(WhileStmt& node) override;

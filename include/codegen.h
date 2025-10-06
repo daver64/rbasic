@@ -41,6 +41,7 @@ public:
     void visit(VarStmt& node) override;
     void visit(PrintStmt& node) override;
     void visit(InputStmt& node) override;
+    void visit(ImportStmt& node) override;
     void visit(IfStmt& node) override;
     void visit(ModernForStmt& node) override;
     void visit(WhileStmt& node) override;

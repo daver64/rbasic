@@ -317,6 +317,7 @@ std::unique_ptr<Statement> Parser::statement() {
         if (match({TokenType::DIM})) return dimStatement();
         if (match({TokenType::DECLARE})) return declareStatement();
         if (match({TokenType::FFI})) return ffiStatement();
+        if (match({TokenType::IMPORT})) return importStatement();
         
         return expressionStatement();
     } catch (const std::exception&) {
@@ -541,6 +542,14 @@ std::unique_ptr<Statement> Parser::dimStatement() {
     consume(TokenType::SEMICOLON, "Expected ';' after dim statement");
     
     return std::make_unique<DimStmt>(variable.value, type, std::move(dimensions));
+}
+
+std::unique_ptr<Statement> Parser::importStatement() {
+    // Parse: import 'filename.bas';
+    auto filename = consume(TokenType::STRING, "Expected filename string after 'import'");
+    consume(TokenType::SEMICOLON, "Expected ';' after import statement");
+    
+    return std::make_unique<ImportStmt>(filename.value);
 }
 
 std::unique_ptr<Statement> Parser::expressionStatement() {

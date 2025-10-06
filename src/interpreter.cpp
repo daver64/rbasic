@@ -3,6 +3,8 @@
 #include "io_handler.h"
 #include "type_utils.h"
 #include "terminal.h"
+#include "lexer.h"
+#include "parser.h"
 #include "../runtime/basic_runtime.h"
 #include "../include/ffi.h"
 #include <iostream>
@@ -13,6 +15,8 @@
 // BasicValue is already available from basic_runtime.h
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <unistd.h>
 #endif
 #include <fstream>
 #include <filesystem>
@@ -2021,6 +2025,54 @@ void Interpreter::visit(DimStmt& node) {
     }
 }
 
+void Interpreter::visit(ImportStmt& node) {
+    // Resolve import path
+    std::string filepath = resolveImportPath(node.filename);
+    
+    // Check for circular imports
+    if (importStack.find(filepath) != importStack.end()) {
+        throw std::runtime_error("Circular import detected: " + filepath);
+    }
+    
+    // Check if already imported
+    if (importedFiles.find(filepath) != importedFiles.end()) {
+        return; // Already imported, skip
+    }
+    
+    // Read and parse the imported file
+    std::ifstream file(filepath);
+    if (!file.is_open()) {
+        throw std::runtime_error("Cannot open import file: " + filepath);
+    }
+    
+    std::string source((std::istreambuf_iterator<char>(file)),
+                       std::istreambuf_iterator<char>());
+    file.close();
+    
+    // Add to import stack for circular detection
+    importStack.insert(filepath);
+    
+    try {
+        // Parse the imported file
+        Lexer lexer(source);
+        auto tokens = lexer.tokenize();
+        Parser parser(tokens);
+        auto program = parser.parse();
+        
+        // Execute the imported file in current context
+        program->accept(*this);
+        
+        // Mark as imported
+        importedFiles.insert(filepath);
+        
+    } catch (const std::exception& e) {
+        importStack.erase(filepath);
+        throw std::runtime_error("Error importing '" + filepath + "': " + e.what());
+    }
+    
+    importStack.erase(filepath);
+}
+
 void Interpreter::visit(FFIFunctionDecl& node) {
     // Store FFI function declaration for later use
     auto ffiDecl = std::make_unique<FFIFunctionDecl>(node.name, node.library, node.returnType, node.parameters);
@@ -2033,6 +2085,71 @@ void Interpreter::visit(Program& node) {
         stmt->accept(*this);
         if (hasReturned) break;
     }
+}
+
+std::string Interpreter::resolveImportPath(const std::string& filename) {
+    // If absolute path, use as-is
+    if (std::filesystem::path(filename).is_absolute()) {
+        return filename;
+    }
+    
+    // Try relative to the directory of the current file being processed
+    if (!currentFile.empty()) {
+        std::filesystem::path currentFileDir = std::filesystem::path(currentFile).parent_path();
+        std::filesystem::path relativePath = currentFileDir / filename;
+        if (std::filesystem::exists(relativePath)) {
+            return relativePath.string();
+        }
+    }
+    
+    // Try relative to current working directory
+    std::filesystem::path currentPath = std::filesystem::current_path() / filename;
+    if (std::filesystem::exists(currentPath)) {
+        return currentPath.string();
+    }
+    
+    // Try relative to executable directory
+    std::filesystem::path execPath = std::filesystem::path(getCurrentExecutablePath()).parent_path() / filename;
+    if (std::filesystem::exists(execPath)) {
+        return execPath.string();
+    }
+    
+    // Try common library paths
+    std::vector<std::string> searchPaths = {
+        "./examples/",   // Add examples directory for testing
+        "./lib/",
+        "./libs/", 
+        "./stdlib/",
+        "../lib/",
+        "../libs/",
+        "../stdlib/"
+    };
+    
+    for (const auto& searchPath : searchPaths) {
+        std::filesystem::path libPath = std::filesystem::path(searchPath) / filename;
+        if (std::filesystem::exists(libPath)) {
+            return libPath.string();
+        }
+    }
+    
+    // If not found anywhere, return the original filename (will cause error)
+    return filename;
+}
+
+std::string Interpreter::getCurrentExecutablePath() {
+#ifdef _WIN32
+    char buffer[MAX_PATH];
+    GetModuleFileNameA(NULL, buffer, MAX_PATH);
+    return std::string(buffer);
+#else
+    char buffer[1024];
+    ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+    if (len != -1) {
+        buffer[len] = '\0';
+        return std::string(buffer);
+    }
+    return "";
+#endif
 }
 
 } // namespace rbasic
