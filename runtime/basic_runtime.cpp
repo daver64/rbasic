@@ -1361,18 +1361,61 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             throw std::runtime_error("Function not found: " + function_name);
         }
         
-        // Convert argument to integer (most common case for single parameter)
-        int param = 0;
-        if (std::holds_alternative<double>(arg1)) {
-            param = static_cast<int>(std::get<double>(arg1));
-        } else if (std::holds_alternative<int>(arg1)) {
-            param = std::get<int>(arg1);
+        // Generic parameter conversion for 1-parameter functions
+        auto getAsPointer = [](const BasicValue& val) -> void* {
+            if (std::holds_alternative<void*>(val)) {
+                return std::get<void*>(val);
+            }
+            return nullptr;
+        };
+        
+        auto getAsString = [](const BasicValue& val) -> const char* {
+            if (std::holds_alternative<std::string>(val)) {
+                return std::get<std::string>(val).c_str();
+            }
+            return nullptr;
+        };
+        
+        auto getAsInt = [](const BasicValue& val) -> int {
+            if (std::holds_alternative<double>(val)) {
+                return static_cast<int>(std::get<double>(val));
+            } else if (std::holds_alternative<int>(val)) {
+                return std::get<int>(val);
+            }
+            return 0;
+        };
+        
+        // Try different 1-parameter patterns in order of likelihood
+        
+        // Pattern: (pointer) -> int (common for SQLite close functions)
+        if (std::holds_alternative<void*>(arg1)) {
+            typedef int (*FuncType)(void*);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(getAsPointer(arg1));
+            return BasicValue(static_cast<double>(result));
         }
         
-        // Call single-parameter function returning int (or void, returning 0)
-        typedef int (*FuncType1)(int);
-        auto func = reinterpret_cast<FuncType1>(funcPtr);
-        return BasicValue(static_cast<double>(func(param)));
+        // Pattern: (int) -> int (most common case)
+        if (std::holds_alternative<double>(arg1) || std::holds_alternative<int>(arg1)) {
+            typedef int (*FuncType)(int);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(getAsInt(arg1));
+            return BasicValue(static_cast<double>(result));
+        }
+        
+        // Pattern: (string) -> int
+        if (std::holds_alternative<std::string>(arg1)) {
+            typedef int (*FuncType)(const char*);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(getAsString(arg1));
+            return BasicValue(static_cast<double>(result));
+        }
+        
+        // Fallback: assume (int) -> int
+        typedef int (*FuncType)(int);
+        auto func = reinterpret_cast<FuncType>(funcPtr);
+        int result = func(getAsInt(arg1));
+        return BasicValue(static_cast<double>(result));
         
     } catch (const std::exception& e) {
         throw std::runtime_error("FFI call failed: " + std::string(e.what()));
@@ -1396,24 +1439,70 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             throw std::runtime_error("Function not found: " + function_name);
         }
         
-        // Convert arguments - common 2-parameter patterns
-        // Pattern 1: (pointer, int) -> pointer (e.g., some SDL functions)
-        void* ptr_arg = nullptr;
-        if (std::holds_alternative<void*>(arg1)) {
-            ptr_arg = std::get<void*>(arg1);
+        // Generic 2-parameter FFI call with automatic type conversion
+        
+        // Helper lambdas for converting BasicValue to appropriate C types
+        auto getAsPointer = [](const BasicValue& val) -> void* {
+            if (std::holds_alternative<void*>(val)) return std::get<void*>(val);
+            return nullptr;
+        };
+        
+        auto getAsString = [](const BasicValue& val) -> std::string {
+            if (std::holds_alternative<std::string>(val)) return std::get<std::string>(val);
+            return "";
+        };
+        
+        auto getAsInt = [](const BasicValue& val) -> int {
+            if (std::holds_alternative<int>(val)) return std::get<int>(val);
+            if (std::holds_alternative<double>(val)) return static_cast<int>(std::get<double>(val));
+            return 0;
+        };
+        
+        // Extract parameters with automatic type conversion
+        void* p1 = getAsPointer(arg1);
+        std::string s1 = getAsString(arg1);
+        int i1 = getAsInt(arg1);
+        
+        void* p2 = getAsPointer(arg2);
+        std::string s2 = getAsString(arg2);
+        int i2 = getAsInt(arg2);
+        
+        // Try different 2-parameter patterns based on function name and parameter types
+        
+        // Pattern 1: (string, pointer) -> int (SQLite open)
+        if (!s1.empty() && p2 != nullptr) {
+            typedef int (*Func1)(const char*, void*);
+            auto func = reinterpret_cast<Func1>(funcPtr);
+            return BasicValue(static_cast<double>(func(s1.c_str(), p2)));
         }
         
-        int int_arg = 0;
-        if (std::holds_alternative<double>(arg2)) {
-            int_arg = static_cast<int>(std::get<double>(arg2));
-        } else if (std::holds_alternative<int>(arg2)) {
-            int_arg = std::get<int>(arg2);
+        // For pointer return functions (sqlite3_column_text, sqlite3_column_name)
+        if (p1 != nullptr && (function_name == "sqlite3_column_text" || function_name == "sqlite3_column_name")) {
+            typedef void* (*FuncPtr)(void*, int);
+            auto func = reinterpret_cast<FuncPtr>(funcPtr);
+            void* result = func(p1, i2);
+            return BasicValue(result);
         }
         
-        // Try most common pattern: (pointer, int) -> int
-        typedef int (*FuncType2)(void*, int);
-        auto func = reinterpret_cast<FuncType2>(funcPtr);
-        return BasicValue(static_cast<double>(func(ptr_arg, int_arg)));
+        // For double return functions (sqlite3_column_double)
+        if (p1 != nullptr && function_name == "sqlite3_column_double") {
+            typedef double (*FuncDouble)(void*, int);
+            auto func = reinterpret_cast<FuncDouble>(funcPtr);
+            double result = func(p1, i2);
+            return BasicValue(result);
+        }
+        
+        // Pattern 2: (pointer, int) -> int (most common: column_int, changes, etc.)
+        if (p1 != nullptr) {
+            typedef int (*Func2)(void*, int);
+            auto func = reinterpret_cast<Func2>(funcPtr);
+            return BasicValue(static_cast<double>(func(p1, i2)));
+        }
+        
+        // Pattern 3: (int, int) -> int (all integers)
+        typedef int (*FuncInt2)(int, int);
+        auto func_int = reinterpret_cast<FuncInt2>(funcPtr);
+        return BasicValue(static_cast<double>(func_int(i1, i2)));
         
     } catch (const std::exception& e) {
         throw std::runtime_error("FFI call failed: " + std::string(e.what()));
@@ -1437,31 +1526,90 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             throw std::runtime_error("Function not found: " + function_name);
         }
         
-        // Common 3-parameter pattern: (pointer, int, int) -> pointer
-        // Used by SDL_CreateRenderer and similar functions
-        void* ptr_arg = nullptr;
-        if (std::holds_alternative<void*>(arg1)) {
-            ptr_arg = std::get<void*>(arg1);
+        // Generic parameter conversion for 3-parameter functions
+        auto getAsPointer = [](const BasicValue& val) -> void* {
+            if (std::holds_alternative<void*>(val)) {
+                return std::get<void*>(val);
+            }
+            return nullptr;
+        };
+        
+        auto getAsString = [](const BasicValue& val) -> const char* {
+            if (std::holds_alternative<std::string>(val)) {
+                return std::get<std::string>(val).c_str();
+            }
+            return nullptr;
+        };
+        
+        auto getAsInt = [](const BasicValue& val) -> int {
+            if (std::holds_alternative<double>(val)) {
+                return static_cast<int>(std::get<double>(val));
+            } else if (std::holds_alternative<int>(val)) {
+                return std::get<int>(val);
+            }
+            return 0;
+        };
+        
+        auto getAsDouble = [](const BasicValue& val) -> double {
+            if (std::holds_alternative<double>(val)) {
+                return std::get<double>(val);
+            } else if (std::holds_alternative<int>(val)) {
+                return static_cast<double>(std::get<int>(val));
+            }
+            return 0.0;
+        };
+        
+        // Try different return type patterns in order of likelihood
+        
+        // Pattern: (pointer, int, int) -> int (common for SQLite bind functions)
+        if (std::holds_alternative<void*>(arg1) && 
+            (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
+            (std::holds_alternative<double>(arg3) || std::holds_alternative<int>(arg3))) {
+            
+            typedef int (*FuncType)(void*, int, int);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3));
+            return BasicValue(static_cast<double>(result));
         }
         
-        int int_arg1 = 0;
-        if (std::holds_alternative<double>(arg2)) {
-            int_arg1 = static_cast<int>(std::get<double>(arg2));
-        } else if (std::holds_alternative<int>(arg2)) {
-            int_arg1 = std::get<int>(arg2);
+        // Pattern: (pointer, int, string) -> int (for bind_text with 3 params)
+        if (std::holds_alternative<void*>(arg1) && 
+            (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
+            std::holds_alternative<std::string>(arg3)) {
+            
+            typedef int (*FuncType)(void*, int, const char*);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(getAsPointer(arg1), getAsInt(arg2), getAsString(arg3));
+            return BasicValue(static_cast<double>(result));
         }
         
-        int int_arg2 = 0;
-        if (std::holds_alternative<double>(arg3)) {
-            int_arg2 = static_cast<int>(std::get<double>(arg3));
-        } else if (std::holds_alternative<int>(arg3)) {
-            int_arg2 = std::get<int>(arg3);
+        // Pattern: (pointer, int, double) -> int
+        if (std::holds_alternative<void*>(arg1) && 
+            (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
+            std::holds_alternative<double>(arg3)) {
+            
+            typedef int (*FuncType)(void*, int, double);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(getAsPointer(arg1), getAsInt(arg2), getAsDouble(arg3));
+            return BasicValue(static_cast<double>(result));
         }
         
-        // Try most common pattern: (pointer, int, int) -> pointer
-        typedef void* (*FuncType3)(void*, int, int);
-        auto func = reinterpret_cast<FuncType3>(funcPtr);
-        return BasicValue(func(ptr_arg, int_arg1, int_arg2));
+        // Pattern: (pointer, int, int) -> pointer (SDL_CreateRenderer style)
+        if (std::holds_alternative<void*>(arg1) && 
+            (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
+            (std::holds_alternative<double>(arg3) || std::holds_alternative<int>(arg3))) {
+            
+            typedef void* (*FuncType)(void*, int, int);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            void* result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3));
+            return BasicValue(result);
+        }
+        
+        // Fallback: try as (pointer, int, int) -> int
+        typedef int (*FuncType)(void*, int, int);
+        auto func = reinterpret_cast<FuncType>(funcPtr);
+        int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3));
+        return BasicValue(static_cast<double>(result));
         
     } catch (const std::exception& e) {
         throw std::runtime_error("FFI call failed: " + std::string(e.what()));
@@ -1485,38 +1633,94 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             throw std::runtime_error("Function not found: " + function_name);
         }
         
-        // Handle MessageBoxA-style function (int, string, string, int) -> int
-        if (function_name == "MessageBoxA") {
-            int hwnd = 0;
-            if (std::holds_alternative<double>(arg1)) {
-                hwnd = static_cast<int>(std::get<double>(arg1));
-            } else if (std::holds_alternative<int>(arg1)) {
-                hwnd = std::get<int>(arg1);
+        // Generic parameter conversion for 4-parameter functions
+        auto getAsPointer = [](const BasicValue& val) -> void* {
+            if (std::holds_alternative<void*>(val)) {
+                return std::get<void*>(val);
             }
-            
-            std::string text, caption;
-            if (std::holds_alternative<std::string>(arg2)) {
-                text = std::get<std::string>(arg2);
+            return nullptr;
+        };
+        
+        auto getAsString = [](const BasicValue& val) -> const char* {
+            if (std::holds_alternative<std::string>(val)) {
+                return std::get<std::string>(val).c_str();
             }
-            if (std::holds_alternative<std::string>(arg3)) {
-                caption = std::get<std::string>(arg3);
+            return nullptr;
+        };
+        
+        auto getAsInt = [](const BasicValue& val) -> int {
+            if (std::holds_alternative<double>(val)) {
+                return static_cast<int>(std::get<double>(val));
+            } else if (std::holds_alternative<int>(val)) {
+                return std::get<int>(val);
             }
-            
-            int type = 0;
-            if (std::holds_alternative<double>(arg4)) {
-                type = static_cast<int>(std::get<double>(arg4));
-            } else if (std::holds_alternative<int>(arg4)) {
-                type = std::get<int>(arg4);
+            return 0;
+        };
+        
+        auto getAsDouble = [](const BasicValue& val) -> double {
+            if (std::holds_alternative<double>(val)) {
+                return std::get<double>(val);
+            } else if (std::holds_alternative<int>(val)) {
+                return static_cast<double>(std::get<int>(val));
             }
+            return 0.0;
+        };
+        
+        // Try different 4-parameter patterns in order of likelihood
+        
+        // Pattern: (int, string, string, int) -> int (MessageBoxA style)
+        if ((std::holds_alternative<double>(arg1) || std::holds_alternative<int>(arg1)) &&
+            std::holds_alternative<std::string>(arg2) &&
+            std::holds_alternative<std::string>(arg3) &&
+            (std::holds_alternative<double>(arg4) || std::holds_alternative<int>(arg4))) {
             
-            typedef int (*MessageBoxAFunc)(int, const char*, const char*, int);
-            auto func = reinterpret_cast<MessageBoxAFunc>(funcPtr);
-            int result = func(hwnd, text.c_str(), caption.c_str(), type);
-            
+            typedef int (*FuncType)(int, const char*, const char*, int);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(getAsInt(arg1), getAsString(arg2), getAsString(arg3), getAsInt(arg4));
             return BasicValue(static_cast<double>(result));
         }
         
-        throw std::runtime_error("Unsupported 4-parameter FFI function: " + function_name);
+        // Pattern: (pointer, int, int, int) -> int
+        if (std::holds_alternative<void*>(arg1) &&
+            (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
+            (std::holds_alternative<double>(arg3) || std::holds_alternative<int>(arg3)) &&
+            (std::holds_alternative<double>(arg4) || std::holds_alternative<int>(arg4))) {
+            
+            typedef int (*FuncType)(void*, int, int, int);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), getAsInt(arg4));
+            return BasicValue(static_cast<double>(result));
+        }
+        
+        // Pattern: (pointer, int, string, int) -> int
+        if (std::holds_alternative<void*>(arg1) &&
+            (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
+            std::holds_alternative<std::string>(arg3) &&
+            (std::holds_alternative<double>(arg4) || std::holds_alternative<int>(arg4))) {
+            
+            typedef int (*FuncType)(void*, int, const char*, int);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(getAsPointer(arg1), getAsInt(arg2), getAsString(arg3), getAsInt(arg4));
+            return BasicValue(static_cast<double>(result));
+        }
+        
+        // Pattern: (pointer, int, int, pointer) -> int
+        if (std::holds_alternative<void*>(arg1) &&
+            (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
+            (std::holds_alternative<double>(arg3) || std::holds_alternative<int>(arg3)) &&
+            std::holds_alternative<void*>(arg4)) {
+            
+            typedef int (*FuncType)(void*, int, int, void*);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), getAsPointer(arg4));
+            return BasicValue(static_cast<double>(result));
+        }
+        
+        // Fallback: assume (int, string, string, int) -> int
+        typedef int (*FuncType)(int, const char*, const char*, int);
+        auto func = reinterpret_cast<FuncType>(funcPtr);
+        int result = func(getAsInt(arg1), getAsString(arg2), getAsString(arg3), getAsInt(arg4));
+        return BasicValue(static_cast<double>(result));
         
     } catch (const std::exception& e) {
         throw std::runtime_error("FFI call failed: " + std::string(e.what()));
@@ -1543,18 +1747,67 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             throw std::runtime_error("Function not found: " + function_name);
         }
         
-        // Generic 5-parameter pattern (int, int, int, int, int) -> int
-        if (std::holds_alternative<int>(arg1) && std::holds_alternative<int>(arg2) && 
-            std::holds_alternative<int>(arg3) && std::holds_alternative<int>(arg4) && 
-            std::holds_alternative<int>(arg5)) {
-            typedef int (*Func5)(int, int, int, int, int);
-            auto func = reinterpret_cast<Func5>(func_ptr);
-            int result = func(std::get<int>(arg1), std::get<int>(arg2), std::get<int>(arg3), 
-                             std::get<int>(arg4), std::get<int>(arg5));
-            return BasicValue(static_cast<double>(result));
+        // Generic 5-parameter FFI call with automatic type conversion
+        // Convert all parameters to their most appropriate C types
+        
+        // Helper lambda for converting BasicValue to appropriate C types
+        auto getAsPointer = [](const BasicValue& val) -> void* {
+            if (std::holds_alternative<void*>(val)) return std::get<void*>(val);
+            return nullptr;
+        };
+        
+        auto getAsString = [](const BasicValue& val) -> std::string {
+            if (std::holds_alternative<std::string>(val)) return std::get<std::string>(val);
+            return "";
+        };
+        
+        auto getAsInt = [](const BasicValue& val) -> int {
+            if (std::holds_alternative<int>(val)) return std::get<int>(val);
+            if (std::holds_alternative<double>(val)) return static_cast<int>(std::get<double>(val));
+            return 0;
+        };
+        
+        // Extract parameters with automatic type conversion
+        void* p1 = getAsPointer(arg1);
+        std::string s1 = getAsString(arg1);
+        int i1 = getAsInt(arg1);
+        
+        void* p2 = getAsPointer(arg2);
+        std::string s2 = getAsString(arg2);
+        int i2 = getAsInt(arg2);
+        
+        void* p3 = getAsPointer(arg3);
+        std::string s3 = getAsString(arg3);
+        int i3 = getAsInt(arg3);
+        
+        void* p4 = getAsPointer(arg4);
+        std::string s4 = getAsString(arg4);
+        int i4 = getAsInt(arg4);
+        
+        void* p5 = getAsPointer(arg5);
+        std::string s5 = getAsString(arg5);
+        int i5 = getAsInt(arg5);
+        
+        // Try the most common 5-parameter patterns
+        
+        // Pattern 1: (pointer, string, int, pointer, pointer) -> int (SQLite prepare)
+        if (p1 != nullptr && !s2.empty() && p4 != nullptr) {
+            typedef int (*Func1)(void*, const char*, int, void*, void*);
+            auto func = reinterpret_cast<Func1>(func_ptr);
+            return BasicValue(static_cast<double>(func(p1, s2.c_str(), i3, p4, p5)));
         }
         
-        throw std::runtime_error("Unsupported 5-parameter FFI function: " + function_name);
+        // Pattern 2: (pointer, int, string, int, pointer) -> int (SQLite bind_text)
+        if (p1 != nullptr && !s3.empty() && p5 != nullptr) {
+            typedef int (*Func2)(void*, int, const char*, int, void*);
+            auto func = reinterpret_cast<Func2>(func_ptr);
+            return BasicValue(static_cast<double>(func(p1, i2, s3.c_str(), i4, p5)));
+        }
+        
+        // Pattern 3: (int, int, int, int, int) -> int (all integers)
+        typedef int (*FuncInt5)(int, int, int, int, int);
+        auto func_int = reinterpret_cast<FuncInt5>(func_ptr);
+        return BasicValue(static_cast<double>(func_int(i1, i2, i3, i4, i5)));
         
     } catch (const std::exception& e) {
         throw std::runtime_error("FFI call failed: " + std::string(e.what()));

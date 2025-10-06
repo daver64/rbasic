@@ -4,16 +4,12 @@ This document defines the complete Backus-Naur Form (BNF) grammar for the rbasic
 
 ## Overview
 
-rbasic is a "C-leaning BASIC" language that combines traditional BASIC simplicity with modern C-style syntax. It features:
+rbasic is a modern BASIC language transpiler that combines BASIC simplicity with C-style syntax:
 - C-style control structures with braces `{}`
-- Function-call I/O syntax
-- Modern comments (`//` and `/* */`)
-- Strong typing with type annotations
-- Structures and arrays
-- Assignment expressions
+- Import system for modular programming
 - Foreign Function Interface (FFI) for C library integration
-- Complete function library with 30+ built-in functions
-- Extensible via Foreign Function Interface (FFI)
+- Comprehensive built-in function library
+- Dual execution modes (interpreter and compiler)
 
 ## Lexical Elements
 

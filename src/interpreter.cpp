@@ -194,6 +194,49 @@ void Interpreter::visit(VariableExpr& node) {
     }
     
     // Regular variable access
+    // First check if it's a predefined constant
+    if (node.name == "NULL" || node.name == "null") {
+        auto constant = basic_runtime::get_constant("NULL");
+        if (std::holds_alternative<void*>(constant)) {
+            lastValue = std::get<void*>(constant);
+        } else {
+            lastValue = static_cast<void*>(nullptr);
+        }
+        return;
+    }
+    if (node.name == "TRUE" || node.name == "true") {
+        auto constant = basic_runtime::get_constant("TRUE");
+        if (std::holds_alternative<bool>(constant)) {
+            lastValue = std::get<bool>(constant);
+        } else {
+            lastValue = true;
+        }
+        return;
+    }
+    if (node.name == "FALSE" || node.name == "false") {
+        auto constant = basic_runtime::get_constant("FALSE");
+        if (std::holds_alternative<bool>(constant)) {
+            lastValue = std::get<bool>(constant);
+        } else {
+            lastValue = false;
+        }
+        return;
+    }
+    
+    // Check for SDL2/SQLite/Windows constants
+    if (node.name.find("SDL_") == 0 || node.name.find("SDLK_") == 0 || 
+        node.name.find("SQLITE_") == 0 || node.name.find("MB_") == 0) {
+        auto constant = basic_runtime::get_constant(node.name);
+        if (std::holds_alternative<double>(constant)) {
+            lastValue = std::get<double>(constant);
+        } else if (std::holds_alternative<int>(constant)) {
+            lastValue = std::get<int>(constant);
+        } else {
+            lastValue = 0.0; // Default for unknown constants
+        }
+        return;
+    }
+    
     lastValue = getVariable(node.name);
 }
 
@@ -1419,8 +1462,29 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
             const auto& param1Type = ffiFunc.parameters[0].second;
             const auto& param2Type = ffiFunc.parameters[1].second;
             
+            // Pattern: (string, pointer) - SQLite functions
+            if (param1Type == "string" && 
+                (param2Type == "pointer" || param2Type.find('*') != std::string::npos)) {
+                std::string param1 = getStringValue(arg1Val);
+                void* param2 = getPointerValue(arg2Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func2)(const char*, void*);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    lastValue = static_cast<double>(func(param1.c_str(), param2));
+                } else if (returnsPointer) {
+                    typedef void* (*Func2)(const char*, void*);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    lastValue = func(param1.c_str(), param2);
+                } else {
+                    typedef void (*Func2)(const char*, void*);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    func(param1.c_str(), param2);
+                    lastValue = 0.0;
+                }
+            }
             // Pattern: (pointer, int)
-            if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) && 
+            else if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) && 
                 (param2Type == "int" || param2Type == "integer")) {
                 void* param1 = getPointerValue(arg1Val);
                 int param2 = getIntValue(arg2Val);
@@ -1524,6 +1588,48 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
                     typedef void (*Func4)(int, const char*, const char*, int);
                     auto func = reinterpret_cast<Func4>(funcPtr);
                     func(param1, str2.c_str(), str3.c_str(), param4);
+                    lastValue = 0.0;
+                }
+            }
+        } else if (ffiFunc.parameters.size() == 5) {
+            // Five parameters - SQLite patterns like sqlite3_prepare_v2
+            ValueType arg1Val = evaluate(*node.arguments[0]);
+            ValueType arg2Val = evaluate(*node.arguments[1]);
+            ValueType arg3Val = evaluate(*node.arguments[2]);
+            ValueType arg4Val = evaluate(*node.arguments[3]);
+            ValueType arg5Val = evaluate(*node.arguments[4]);
+            
+            const auto& param1Type = ffiFunc.parameters[0].second;
+            const auto& param2Type = ffiFunc.parameters[1].second;
+            const auto& param3Type = ffiFunc.parameters[2].second;
+            const auto& param4Type = ffiFunc.parameters[3].second;
+            const auto& param5Type = ffiFunc.parameters[4].second;
+            
+            // Pattern: (pointer, string, int, pointer, pointer) - sqlite3_prepare_v2
+            if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) &&
+                param2Type == "string" &&
+                (param3Type == "int" || param3Type == "integer") &&
+                (param4Type == "pointer" || param4Type.find('*') != std::string::npos) &&
+                (param5Type == "pointer" || param5Type.find('*') != std::string::npos)) {
+                
+                void* param1 = getPointerValue(arg1Val);
+                std::string param2 = getStringValue(arg2Val);
+                int param3 = getIntValue(arg3Val);
+                void* param4 = getPointerValue(arg4Val);
+                void* param5 = getPointerValue(arg5Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func5)(void*, const char*, int, void*, void*);
+                    auto func = reinterpret_cast<Func5>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2.c_str(), param3, param4, param5));
+                } else if (returnsPointer) {
+                    typedef void* (*Func5)(void*, const char*, int, void*, void*);
+                    auto func = reinterpret_cast<Func5>(funcPtr);
+                    lastValue = func(param1, param2.c_str(), param3, param4, param5);
+                } else {
+                    typedef void (*Func5)(void*, const char*, int, void*, void*);
+                    auto func = reinterpret_cast<Func5>(funcPtr);
+                    func(param1, param2.c_str(), param3, param4, param5);
                     lastValue = 0.0;
                 }
             }

@@ -41,6 +41,7 @@ enum class TokenType {
     FROM,
     IMPORT,
     MOD,
+    NULL_LITERAL,
     
     // Operators
     PLUS,

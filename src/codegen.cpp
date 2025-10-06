@@ -2,7 +2,7 @@
 
 namespace rbasic {
 
-CodeGenerator::CodeGenerator() : indentLevel(0), tempVarCounter(0) {}
+CodeGenerator::CodeGenerator() : indentLevel(0), tempVarCounter(0), currentFunction("") {}
 
 void CodeGenerator::indent() {
     for (int i = 0; i < indentLevel; i++) {
@@ -104,6 +104,8 @@ void CodeGenerator::visit(LiteralExpr& node) {
         write("BasicValue(\"" + escapeString(std::get<std::string>(node.value)) + "\")");
     } else if (std::holds_alternative<bool>(node.value)) {
         write("BasicValue(" + std::string(std::get<bool>(node.value) ? "true" : "false") + ")");
+    } else if (std::holds_alternative<void*>(node.value)) {
+        write("BasicValue(static_cast<void*>(nullptr))");
     }
 }
 
@@ -461,6 +463,87 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
 
+    // FFI memory and utility functions
+    if (node.name == "alloc_buffer" && node.arguments.size() == 1) {
+        write("basic_runtime::alloc_buffer(to_int(");
+        node.arguments[0]->accept(*this);
+        write("))");
+        return;
+    }
+
+    if (node.name == "alloc_int_buffer" && node.arguments.size() == 1) {
+        write("basic_runtime::alloc_int_buffer(to_int(");
+        node.arguments[0]->accept(*this);
+        write("))");
+        return;
+    }
+
+    if (node.name == "alloc_pointer_buffer" && node.arguments.size() == 0) {
+        write("basic_runtime::alloc_pointer_buffer()");
+        return;
+    }
+
+    if (node.name == "deref_int" && node.arguments.size() == 1) {
+        write("basic_runtime::deref_int(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+
+    if (node.name == "deref_pointer" && node.arguments.size() == 1) {
+        write("basic_runtime::deref_pointer(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+
+    if (node.name == "deref_string" && node.arguments.size() == 1) {
+        write("basic_runtime::deref_string(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+
+    if (node.name == "is_null" && node.arguments.size() == 1) {
+        write("BasicValue(basic_runtime::is_null(");
+        node.arguments[0]->accept(*this);
+        write("))");
+        return;
+    }
+
+    if (node.name == "not_null" && node.arguments.size() == 1) {
+        write("BasicValue(basic_runtime::not_null(");
+        node.arguments[0]->accept(*this);
+        write("))");
+        return;
+    }
+
+    if (node.name == "get_constant" && node.arguments.size() == 1) {
+        write("basic_runtime::get_constant(to_string(");
+        node.arguments[0]->accept(*this);
+        write("))");
+        return;
+    }
+
+    // SDL structure creation functions
+    if (node.name == "create_sdl_rect" && node.arguments.size() == 4) {
+        write("basic_runtime::create_sdl_rect(to_int(");
+        node.arguments[0]->accept(*this);
+        write("), to_int(");
+        node.arguments[1]->accept(*this);
+        write("), to_int(");
+        node.arguments[2]->accept(*this);
+        write("), to_int(");
+        node.arguments[3]->accept(*this);
+        write("))");
+        return;
+    }
+
+    if (node.name == "create_sdl_event" && node.arguments.size() == 0) {
+        write("basic_runtime::create_sdl_event()");
+        return;
+    }
+
     // Check if this is an FFI function call
     auto ffiIt = ffiFunctions.find(node.name);
     if (ffiIt != ffiFunctions.end()) {
@@ -480,12 +563,10 @@ void CodeGenerator::visit(CallExpr& node) {
     }
 
     // User-defined function calls
-    write("func_" + node.name + "(");
+    write("func_" + node.name + "(variables");
     for (size_t i = 0; i < node.arguments.size(); i++) {
+        write(", ");
         node.arguments[i]->accept(*this);
-        if (i < node.arguments.size() - 1) {
-            write(", ");
-        }
     }
     write(")");
 }
@@ -648,25 +729,34 @@ void CodeGenerator::visit(WhileStmt& node) {
 void CodeGenerator::visit(ReturnStmt& node) {
     indent();
     if (node.value) {
-        write("return ");
-        node.value->accept(*this);
-        write(";\n");
+        // For main function, return values need to be converted to int
+        if (currentFunction.empty()) {
+            write("return to_int(");
+            node.value->accept(*this);
+            write(");\n");
+        } else {
+            write("return ");
+            node.value->accept(*this);
+            write(";\n");
+        }
     } else {
-        write("return BasicValue(0);\n");
+        // Empty return - for main function return 0, for user functions return BasicValue(0)
+        if (currentFunction.empty()) {
+            write("return 0;\n");
+        } else {
+            write("return BasicValue(0);\n");
+        }
     }
 }
 
 void CodeGenerator::visit(FunctionDecl& node) {
     // Generate function declaration outside of main
     // We need to move this to the beginning of the file
-    functionDeclarations += "BasicValue func_" + node.name + "(";
+    functionDeclarations += "BasicValue func_" + node.name + "(std::map<std::string, BasicValue>& variables";
     
     // Parameters
     for (size_t i = 0; i < node.parameters.size(); i++) {
-        functionDeclarations += "BasicValue " + node.parameters[i];
-        if (i < node.parameters.size() - 1) {
-            functionDeclarations += ", ";
-        }
+        functionDeclarations += ", BasicValue " + node.parameters[i];
     }
     functionDeclarations += ") {\n";
     
@@ -684,15 +774,18 @@ void CodeGenerator::visit(FunctionDecl& node) {
     
     // Generate function body
     int savedIndent = indentLevel;
+    std::string savedCurrentFunction = currentFunction;
     indentLevel = 1;
+    currentFunction = node.name;
     for (auto& stmt : node.body) {
         stmt->accept(*this);
     }
     indentLevel = savedIndent;
+    currentFunction = savedCurrentFunction;
     
     // Add function body to function declarations
     std::string functionBody = output.str();
-    // Replace variable access with function_vars, but handle boolean constants specially
+    // Replace variable access with function_vars only for function parameters, but handle boolean constants specially
     size_t pos = 0;
     while ((pos = functionBody.find("variables[", pos)) != std::string::npos) {
         size_t endPos = functionBody.find("]", pos);
@@ -704,9 +797,24 @@ void CodeGenerator::visit(FunctionDecl& node) {
                 functionBody.replace(pos, endPos - pos + 1, boolValue);
                 pos += boolValue.length();
             } else {
-                // Replace regular variables with function_vars
-                functionBody.replace(pos, 10, "function_vars[");
-                pos += 14;
+                // Check if this is a function parameter
+                std::string varName = varContent.substr(1, varContent.length() - 2); // Remove quotes
+                bool isParameter = false;
+                for (const auto& param : node.parameters) {
+                    if (param == varName) {
+                        isParameter = true;
+                        break;
+                    }
+                }
+                
+                if (isParameter) {
+                    // Replace function parameters with function_vars
+                    functionBody.replace(pos, 10, "function_vars[");
+                    pos += 14;
+                } else {
+                    // Keep global variables as variables
+                    pos += 10;
+                }
             }
         } else {
             break;
@@ -779,8 +887,34 @@ void CodeGenerator::visit(FFIFunctionDecl& node) {
     // Store the FFI function declaration for use in call generation
     ffiFunctions[node.name] = std::make_unique<FFIFunctionDecl>(node.name, node.library, node.returnType, node.parameters);
     
-    // Generate comment in the output
-    writeLine("// FFI Function Declaration: " + node.name + " from " + node.library);
+    // Generate wrapper function for the FFI call and add to function declarations
+    std::ostringstream ffiFunc;
+    
+    ffiFunc << "// FFI Function Declaration: " << node.name << " from " << node.library << "\n";
+    ffiFunc << "BasicValue func_" << node.name << "(";
+    
+    // Generate parameter list
+    bool first = true;
+    for (size_t i = 0; i < node.parameters.size(); ++i) {
+        if (!first) ffiFunc << ", ";
+        ffiFunc << "const BasicValue& arg" << i;
+        first = false;
+    }
+    
+    ffiFunc << ") {\n";
+    ffiFunc << "    return call_ffi_function(\"" << node.library << "\", \"" << node.name << "\"";
+    
+    for (size_t i = 0; i < node.parameters.size(); ++i) {
+        ffiFunc << ", arg" << i;
+    }
+    
+    ffiFunc << ");\n";
+    ffiFunc << "}\n\n";
+    
+    // Add to function declarations
+    functionDeclarations += ffiFunc.str();
+    
+    // FFI function processed
 }
 
 void CodeGenerator::visit(Program& node) {

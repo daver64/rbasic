@@ -279,6 +279,10 @@ std::unique_ptr<Expression> Parser::primary() {
         return std::make_unique<LiteralExpr>(previous().value);
     }
     
+    if (match({TokenType::NULL_LITERAL})) {
+        return std::make_unique<LiteralExpr>(static_cast<void*>(nullptr));
+    }
+    
     if (match({TokenType::IDENTIFIER})) {
         return std::make_unique<VariableExpr>(previous().value);
     }
@@ -659,13 +663,19 @@ std::unique_ptr<Statement> Parser::declareStatement() {
 
 // Parse direct FFI syntax: ffi "library" FunctionName(params) as returnType;
 std::unique_ptr<Statement> Parser::ffiStatement() {
-    // Parse: ffi returnType FunctionName(param1, param2, ...) from "library";
+    // Parse: ffi returnType FunctionName(param1 as type1, param2 as type2, ...) from "library";
     
-    // Parse return type
-    Token returnTypeToken = consume(TokenType::IDENTIFIER, "Expected return type after 'ffi'");
-    std::string returnType = returnTypeToken.value;
+    // Parse return type (can be identifier or 'pointer' keyword)
+    std::string returnType;
+    if (check(TokenType::POINTER)) {
+        advance(); // consume 'pointer' keyword
+        returnType = "pointer";
+    } else {
+        Token returnTypeToken = consume(TokenType::IDENTIFIER, "Expected return type after 'ffi'");
+        returnType = returnTypeToken.value;
+    }
     
-    // Check for pointer syntax
+    // Check for pointer syntax (e.g., "integer*")
     if (check(TokenType::MULTIPLY)) {
         advance(); // consume '*'
         returnType += "*";
@@ -682,18 +692,30 @@ std::unique_ptr<Statement> Parser::ffiStatement() {
     
     if (!check(TokenType::RIGHT_PAREN)) {
         do {
-            // Parse parameter type directly (simplified syntax)
-            Token paramType = consume(TokenType::IDENTIFIER, "Expected parameter type");
-            std::string typeStr = paramType.value;
+            // Parse parameter name
+            Token paramName = consume(TokenType::IDENTIFIER, "Expected parameter name");
+            std::string paramNameStr = paramName.value;
             
-            // Check for pointer syntax
+            // Parse 'as' keyword
+            consume(TokenType::AS, "Expected 'as' after parameter name");
+            
+            // Parse parameter type (can be identifier or 'pointer' keyword)
+            std::string typeStr;
+            if (check(TokenType::POINTER)) {
+                advance(); // consume 'pointer' keyword
+                typeStr = "pointer";
+            } else {
+                Token paramType = consume(TokenType::IDENTIFIER, "Expected parameter type after 'as'");
+                typeStr = paramType.value;
+            }
+            
+            // Check for pointer syntax (e.g., "integer*")
             if (check(TokenType::MULTIPLY)) {
                 advance(); // consume '*'
                 typeStr += "*";
             }
             
-            // Use type as both name and type for simplified syntax
-            parameters.emplace_back("param" + std::to_string(parameters.size()), typeStr);
+            parameters.emplace_back(paramNameStr, typeStr);
         } while (match({TokenType::COMMA}));
     }
     

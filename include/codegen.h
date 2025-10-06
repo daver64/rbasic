@@ -11,6 +11,7 @@ private:
     std::ostringstream output;
     std::string functionDeclarations;
     int indentLevel;
+    std::string currentFunction; // Track current function name (empty if in main)
     std::map<std::string, std::unique_ptr<StructDecl>> structs; // Store struct declarations
     std::map<std::string, std::unique_ptr<FFIFunctionDecl>> ffiFunctions; // Store FFI function declarations
     
