@@ -1935,4 +1935,109 @@ BasicValue func_get_rect_field(const BasicValue& rect, const BasicValue& field) 
     return get_rect_field(rect, fieldStr);
 }
 
+// ===== CONSTANT/NULL HANDLING SYSTEM =====
+
+BasicValue get_constant(const std::string& name) {
+    // Core language constants
+    if (name == "NULL" || name == "null") {
+        return BasicValue(static_cast<void*>(nullptr));
+    }
+    if (name == "TRUE" || name == "true") {
+        return BasicValue(true);
+    }
+    if (name == "FALSE" || name == "false") {
+        return BasicValue(false);
+    }
+    
+    // SDL2 constants
+    if (name == "SDL_INIT_VIDEO") return BasicValue(static_cast<double>(0x00000020));
+    if (name == "SDL_INIT_AUDIO") return BasicValue(static_cast<double>(0x00000010));
+    if (name == "SDL_INIT_EVENTS") return BasicValue(static_cast<double>(0x00004000));
+    if (name == "SDL_INIT_EVERYTHING") return BasicValue(static_cast<double>(0x0000FFFF));
+    
+    if (name == "SDL_WINDOW_SHOWN") return BasicValue(static_cast<double>(0x00000004));
+    if (name == "SDL_WINDOW_RESIZABLE") return BasicValue(static_cast<double>(0x00000020));
+    if (name == "SDL_WINDOW_FULLSCREEN") return BasicValue(static_cast<double>(0x00000001));
+    if (name == "SDL_WINDOW_FULLSCREEN_DESKTOP") return BasicValue(static_cast<double>(0x00001001));
+    
+    if (name == "SDL_WINDOWPOS_UNDEFINED") return BasicValue(static_cast<double>(0x1FFF0000));
+    if (name == "SDL_WINDOWPOS_CENTERED") return BasicValue(static_cast<double>(0x2FFF0000));
+    
+    if (name == "SDL_RENDERER_ACCELERATED") return BasicValue(static_cast<double>(0x00000002));
+    if (name == "SDL_RENDERER_PRESENTVSYNC") return BasicValue(static_cast<double>(0x00000004));
+    
+    // SDL Event types
+    if (name == "SDL_QUIT") return BasicValue(static_cast<double>(0x100));
+    if (name == "SDL_KEYDOWN") return BasicValue(static_cast<double>(0x300));
+    if (name == "SDL_KEYUP") return BasicValue(static_cast<double>(0x301));
+    if (name == "SDL_MOUSEBUTTONDOWN") return BasicValue(static_cast<double>(0x401));
+    if (name == "SDL_MOUSEBUTTONUP") return BasicValue(static_cast<double>(0x402));
+    
+    // SDL Key codes (common ones)
+    if (name == "SDLK_ESCAPE") return BasicValue(static_cast<double>(27));
+    if (name == "SDLK_SPACE") return BasicValue(static_cast<double>(32));
+    if (name == "SDLK_RETURN") return BasicValue(static_cast<double>(13));
+    if (name == "SDLK_UP") return BasicValue(static_cast<double>(1073741906));
+    if (name == "SDLK_DOWN") return BasicValue(static_cast<double>(1073741905));
+    if (name == "SDLK_LEFT") return BasicValue(static_cast<double>(1073741904));
+    if (name == "SDLK_RIGHT") return BasicValue(static_cast<double>(1073741903));
+    
+    // SQLite constants
+    if (name == "SQLITE_OK") return BasicValue(static_cast<double>(0));
+    if (name == "SQLITE_ERROR") return BasicValue(static_cast<double>(1));
+    if (name == "SQLITE_BUSY") return BasicValue(static_cast<double>(5));
+    if (name == "SQLITE_LOCKED") return BasicValue(static_cast<double>(6));
+    if (name == "SQLITE_NOMEM") return BasicValue(static_cast<double>(7));
+    if (name == "SQLITE_READONLY") return BasicValue(static_cast<double>(8));
+    if (name == "SQLITE_DONE") return BasicValue(static_cast<double>(101));
+    if (name == "SQLITE_ROW") return BasicValue(static_cast<double>(100));
+    
+    // SQLite open flags
+    if (name == "SQLITE_OPEN_READONLY") return BasicValue(static_cast<double>(0x00000001));
+    if (name == "SQLITE_OPEN_READWRITE") return BasicValue(static_cast<double>(0x00000002));
+    if (name == "SQLITE_OPEN_CREATE") return BasicValue(static_cast<double>(0x00000004));
+    
+    // Windows API constants (useful for MessageBox etc.)
+    if (name == "MB_OK") return BasicValue(static_cast<double>(0x00000000));
+    if (name == "MB_OKCANCEL") return BasicValue(static_cast<double>(0x00000001));
+    if (name == "MB_YESNO") return BasicValue(static_cast<double>(0x00000004));
+    if (name == "MB_ICONERROR") return BasicValue(static_cast<double>(0x00000010));
+    if (name == "MB_ICONWARNING") return BasicValue(static_cast<double>(0x00000030));
+    if (name == "MB_ICONINFORMATION") return BasicValue(static_cast<double>(0x00000040));
+    
+    // Return 0 for unknown constants (could also throw error)
+    return BasicValue(static_cast<double>(0));
+}
+
+BasicValue is_null(const BasicValue& value) {
+    // Check if a value is NULL/nullptr
+    if (std::holds_alternative<void*>(value)) {
+        return BasicValue(std::get<void*>(value) == nullptr);
+    }
+    return BasicValue(false);
+}
+
+BasicValue not_null(const BasicValue& value) {
+    // Check if a value is NOT NULL
+    if (std::holds_alternative<void*>(value)) {
+        return BasicValue(std::get<void*>(value) != nullptr);
+    }
+    return BasicValue(true); // Non-pointer values are considered "not null"
+}
+
+// ===== WRAPPER FUNCTIONS FOR CODE GENERATOR =====
+
+BasicValue func_get_constant(const BasicValue& name) {
+    std::string nameStr = to_string(name);
+    return get_constant(nameStr);
+}
+
+BasicValue func_is_null(const BasicValue& value) {
+    return is_null(value);
+}
+
+BasicValue func_not_null(const BasicValue& value) {
+    return not_null(value);
+}
+
 } // namespace basic_runtime

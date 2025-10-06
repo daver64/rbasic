@@ -1143,6 +1143,73 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
         return true;
     }
     
+    // Constant/NULL handling functions
+    if (node.name == "get_constant" && node.arguments.size() == 1) {
+        ValueType nameVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<std::string>(nameVal)) {
+            std::string name = std::get<std::string>(nameVal);
+            BasicValue result = basic_runtime::get_constant(name);
+            
+            // Convert BasicValue back to ValueType for interpreter
+            if (std::holds_alternative<void*>(result)) {
+                lastValue = std::get<void*>(result);
+            } else if (std::holds_alternative<double>(result)) {
+                lastValue = std::get<double>(result);
+            } else if (std::holds_alternative<bool>(result)) {
+                lastValue = std::get<bool>(result);
+            } else if (std::holds_alternative<std::string>(result)) {
+                lastValue = std::get<std::string>(result);
+            } else if (std::holds_alternative<int>(result)) {
+                lastValue = std::get<int>(result);
+            }
+        }
+        return true;
+    }
+    
+    if (node.name == "is_null" && node.arguments.size() == 1) {
+        ValueType val = evaluate(*node.arguments[0]);
+        
+        // Convert ValueType to BasicValue for runtime function
+        BasicValue bv;
+        if (std::holds_alternative<void*>(val)) {
+            bv = std::get<void*>(val);
+        } else if (std::holds_alternative<double>(val)) {
+            bv = std::get<double>(val);
+        } else if (std::holds_alternative<int>(val)) {
+            bv = std::get<int>(val);
+        } else if (std::holds_alternative<bool>(val)) {
+            bv = std::get<bool>(val);
+        } else if (std::holds_alternative<std::string>(val)) {
+            bv = std::get<std::string>(val);
+        }
+        
+        BasicValue result = basic_runtime::is_null(bv);
+        lastValue = std::get<bool>(result);
+        return true;
+    }
+    
+    if (node.name == "not_null" && node.arguments.size() == 1) {
+        ValueType val = evaluate(*node.arguments[0]);
+        
+        // Convert ValueType to BasicValue for runtime function
+        BasicValue bv;
+        if (std::holds_alternative<void*>(val)) {
+            bv = std::get<void*>(val);
+        } else if (std::holds_alternative<double>(val)) {
+            bv = std::get<double>(val);
+        } else if (std::holds_alternative<int>(val)) {
+            bv = std::get<int>(val);
+        } else if (std::holds_alternative<bool>(val)) {
+            bv = std::get<bool>(val);
+        } else if (std::holds_alternative<std::string>(val)) {
+            bv = std::get<std::string>(val);
+        }
+        
+        BasicValue result = basic_runtime::not_null(bv);
+        lastValue = std::get<bool>(result);
+        return true;
+    }
+    
     return false; // Function not handled by this dispatcher
 }
 

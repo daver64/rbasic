@@ -475,4 +475,14 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
 BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3, const BasicValue& arg4, const BasicValue& arg5, const BasicValue& arg6, const BasicValue& arg7);
 BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3, const BasicValue& arg4, const BasicValue& arg5, const BasicValue& arg6, const BasicValue& arg7, const BasicValue& arg8);
 
+// Constant/NULL handling system
+BasicValue get_constant(const std::string& name);       // Get predefined constants (NULL, SDL_*, SQLITE_*, etc.)
+BasicValue is_null(const BasicValue& value);            // Check if value is NULL/nullptr
+BasicValue not_null(const BasicValue& value);           // Check if value is NOT NULL
+
+// Constant handling wrapper functions for code generator
+BasicValue func_get_constant(const BasicValue& name);
+BasicValue func_is_null(const BasicValue& value);
+BasicValue func_not_null(const BasicValue& value);
+
 } // namespace basic_runtime
