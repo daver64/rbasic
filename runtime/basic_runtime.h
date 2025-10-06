@@ -456,5 +456,9 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
 BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2);
 BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3);
 BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3, const BasicValue& arg4);
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3, const BasicValue& arg4, const BasicValue& arg5);
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3, const BasicValue& arg4, const BasicValue& arg5, const BasicValue& arg6);
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3, const BasicValue& arg4, const BasicValue& arg5, const BasicValue& arg6, const BasicValue& arg7);
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3, const BasicValue& arg4, const BasicValue& arg5, const BasicValue& arg6, const BasicValue& arg7, const BasicValue& arg8);
 
 } // namespace basic_runtime

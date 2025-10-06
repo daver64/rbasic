@@ -1778,4 +1778,174 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
     }
 }
 
+// 5-parameter FFI function calls
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, 
+                           const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3,
+                           const BasicValue& arg4, const BasicValue& arg5) {
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        auto library = ffi_manager.get_library(library_name);
+        if (!library) {
+            library = ffi_manager.load_library(library_name);
+        }
+        
+        if (!library || !library->is_valid()) {
+            throw std::runtime_error("Failed to load library: " + library_name);
+        }
+        
+        void* func_ptr = library->get_function_address(function_name);
+        if (!func_ptr) {
+            throw std::runtime_error("Function not found: " + function_name);
+        }
+        
+        // Generic 5-parameter pattern (int, int, int, int, int) -> int
+        if (std::holds_alternative<int>(arg1) && std::holds_alternative<int>(arg2) && 
+            std::holds_alternative<int>(arg3) && std::holds_alternative<int>(arg4) && 
+            std::holds_alternative<int>(arg5)) {
+            typedef int (*Func5)(int, int, int, int, int);
+            auto func = reinterpret_cast<Func5>(func_ptr);
+            int result = func(std::get<int>(arg1), std::get<int>(arg2), std::get<int>(arg3), 
+                             std::get<int>(arg4), std::get<int>(arg5));
+            return BasicValue(static_cast<double>(result));
+        }
+        
+        throw std::runtime_error("Unsupported 5-parameter FFI function: " + function_name);
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("FFI call failed: " + std::string(e.what()));
+    }
+}
+
+// 6-parameter FFI function calls
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, 
+                           const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3,
+                           const BasicValue& arg4, const BasicValue& arg5, const BasicValue& arg6) {
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        auto library = ffi_manager.get_library(library_name);
+        if (!library) {
+            library = ffi_manager.load_library(library_name);
+        }
+        
+        if (!library || !library->is_valid()) {
+            throw std::runtime_error("Failed to load library: " + library_name);
+        }
+        
+        void* func_ptr = library->get_function_address(function_name);
+        if (!func_ptr) {
+            throw std::runtime_error("Function not found: " + function_name);
+        }
+        
+        // Pattern: (string, int, int, int, int, int) -> pointer - SDL_CreateWindow
+        if (std::holds_alternative<std::string>(arg1) && std::holds_alternative<int>(arg2) && 
+            std::holds_alternative<int>(arg3) && std::holds_alternative<int>(arg4) && 
+            std::holds_alternative<int>(arg5) && std::holds_alternative<int>(arg6)) {
+            typedef void* (*Func6)(const char*, int, int, int, int, int);
+            auto func = reinterpret_cast<Func6>(func_ptr);
+            void* result = func(std::get<std::string>(arg1).c_str(), std::get<int>(arg2), 
+                               std::get<int>(arg3), std::get<int>(arg4), std::get<int>(arg5), 
+                               std::get<int>(arg6));
+            return BasicValue(result);
+        }
+        
+        // Generic 6-parameter pattern (int, int, int, int, int, int) -> int
+        if (std::holds_alternative<int>(arg1) && std::holds_alternative<int>(arg2) && 
+            std::holds_alternative<int>(arg3) && std::holds_alternative<int>(arg4) && 
+            std::holds_alternative<int>(arg5) && std::holds_alternative<int>(arg6)) {
+            typedef int (*Func6)(int, int, int, int, int, int);
+            auto func = reinterpret_cast<Func6>(func_ptr);
+            int result = func(std::get<int>(arg1), std::get<int>(arg2), std::get<int>(arg3), 
+                             std::get<int>(arg4), std::get<int>(arg5), std::get<int>(arg6));
+            return BasicValue(static_cast<double>(result));
+        }
+        
+        throw std::runtime_error("Unsupported 6-parameter FFI function: " + function_name);
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("FFI call failed: " + std::string(e.what()));
+    }
+}
+
+// 7-parameter FFI function calls
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, 
+                           const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3,
+                           const BasicValue& arg4, const BasicValue& arg5, const BasicValue& arg6,
+                           const BasicValue& arg7) {
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        auto library = ffi_manager.get_library(library_name);
+        if (!library) {
+            library = ffi_manager.load_library(library_name);
+        }
+        
+        if (!library || !library->is_valid()) {
+            throw std::runtime_error("Failed to load library: " + library_name);
+        }
+        
+        void* func_ptr = library->get_function_address(function_name);
+        if (!func_ptr) {
+            throw std::runtime_error("Function not found: " + function_name);
+        }
+        
+        // Generic 7-parameter pattern (int, int, int, int, int, int, int) -> int
+        if (std::holds_alternative<int>(arg1) && std::holds_alternative<int>(arg2) && 
+            std::holds_alternative<int>(arg3) && std::holds_alternative<int>(arg4) && 
+            std::holds_alternative<int>(arg5) && std::holds_alternative<int>(arg6) && 
+            std::holds_alternative<int>(arg7)) {
+            typedef int (*Func7)(int, int, int, int, int, int, int);
+            auto func = reinterpret_cast<Func7>(func_ptr);
+            int result = func(std::get<int>(arg1), std::get<int>(arg2), std::get<int>(arg3), 
+                             std::get<int>(arg4), std::get<int>(arg5), std::get<int>(arg6),
+                             std::get<int>(arg7));
+            return BasicValue(static_cast<double>(result));
+        }
+        
+        throw std::runtime_error("Unsupported 7-parameter FFI function: " + function_name);
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("FFI call failed: " + std::string(e.what()));
+    }
+}
+
+// 8-parameter FFI function calls
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, 
+                           const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3,
+                           const BasicValue& arg4, const BasicValue& arg5, const BasicValue& arg6,
+                           const BasicValue& arg7, const BasicValue& arg8) {
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        auto library = ffi_manager.get_library(library_name);
+        if (!library) {
+            library = ffi_manager.load_library(library_name);
+        }
+        
+        if (!library || !library->is_valid()) {
+            throw std::runtime_error("Failed to load library: " + library_name);
+        }
+        
+        void* func_ptr = library->get_function_address(function_name);
+        if (!func_ptr) {
+            throw std::runtime_error("Function not found: " + function_name);
+        }
+        
+        // Generic 8-parameter pattern (int, int, int, int, int, int, int, int) -> int
+        if (std::holds_alternative<int>(arg1) && std::holds_alternative<int>(arg2) && 
+            std::holds_alternative<int>(arg3) && std::holds_alternative<int>(arg4) && 
+            std::holds_alternative<int>(arg5) && std::holds_alternative<int>(arg6) && 
+            std::holds_alternative<int>(arg7) && std::holds_alternative<int>(arg8)) {
+            typedef int (*Func8)(int, int, int, int, int, int, int, int);
+            auto func = reinterpret_cast<Func8>(func_ptr);
+            int result = func(std::get<int>(arg1), std::get<int>(arg2), std::get<int>(arg3), 
+                             std::get<int>(arg4), std::get<int>(arg5), std::get<int>(arg6),
+                             std::get<int>(arg7), std::get<int>(arg8));
+            return BasicValue(static_cast<double>(result));
+        }
+        
+        throw std::runtime_error("Unsupported 8-parameter FFI function: " + function_name);
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("FFI call failed: " + std::string(e.what()));
+    }
+}
+
 } // namespace basic_runtime

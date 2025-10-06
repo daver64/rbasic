@@ -1137,6 +1137,7 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
         // Determine return type
         bool returnsPointer = (ffiFunc.returnType == "pointer" || ffiFunc.returnType.find('*') != std::string::npos);
         bool returnsInteger = (ffiFunc.returnType == "int" || ffiFunc.returnType == "integer");
+        bool returnsString = (ffiFunc.returnType == "string" || ffiFunc.returnType == "char*");
         bool returnsVoid = (ffiFunc.returnType == "void");
         
         // Handle function calls based on parameter count and signature
@@ -1150,6 +1151,11 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
                 typedef void* (*Func0)();
                 auto func = reinterpret_cast<Func0>(funcPtr);
                 lastValue = func();
+            } else if (returnsString) {
+                typedef const char* (*Func0)();
+                auto func = reinterpret_cast<Func0>(funcPtr);
+                const char* result = func();
+                lastValue = std::string(result ? result : "");
             } else {
                 typedef void (*Func0)();
                 auto func = reinterpret_cast<Func0>(funcPtr);
@@ -1171,6 +1177,11 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
                     typedef void* (*Func1)(int);
                     auto func = reinterpret_cast<Func1>(funcPtr);
                     lastValue = func(param);
+                } else if (returnsString) {
+                    typedef const char* (*Func1)(int);
+                    auto func = reinterpret_cast<Func1>(funcPtr);
+                    const char* result = func(param);
+                    lastValue = std::string(result ? result : "");
                 } else {
                     typedef void (*Func1)(int);
                     auto func = reinterpret_cast<Func1>(funcPtr);
@@ -1187,6 +1198,11 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
                     typedef void* (*Func1)(const char*);
                     auto func = reinterpret_cast<Func1>(funcPtr);
                     lastValue = func(str.c_str());
+                } else if (returnsString) {
+                    typedef const char* (*Func1)(const char*);
+                    auto func = reinterpret_cast<Func1>(funcPtr);
+                    const char* result = func(str.c_str());
+                    lastValue = std::string(result ? result : "");
                 } else {
                     typedef void (*Func1)(const char*);
                     auto func = reinterpret_cast<Func1>(funcPtr);
@@ -1203,6 +1219,11 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
                     typedef void* (*Func1)(void*);
                     auto func = reinterpret_cast<Func1>(funcPtr);
                     lastValue = func(param);
+                } else if (returnsString) {
+                    typedef const char* (*Func1)(void*);
+                    auto func = reinterpret_cast<Func1>(funcPtr);
+                    const char* result = func(param);
+                    lastValue = std::string(result ? result : "");
                 } else {
                     typedef void (*Func1)(void*);
                     auto func = reinterpret_cast<Func1>(funcPtr);
@@ -1353,12 +1374,95 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
                     typedef int (*Func6)(const char*, int, int, int, int, int);
                     auto func = reinterpret_cast<Func6>(funcPtr);
                     lastValue = static_cast<double>(func(str1.c_str(), param2, param3, param4, param5, param6));
+                } else if (returnsString) {
+                    typedef const char* (*Func6)(const char*, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func6>(funcPtr);
+                    const char* result = func(str1.c_str(), param2, param3, param4, param5, param6);
+                    lastValue = std::string(result ? result : "");
                 } else {
                     typedef void (*Func6)(const char*, int, int, int, int, int);
                     auto func = reinterpret_cast<Func6>(funcPtr);
                     func(str1.c_str(), param2, param3, param4, param5, param6);
                     lastValue = 0.0;
                 }
+            }
+        } else if (ffiFunc.parameters.size() == 7) {
+            // Seven parameters - advanced library functions
+            ValueType arg1Val = evaluate(*node.arguments[0]);
+            ValueType arg2Val = evaluate(*node.arguments[1]);
+            ValueType arg3Val = evaluate(*node.arguments[2]);
+            ValueType arg4Val = evaluate(*node.arguments[3]);
+            ValueType arg5Val = evaluate(*node.arguments[4]);
+            ValueType arg6Val = evaluate(*node.arguments[5]);
+            ValueType arg7Val = evaluate(*node.arguments[6]);
+            
+            // Generic pattern: assume all int parameters for now
+            int param1 = getIntValue(arg1Val);
+            int param2 = getIntValue(arg2Val);
+            int param3 = getIntValue(arg3Val);
+            int param4 = getIntValue(arg4Val);
+            int param5 = getIntValue(arg5Val);
+            int param6 = getIntValue(arg6Val);
+            int param7 = getIntValue(arg7Val);
+            
+            if (returnsInteger) {
+                typedef int (*Func7)(int, int, int, int, int, int, int);
+                auto func = reinterpret_cast<Func7>(funcPtr);
+                lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7));
+            } else if (returnsPointer) {
+                typedef void* (*Func7)(int, int, int, int, int, int, int);
+                auto func = reinterpret_cast<Func7>(funcPtr);
+                lastValue = func(param1, param2, param3, param4, param5, param6, param7);
+            } else if (returnsString) {
+                typedef const char* (*Func7)(int, int, int, int, int, int, int);
+                auto func = reinterpret_cast<Func7>(funcPtr);
+                const char* result = func(param1, param2, param3, param4, param5, param6, param7);
+                lastValue = std::string(result ? result : "");
+            } else {
+                typedef void (*Func7)(int, int, int, int, int, int, int);
+                auto func = reinterpret_cast<Func7>(funcPtr);
+                func(param1, param2, param3, param4, param5, param6, param7);
+                lastValue = 0.0;
+            }
+        } else if (ffiFunc.parameters.size() == 8) {
+            // Eight parameters - maximum complexity library functions
+            ValueType arg1Val = evaluate(*node.arguments[0]);
+            ValueType arg2Val = evaluate(*node.arguments[1]);
+            ValueType arg3Val = evaluate(*node.arguments[2]);
+            ValueType arg4Val = evaluate(*node.arguments[3]);
+            ValueType arg5Val = evaluate(*node.arguments[4]);
+            ValueType arg6Val = evaluate(*node.arguments[5]);
+            ValueType arg7Val = evaluate(*node.arguments[6]);
+            ValueType arg8Val = evaluate(*node.arguments[7]);
+            
+            // Generic pattern: assume all int parameters for now
+            int param1 = getIntValue(arg1Val);
+            int param2 = getIntValue(arg2Val);
+            int param3 = getIntValue(arg3Val);
+            int param4 = getIntValue(arg4Val);
+            int param5 = getIntValue(arg5Val);
+            int param6 = getIntValue(arg6Val);
+            int param7 = getIntValue(arg7Val);
+            int param8 = getIntValue(arg8Val);
+            
+            if (returnsInteger) {
+                typedef int (*Func8)(int, int, int, int, int, int, int, int);
+                auto func = reinterpret_cast<Func8>(funcPtr);
+                lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7, param8));
+            } else if (returnsPointer) {
+                typedef void* (*Func8)(int, int, int, int, int, int, int, int);
+                auto func = reinterpret_cast<Func8>(funcPtr);
+                lastValue = func(param1, param2, param3, param4, param5, param6, param7, param8);
+            } else if (returnsString) {
+                typedef const char* (*Func8)(int, int, int, int, int, int, int, int);
+                auto func = reinterpret_cast<Func8>(funcPtr);
+                const char* result = func(param1, param2, param3, param4, param5, param6, param7, param8);
+                lastValue = std::string(result ? result : "");
+            } else {
+                typedef void (*Func8)(int, int, int, int, int, int, int, int);
+                auto func = reinterpret_cast<Func8>(funcPtr);
+                func(param1, param2, param3, param4, param5, param6, param7, param8);
+                lastValue = 0.0;
             }
         } else {
             // Unsupported parameter count
