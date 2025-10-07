@@ -1633,6 +1633,35 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
                     lastValue = 0.0;
                 }
             }
+            
+            // Pattern: (pointer, int, int, int, int) - SDL2 SetRenderDrawColor, RenderDrawLine
+            else if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) &&
+                     (param2Type == "int" || param2Type == "integer") &&
+                     (param3Type == "int" || param3Type == "integer") &&
+                     (param4Type == "int" || param4Type == "integer") &&
+                     (param5Type == "int" || param5Type == "integer")) {
+                
+                void* param1 = getPointerValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                int param3 = getIntValue(arg3Val);
+                int param4 = getIntValue(arg4Val);
+                int param5 = getIntValue(arg5Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func5)(void*, int, int, int, int);
+                    auto func = reinterpret_cast<Func5>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4, param5));
+                } else if (returnsPointer) {
+                    typedef void* (*Func5)(void*, int, int, int, int);
+                    auto func = reinterpret_cast<Func5>(funcPtr);
+                    lastValue = func(param1, param2, param3, param4, param5);
+                } else {
+                    typedef void (*Func5)(void*, int, int, int, int);
+                    auto func = reinterpret_cast<Func5>(funcPtr);
+                    func(param1, param2, param3, param4, param5);
+                    lastValue = 0.0;
+                }
+            }
         } else if (ffiFunc.parameters.size() == 6) {
             // Six parameters - SDL_CreateWindow pattern
             ValueType arg1Val = evaluate(*node.arguments[0]);
