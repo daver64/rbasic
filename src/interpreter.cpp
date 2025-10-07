@@ -1167,6 +1167,18 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
         return true;
     }
     
+    if (node.name == "deref_int_offset" && node.arguments.size() == 2) {
+        ValueType ptrVal = evaluate(*node.arguments[0]);
+        ValueType offsetVal = evaluate(*node.arguments[1]);
+        if (std::holds_alternative<void*>(ptrVal) && std::holds_alternative<double>(offsetVal)) {
+            BasicValue bv = std::get<void*>(ptrVal);
+            BasicValue offset = std::get<double>(offsetVal);
+            BasicValue result = basic_runtime::deref_int_offset(bv, offset);
+            lastValue = std::get<double>(result);
+        }
+        return true;
+    }
+    
     if (node.name == "get_key_code" && node.arguments.size() == 1) {
         ValueType eventVal = evaluate(*node.arguments[0]);
         if (std::holds_alternative<void*>(eventVal)) {
@@ -1564,6 +1576,27 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
                     typedef void (*Func2)(void*, const char*);
                     auto func = reinterpret_cast<Func2>(funcPtr);
                     func(param1, param2.c_str());
+                    lastValue = 0.0;
+                }
+            }
+            // Pattern: (pointer, pointer) - SDL_GetMouseState, output parameters
+            else if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) &&
+                     (param2Type == "pointer" || param2Type.find('*') != std::string::npos)) {
+                void* param1 = getPointerValue(arg1Val);
+                void* param2 = getPointerValue(arg2Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func2)(void*, void*);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2));
+                } else if (returnsPointer) {
+                    typedef void* (*Func2)(void*, void*);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    lastValue = func(param1, param2);
+                } else {
+                    typedef void (*Func2)(void*, void*);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    func(param1, param2);
                     lastValue = 0.0;
                 }
             }

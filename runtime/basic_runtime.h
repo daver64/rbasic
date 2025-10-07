@@ -379,6 +379,7 @@ void set_struct_field(BasicStruct& struct_, const std::string& fieldName, const 
 BasicValue alloc_int_buffer();              // Allocates int* for output parameters
 BasicValue alloc_pointer_buffer();          // Allocates void** for output parameters  
 BasicValue alloc_buffer(int size);          // Allocates byte buffer of specified size
+BasicValue deref_int_offset(const BasicValue& ptr, const BasicValue& offset);
 BasicValue deref_int(const BasicValue& ptr);     // Dereferences int* to get int value
 BasicValue deref_pointer(const BasicValue& ptr); // Dereferences void** to get void* value
 BasicValue deref_string(const BasicValue& ptr);  // Dereferences char* to get string value

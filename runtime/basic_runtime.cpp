@@ -2140,6 +2140,27 @@ BasicValue alloc_buffer(int size) {
     return BasicValue(static_cast<void*>(buffer));
 }
 
+BasicValue deref_int_offset(const BasicValue& ptr, const BasicValue& offset) {
+    // Dereference int* at a specific byte offset
+    if (!std::holds_alternative<void*>(ptr)) {
+        throw std::runtime_error("deref_int_offset requires a pointer");
+    }
+    if (!std::holds_alternative<double>(offset)) {
+        throw std::runtime_error("deref_int_offset requires numeric offset");
+    }
+    
+    void* raw_ptr = std::get<void*>(ptr);
+    if (!raw_ptr) {
+        throw std::runtime_error("Cannot dereference null pointer");
+    }
+    
+    int byte_offset = static_cast<int>(std::get<double>(offset));
+    uint8_t* base_ptr = static_cast<uint8_t*>(raw_ptr);
+    uint32_t* target_ptr = reinterpret_cast<uint32_t*>(base_ptr + byte_offset);
+    
+    return BasicValue(static_cast<double>(*target_ptr));
+}
+
 BasicValue deref_int(const BasicValue& ptr) {
     // Dereference int* to get int value
     if (!std::holds_alternative<void*>(ptr)) {
@@ -2395,8 +2416,24 @@ BasicValue get_constant(const std::string& name) {
     if (name == "SDL_KEYUP") return BasicValue(static_cast<double>(0x301));
     if (name == "SDL_MOUSEBUTTONDOWN") return BasicValue(static_cast<double>(0x401));
     if (name == "SDL_MOUSEBUTTONUP") return BasicValue(static_cast<double>(0x402));
+    if (name == "SDL_MOUSEMOTION") return BasicValue(static_cast<double>(0x400));
+    if (name == "SDL_MOUSEWHEEL") return BasicValue(static_cast<double>(0x403));
     
-    // SDL Key codes (common ones)
+    // SDL Mouse button constants
+    if (name == "SDL_BUTTON_LEFT") return BasicValue(static_cast<double>(1));
+    if (name == "SDL_BUTTON_MIDDLE") return BasicValue(static_cast<double>(2));
+    if (name == "SDL_BUTTON_RIGHT") return BasicValue(static_cast<double>(3));
+    if (name == "SDL_BUTTON_X1") return BasicValue(static_cast<double>(4));
+    if (name == "SDL_BUTTON_X2") return BasicValue(static_cast<double>(5));
+    
+    // SDL Mouse button masks (for SDL_GetMouseState) - SDL_BUTTON(X) = (1 << ((X)-1))
+    if (name == "SDL_BUTTON_LMASK") return BasicValue(static_cast<double>(1));     // 1 << (1-1) = 1 << 0 = 1
+    if (name == "SDL_BUTTON_MMASK") return BasicValue(static_cast<double>(2));     // 1 << (2-1) = 1 << 1 = 2  
+    if (name == "SDL_BUTTON_RMASK") return BasicValue(static_cast<double>(4));     // 1 << (3-1) = 1 << 2 = 4
+    if (name == "SDL_BUTTON_X1MASK") return BasicValue(static_cast<double>(8));    // 1 << (4-1) = 1 << 3 = 8
+    if (name == "SDL_BUTTON_X2MASK") return BasicValue(static_cast<double>(16));   // 1 << (5-1) = 1 << 4 = 16
+    
+    // SDL Key codes (these are the SDLK_* values - different from scan codes!)
     if (name == "SDLK_ESCAPE") return BasicValue(static_cast<double>(27));
     if (name == "SDLK_SPACE") return BasicValue(static_cast<double>(32));
     if (name == "SDLK_RETURN") return BasicValue(static_cast<double>(13));
@@ -2404,6 +2441,101 @@ BasicValue get_constant(const std::string& name) {
     if (name == "SDLK_DOWN") return BasicValue(static_cast<double>(1073741905));
     if (name == "SDLK_LEFT") return BasicValue(static_cast<double>(1073741904));
     if (name == "SDLK_RIGHT") return BasicValue(static_cast<double>(1073741903));
+    
+    // SDL Scan codes (these are what get_key_code() actually returns!)
+    if (name == "SDL_SCANCODE_A") return BasicValue(static_cast<double>(4));
+    if (name == "SDL_SCANCODE_B") return BasicValue(static_cast<double>(5));
+    if (name == "SDL_SCANCODE_C") return BasicValue(static_cast<double>(6));
+    if (name == "SDL_SCANCODE_D") return BasicValue(static_cast<double>(7));
+    if (name == "SDL_SCANCODE_E") return BasicValue(static_cast<double>(8));
+    if (name == "SDL_SCANCODE_F") return BasicValue(static_cast<double>(9));
+    if (name == "SDL_SCANCODE_G") return BasicValue(static_cast<double>(10));
+    if (name == "SDL_SCANCODE_H") return BasicValue(static_cast<double>(11));
+    if (name == "SDL_SCANCODE_I") return BasicValue(static_cast<double>(12));
+    if (name == "SDL_SCANCODE_J") return BasicValue(static_cast<double>(13));
+    if (name == "SDL_SCANCODE_K") return BasicValue(static_cast<double>(14));
+    if (name == "SDL_SCANCODE_L") return BasicValue(static_cast<double>(15));
+    if (name == "SDL_SCANCODE_M") return BasicValue(static_cast<double>(16));
+    if (name == "SDL_SCANCODE_N") return BasicValue(static_cast<double>(17));
+    if (name == "SDL_SCANCODE_O") return BasicValue(static_cast<double>(18));
+    if (name == "SDL_SCANCODE_P") return BasicValue(static_cast<double>(19));
+    if (name == "SDL_SCANCODE_Q") return BasicValue(static_cast<double>(20));
+    if (name == "SDL_SCANCODE_R") return BasicValue(static_cast<double>(21));
+    if (name == "SDL_SCANCODE_S") return BasicValue(static_cast<double>(22));
+    if (name == "SDL_SCANCODE_T") return BasicValue(static_cast<double>(23));
+    if (name == "SDL_SCANCODE_U") return BasicValue(static_cast<double>(24));
+    if (name == "SDL_SCANCODE_V") return BasicValue(static_cast<double>(25));
+    if (name == "SDL_SCANCODE_W") return BasicValue(static_cast<double>(26));
+    if (name == "SDL_SCANCODE_X") return BasicValue(static_cast<double>(27));
+    if (name == "SDL_SCANCODE_Y") return BasicValue(static_cast<double>(28));
+    if (name == "SDL_SCANCODE_Z") return BasicValue(static_cast<double>(29));
+    
+    if (name == "SDL_SCANCODE_1") return BasicValue(static_cast<double>(30));
+    if (name == "SDL_SCANCODE_2") return BasicValue(static_cast<double>(31));
+    if (name == "SDL_SCANCODE_3") return BasicValue(static_cast<double>(32));
+    if (name == "SDL_SCANCODE_4") return BasicValue(static_cast<double>(33));
+    if (name == "SDL_SCANCODE_5") return BasicValue(static_cast<double>(34));
+    if (name == "SDL_SCANCODE_6") return BasicValue(static_cast<double>(35));
+    if (name == "SDL_SCANCODE_7") return BasicValue(static_cast<double>(36));
+    if (name == "SDL_SCANCODE_8") return BasicValue(static_cast<double>(37));
+    if (name == "SDL_SCANCODE_9") return BasicValue(static_cast<double>(38));
+    if (name == "SDL_SCANCODE_0") return BasicValue(static_cast<double>(39));
+    
+    if (name == "SDL_SCANCODE_RETURN") return BasicValue(static_cast<double>(40));
+    if (name == "SDL_SCANCODE_ESCAPE") return BasicValue(static_cast<double>(41));
+    if (name == "SDL_SCANCODE_BACKSPACE") return BasicValue(static_cast<double>(42));
+    if (name == "SDL_SCANCODE_TAB") return BasicValue(static_cast<double>(43));
+    if (name == "SDL_SCANCODE_SPACE") return BasicValue(static_cast<double>(44));
+    
+    if (name == "SDL_SCANCODE_MINUS") return BasicValue(static_cast<double>(45));
+    if (name == "SDL_SCANCODE_EQUALS") return BasicValue(static_cast<double>(46));
+    if (name == "SDL_SCANCODE_LEFTBRACKET") return BasicValue(static_cast<double>(47));
+    if (name == "SDL_SCANCODE_RIGHTBRACKET") return BasicValue(static_cast<double>(48));
+    if (name == "SDL_SCANCODE_BACKSLASH") return BasicValue(static_cast<double>(49));
+    if (name == "SDL_SCANCODE_SEMICOLON") return BasicValue(static_cast<double>(51));
+    if (name == "SDL_SCANCODE_APOSTROPHE") return BasicValue(static_cast<double>(52));
+    if (name == "SDL_SCANCODE_GRAVE") return BasicValue(static_cast<double>(53));
+    if (name == "SDL_SCANCODE_COMMA") return BasicValue(static_cast<double>(54));
+    if (name == "SDL_SCANCODE_PERIOD") return BasicValue(static_cast<double>(55));
+    if (name == "SDL_SCANCODE_SLASH") return BasicValue(static_cast<double>(56));
+    
+    if (name == "SDL_SCANCODE_CAPSLOCK") return BasicValue(static_cast<double>(57));
+    
+    if (name == "SDL_SCANCODE_F1") return BasicValue(static_cast<double>(58));
+    if (name == "SDL_SCANCODE_F2") return BasicValue(static_cast<double>(59));
+    if (name == "SDL_SCANCODE_F3") return BasicValue(static_cast<double>(60));
+    if (name == "SDL_SCANCODE_F4") return BasicValue(static_cast<double>(61));
+    if (name == "SDL_SCANCODE_F5") return BasicValue(static_cast<double>(62));
+    if (name == "SDL_SCANCODE_F6") return BasicValue(static_cast<double>(63));
+    if (name == "SDL_SCANCODE_F7") return BasicValue(static_cast<double>(64));
+    if (name == "SDL_SCANCODE_F8") return BasicValue(static_cast<double>(65));
+    if (name == "SDL_SCANCODE_F9") return BasicValue(static_cast<double>(66));
+    if (name == "SDL_SCANCODE_F10") return BasicValue(static_cast<double>(67));
+    if (name == "SDL_SCANCODE_F11") return BasicValue(static_cast<double>(68));
+    if (name == "SDL_SCANCODE_F12") return BasicValue(static_cast<double>(69));
+    
+    if (name == "SDL_SCANCODE_PRINTSCREEN") return BasicValue(static_cast<double>(70));
+    if (name == "SDL_SCANCODE_SCROLLLOCK") return BasicValue(static_cast<double>(71));
+    if (name == "SDL_SCANCODE_PAUSE") return BasicValue(static_cast<double>(72));
+    if (name == "SDL_SCANCODE_INSERT") return BasicValue(static_cast<double>(73));
+    if (name == "SDL_SCANCODE_HOME") return BasicValue(static_cast<double>(74));
+    if (name == "SDL_SCANCODE_PAGEUP") return BasicValue(static_cast<double>(75));
+    if (name == "SDL_SCANCODE_DELETE") return BasicValue(static_cast<double>(76));
+    if (name == "SDL_SCANCODE_END") return BasicValue(static_cast<double>(77));
+    if (name == "SDL_SCANCODE_PAGEDOWN") return BasicValue(static_cast<double>(78));
+    if (name == "SDL_SCANCODE_RIGHT") return BasicValue(static_cast<double>(79));
+    if (name == "SDL_SCANCODE_LEFT") return BasicValue(static_cast<double>(80));
+    if (name == "SDL_SCANCODE_DOWN") return BasicValue(static_cast<double>(81));
+    if (name == "SDL_SCANCODE_UP") return BasicValue(static_cast<double>(82));
+    
+    if (name == "SDL_SCANCODE_LCTRL") return BasicValue(static_cast<double>(224));
+    if (name == "SDL_SCANCODE_LSHIFT") return BasicValue(static_cast<double>(225));
+    if (name == "SDL_SCANCODE_LALT") return BasicValue(static_cast<double>(226));
+    if (name == "SDL_SCANCODE_LGUI") return BasicValue(static_cast<double>(227));
+    if (name == "SDL_SCANCODE_RCTRL") return BasicValue(static_cast<double>(228));
+    if (name == "SDL_SCANCODE_RSHIFT") return BasicValue(static_cast<double>(229));
+    if (name == "SDL_SCANCODE_RALT") return BasicValue(static_cast<double>(230));
+    if (name == "SDL_SCANCODE_RGUI") return BasicValue(static_cast<double>(231));
     
     // SQLite constants
     if (name == "SQLITE_OK") return BasicValue(static_cast<double>(0));
