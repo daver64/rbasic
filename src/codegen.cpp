@@ -110,6 +110,13 @@ void CodeGenerator::visit(LiteralExpr& node) {
 }
 
 void CodeGenerator::visit(VariableExpr& node) {
+    // Check if this is a built-in constant first
+    if (node.name.find("SDL_") == 0 || node.name.find("SQLITE_") == 0 || 
+        node.name.find("MB_") == 0 || node.name.find("IDYES") == 0 || node.name.find("IDNO") == 0) {
+        write("basic_runtime::get_constant(\"" + node.name + "\")");
+        return;
+    }
+    
     if (!node.indices.empty()) {
         // Array access: array[index1, index2, ...]
         write("get_array_element(variables[\"" + node.name + "\"], std::vector<BasicValue>{");
@@ -541,6 +548,22 @@ void CodeGenerator::visit(CallExpr& node) {
 
     if (node.name == "create_sdl_event" && node.arguments.size() == 0) {
         write("basic_runtime::create_sdl_event()");
+        return;
+    }
+
+    if (node.name == "get_key_code" && node.arguments.size() == 1) {
+        write("basic_runtime::get_key_code(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+
+    if (node.name == "deref_int_offset" && node.arguments.size() == 2) {
+        write("basic_runtime::deref_int_offset(");
+        node.arguments[0]->accept(*this);
+        write(", ");
+        node.arguments[1]->accept(*this);
+        write(")");
         return;
     }
 
