@@ -1335,7 +1335,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         }
         
         // Call no-parameter function returning int
-        typedef int (*FuncType0)();
+        typedef int (__cdecl *FuncType0)();
         auto func = reinterpret_cast<FuncType0>(funcPtr);
         return BasicValue(static_cast<double>(func()));
         
@@ -1387,9 +1387,18 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         
         // Try different 1-parameter patterns in order of likelihood
         
+        // Pattern: (string) -> pointer (IMG_Load and similar)
+        if (std::holds_alternative<std::string>(arg1) && 
+            (function_name == "IMG_Load" || function_name.find("Load") != std::string::npos)) {
+            typedef void* (__cdecl *FuncType)(const char*);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            void* result = func(getAsString(arg1));
+            return BasicValue(result);
+        }
+        
         // Pattern: (pointer) -> int (common for SQLite close functions)
         if (std::holds_alternative<void*>(arg1)) {
-            typedef int (*FuncType)(void*);
+            typedef int (__cdecl *FuncType)(void*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1));
             return BasicValue(static_cast<double>(result));
@@ -1397,7 +1406,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         
         // Pattern: (int) -> int (most common case)
         if (std::holds_alternative<double>(arg1) || std::holds_alternative<int>(arg1)) {
-            typedef int (*FuncType)(int);
+            typedef int (__cdecl *FuncType)(int);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsInt(arg1));
             return BasicValue(static_cast<double>(result));
@@ -1405,14 +1414,14 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         
         // Pattern: (string) -> int
         if (std::holds_alternative<std::string>(arg1)) {
-            typedef int (*FuncType)(const char*);
+            typedef int (__cdecl *FuncType)(const char*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsString(arg1));
             return BasicValue(static_cast<double>(result));
         }
         
         // Fallback: assume (int) -> int
-        typedef int (*FuncType)(int);
+        typedef int (__cdecl *FuncType)(int);
         auto func = reinterpret_cast<FuncType>(funcPtr);
         int result = func(getAsInt(arg1));
         return BasicValue(static_cast<double>(result));
@@ -1469,9 +1478,18 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         
         // Try different 2-parameter patterns based on function name and parameter types
         
+        // Pattern: (pointer, pointer) -> pointer (SDL_CreateTextureFromSurface)
+        if (function_name == "SDL_CreateTextureFromSurface" && 
+            std::holds_alternative<void*>(arg1) && std::holds_alternative<void*>(arg2)) {
+            typedef void* (__cdecl *FuncType)(void*, void*);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            void* result = func(getAsPointer(arg1), getAsPointer(arg2));
+            return BasicValue(result);
+        }
+        
         // Pattern: (pointer, pointer) -> int (SDL2 RenderDrawRect, RenderFillRect)
         if (std::holds_alternative<void*>(arg1) && std::holds_alternative<void*>(arg2)) {
-            typedef int (*FuncType)(void*, void*);
+            typedef int (__cdecl *FuncType)(void*, void*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1), getAsPointer(arg2));
             return BasicValue(static_cast<double>(result));
@@ -1479,14 +1497,14 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         
         // Pattern 1: (string, pointer) -> int (SQLite open)
         if (!s1.empty() && p2 != nullptr) {
-            typedef int (*Func1)(const char*, void*);
+            typedef int (__cdecl *Func1)(const char*, void*);
             auto func = reinterpret_cast<Func1>(funcPtr);
             return BasicValue(static_cast<double>(func(s1.c_str(), p2)));
         }
         
         // For pointer return functions (sqlite3_column_text, sqlite3_column_name)
         if (p1 != nullptr && (function_name == "sqlite3_column_text" || function_name == "sqlite3_column_name")) {
-            typedef void* (*FuncPtr)(void*, int);
+            typedef void* (__cdecl *FuncPtr)(void*, int);
             auto func = reinterpret_cast<FuncPtr>(funcPtr);
             void* result = func(p1, i2);
             return BasicValue(result);
@@ -1494,7 +1512,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         
         // For double return functions (sqlite3_column_double)
         if (p1 != nullptr && function_name == "sqlite3_column_double") {
-            typedef double (*FuncDouble)(void*, int);
+            typedef double (__cdecl *FuncDouble)(void*, int);
             auto func = reinterpret_cast<FuncDouble>(funcPtr);
             double result = func(p1, i2);
             return BasicValue(result);
@@ -1502,21 +1520,21 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         
         // Pattern 2: (pointer, int) -> int (most common: column_int, changes, etc.)
         if (p1 != nullptr) {
-            typedef int (*Func2)(void*, int);
+            typedef int (__cdecl *Func2)(void*, int);
             auto func = reinterpret_cast<Func2>(funcPtr);
             return BasicValue(static_cast<double>(func(p1, i2)));
         }
         
         // Pattern: (pointer, string) -> void (SDL_SetWindowTitle)
         if (std::holds_alternative<void*>(arg1) && std::holds_alternative<std::string>(arg2)) {
-            typedef void (*FuncType)(void*, const char*);
+            typedef void (__cdecl *FuncType)(void*, const char*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             func(getAsPointer(arg1), getAsString(arg2).c_str());
             return BasicValue(0.0);
         }
         
-        // Pattern 3: (int, int) -> int (all integers)
-        typedef int (*FuncInt2)(int, int);
+        // Pattern 3: (int, int) -> int (all integers) - Windows API
+        typedef int (__stdcall *FuncInt2)(int, int);
         auto func_int = reinterpret_cast<FuncInt2>(funcPtr);
         return BasicValue(static_cast<double>(func_int(i1, i2)));
         
@@ -1582,7 +1600,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
             (std::holds_alternative<double>(arg3) || std::holds_alternative<int>(arg3))) {
             
-            typedef void* (*FuncType)(void*, int, int);
+            typedef void* (__cdecl *FuncType)(void*, int, int);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             void* result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3));
             if (result != nullptr) {
@@ -1595,7 +1613,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
             (std::holds_alternative<double>(arg3) || std::holds_alternative<int>(arg3))) {
             
-            typedef int (*FuncType)(void*, int, int);
+            typedef int (__cdecl *FuncType)(void*, int, int);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3));
             return BasicValue(static_cast<double>(result));
@@ -1606,7 +1624,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
             std::holds_alternative<std::string>(arg3)) {
             
-            typedef int (*FuncType)(void*, int, const char*);
+            typedef int (__cdecl *FuncType)(void*, int, const char*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1), getAsInt(arg2), getAsString(arg3));
             return BasicValue(static_cast<double>(result));
@@ -1617,7 +1635,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
             std::holds_alternative<double>(arg3)) {
             
-            typedef int (*FuncType)(void*, int, double);
+            typedef int (__cdecl *FuncType)(void*, int, double);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1), getAsInt(arg2), getAsDouble(arg3));
             return BasicValue(static_cast<double>(result));
@@ -1628,14 +1646,14 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
             (std::holds_alternative<double>(arg3) || std::holds_alternative<int>(arg3))) {
             
-            typedef void* (*FuncType)(void*, int, int);
+            typedef void* (__cdecl *FuncType)(void*, int, int);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             void* result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3));
             return BasicValue(result);
         }
         
         // Fallback: try as (pointer, int, int) -> int
-        typedef int (*FuncType)(void*, int, int);
+        typedef int (__cdecl *FuncType)(void*, int, int);
         auto func = reinterpret_cast<FuncType>(funcPtr);
         int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3));
         return BasicValue(static_cast<double>(result));
@@ -1698,12 +1716,13 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         // Try different 4-parameter patterns in order of likelihood
         
         // Pattern: (int, string, string, int) -> int (MessageBoxA style)
+        // Pattern: (int, string, string, int) -> int (Windows API style)
         if ((std::holds_alternative<double>(arg1) || std::holds_alternative<int>(arg1)) &&
             std::holds_alternative<std::string>(arg2) &&
             std::holds_alternative<std::string>(arg3) &&
             (std::holds_alternative<double>(arg4) || std::holds_alternative<int>(arg4))) {
             
-            typedef int (*FuncType)(int, const char*, const char*, int);
+            typedef int (__stdcall *FuncType)(int, const char*, const char*, int);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsInt(arg1), getAsString(arg2), getAsString(arg3), getAsInt(arg4));
             return BasicValue(static_cast<double>(result));
@@ -1715,7 +1734,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             (std::holds_alternative<double>(arg3) || std::holds_alternative<int>(arg3)) &&
             (std::holds_alternative<double>(arg4) || std::holds_alternative<int>(arg4))) {
             
-            typedef int (*FuncType)(void*, int, int, int);
+            typedef int (__cdecl *FuncType)(void*, int, int, int);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), getAsInt(arg4));
             return BasicValue(static_cast<double>(result));
@@ -1727,31 +1746,29 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             std::holds_alternative<std::string>(arg3) &&
             (std::holds_alternative<double>(arg4) || std::holds_alternative<int>(arg4))) {
             
-            typedef int (*FuncType)(void*, int, const char*, int);
+            typedef int (__cdecl *FuncType)(void*, int, const char*, int);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1), getAsInt(arg2), getAsString(arg3), getAsInt(arg4));
             return BasicValue(static_cast<double>(result));
         }
         
-        // Pattern: (pointer, int, int, pointer) -> int
+        // Pattern: (pointer, int, int, pointer) -> int 
         if (std::holds_alternative<void*>(arg1) &&
             (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
             (std::holds_alternative<double>(arg3) || std::holds_alternative<int>(arg3)) &&
             std::holds_alternative<void*>(arg4)) {
             
-            typedef int (*FuncType)(void*, int, int, void*);
+            typedef int (__cdecl *FuncType)(void*, int, int, void*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), getAsPointer(arg4));
             return BasicValue(static_cast<double>(result));
-        }
-        
-        // Pattern: (pointer, pointer, pointer, pointer) -> int - SDL_RenderCopy
+        }        // Pattern: (pointer, pointer, pointer, pointer) -> int - SDL_RenderCopy
         if (std::holds_alternative<void*>(arg1) &&
             std::holds_alternative<void*>(arg2) &&
             std::holds_alternative<void*>(arg3) &&
             std::holds_alternative<void*>(arg4)) {
             
-            typedef int (*FuncType)(void*, void*, void*, void*);
+            typedef int (__cdecl *FuncType)(void*, void*, void*, void*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1), getAsPointer(arg2), getAsPointer(arg3), getAsPointer(arg4));
             return BasicValue(static_cast<double>(result));
@@ -1764,7 +1781,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             (std::holds_alternative<double>(arg4) || std::holds_alternative<int>(arg4))) {
             
             // Try as pointer return first
-            typedef void* (*FuncTypePtrRet)(void*, int, int, int);
+            typedef void* (__cdecl *FuncTypePtrRet)(void*, int, int, int);
             auto funcPtrRet = reinterpret_cast<FuncTypePtrRet>(funcPtr);
             void* result = funcPtrRet(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), getAsInt(arg4));
             if (result != nullptr) {
@@ -1772,7 +1789,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             }
             
             // Fallback to int return
-            typedef int (*FuncTypeIntRet)(void*, int, int, int);
+            typedef int (__cdecl *FuncTypeIntRet)(void*, int, int, int);
             auto funcIntRet = reinterpret_cast<FuncTypeIntRet>(funcPtr);
             int intResult = funcIntRet(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), getAsInt(arg4));
             return BasicValue(static_cast<double>(intResult));
@@ -1784,14 +1801,14 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             std::holds_alternative<void*>(arg3) &&
             (std::holds_alternative<double>(arg4) || std::holds_alternative<int>(arg4))) {
             
-            typedef int (*FuncType)(void*, void*, void*, int);
+            typedef int (__cdecl *FuncType)(void*, void*, void*, int);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1), getAsPointer(arg2), getAsPointer(arg3), getAsInt(arg4));
             return BasicValue(static_cast<double>(result));
         }
         
         // Fallback: assume (int, string, string, int) -> int
-        typedef int (*FuncType)(int, const char*, const char*, int);
+        typedef int (__stdcall *FuncType)(int, const char*, const char*, int);
         auto func = reinterpret_cast<FuncType>(funcPtr);
         int result = func(getAsInt(arg1), getAsString(arg2), getAsString(arg3), getAsInt(arg4));
         return BasicValue(static_cast<double>(result));
@@ -1857,7 +1874,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             (std::holds_alternative<double>(arg4) || std::holds_alternative<int>(arg4)) &&
             (std::holds_alternative<double>(arg5) || std::holds_alternative<int>(arg5))) {
             
-            typedef int (*FuncType)(void*, int, int, int, int);
+            typedef int (__cdecl *FuncType)(void*, int, int, int, int);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), getAsInt(arg4), getAsInt(arg5));
             return BasicValue(static_cast<double>(result));
@@ -1870,7 +1887,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             std::holds_alternative<void*>(arg4) &&
             std::holds_alternative<void*>(arg5)) {
             
-            typedef int (*FuncType)(void*, const char*, int, void*, void*);
+            typedef int (__cdecl *FuncType)(void*, const char*, int, void*, void*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1), getAsString(arg2), getAsInt(arg3), getAsPointer(arg4), getAsPointer(arg5));
             return BasicValue(static_cast<double>(result));
@@ -1883,14 +1900,14 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             (std::holds_alternative<double>(arg4) || std::holds_alternative<int>(arg4)) &&
             std::holds_alternative<void*>(arg5)) {
             
-            typedef int (*FuncType)(void*, int, const char*, int, void*);
+            typedef int (__cdecl *FuncType)(void*, int, const char*, int, void*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1), getAsInt(arg2), getAsString(arg3), getAsInt(arg4), getAsPointer(arg5));
             return BasicValue(static_cast<double>(result));
         }
         
-        // Fallback: (int, int, int, int, int) -> int (all integers)
-        typedef int (*FuncInt5)(int, int, int, int, int);
+        // Fallback: (int, int, int, int, int) -> int (all integers) - Windows API
+        typedef int (__stdcall *FuncInt5)(int, int, int, int, int);
         auto func_int = reinterpret_cast<FuncInt5>(funcPtr);
         return BasicValue(static_cast<double>(func_int(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), getAsInt(arg4), getAsInt(arg5))));
         
@@ -1927,13 +1944,6 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             return nullptr;
         };
         
-        auto getAsString = [](const BasicValue& val) -> const char* {
-            if (std::holds_alternative<std::string>(val)) {
-                return std::get<std::string>(val).c_str();
-            }
-            return nullptr;
-        };
-        
         auto getAsInt = [](const BasicValue& val) -> int {
             if (std::holds_alternative<double>(val)) {
                 return static_cast<int>(std::get<double>(val));
@@ -1952,18 +1962,28 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             return 0.0;
         };
         
+        // Store strings to ensure pointer stability
+        std::string str1, str2, str3, str4, str5, str6;
+        auto getAsString = [&](const BasicValue& val, std::string& storage) -> const char* {
+            if (std::holds_alternative<std::string>(val)) {
+                storage = std::get<std::string>(val);
+                return storage.c_str();
+            }
+            return nullptr;
+        };
+        
         // Pattern: (string, int, int, int, int, int) -> pointer (SDL_CreateWindow)
         if (std::holds_alternative<std::string>(arg1)) {
-            typedef void* (*FuncType)(const char*, int, int, int, int, int);
+            typedef void* (__cdecl *FuncType)(const char*, int, int, int, int, int);
             auto func = reinterpret_cast<FuncType>(func_ptr);
-            void* result = func(getAsString(arg1), getAsInt(arg2), getAsInt(arg3), 
+            void* result = func(getAsString(arg1, str1), getAsInt(arg2), getAsInt(arg3), 
                                getAsInt(arg4), getAsInt(arg5), getAsInt(arg6));
             return BasicValue(result);
         }
         
         // Pattern: (pointer, int, int, int, int, int) -> int
         if (std::holds_alternative<void*>(arg1)) {
-            typedef int (*FuncType)(void*, int, int, int, int, int);
+            typedef int (__cdecl *FuncType)(void*, int, int, int, int, int);
             auto func = reinterpret_cast<FuncType>(func_ptr);
             int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), 
                              getAsInt(arg4), getAsInt(arg5), getAsInt(arg6));
@@ -1971,7 +1991,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         }
         
         // Pattern: (int, int, int, int, int, int) -> int
-        typedef int (*FuncType)(int, int, int, int, int, int);
+        typedef int (__stdcall *FuncType)(int, int, int, int, int, int);
         auto func = reinterpret_cast<FuncType>(func_ptr);
         int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
                          getAsInt(arg4), getAsInt(arg5), getAsInt(arg6));
@@ -2028,7 +2048,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         };
         
         // Pattern: (int, int, int, int, int, int, int) -> int
-        typedef int (*FuncType)(int, int, int, int, int, int, int);
+        typedef int (__stdcall *FuncType)(int, int, int, int, int, int, int);
         auto func = reinterpret_cast<FuncType>(func_ptr);
         int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
                          getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), getAsInt(arg7));
@@ -2095,15 +2115,15 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         
         // Check for SDL_RenderCopyEx pattern: (pointer, pointer, pointer, pointer, double, pointer, double, int) -> int
         if (std::holds_alternative<void*>(arg1) && std::holds_alternative<double>(arg5) && std::holds_alternative<double>(arg7)) {
-            typedef int (*FuncSDLRenderCopyEx)(void*, void*, void*, void*, double, void*, double, int);
+            typedef int (__cdecl *FuncSDLRenderCopyEx)(void*, void*, void*, void*, double, void*, double, int);
             auto func = reinterpret_cast<FuncSDLRenderCopyEx>(func_ptr);
             int result = func(getAsPointer(arg1), getAsPointer(arg2), getAsPointer(arg3), 
                              getAsPointer(arg4), getAsDouble(arg5), getAsPointer(arg6), 
                              getAsDouble(arg7), getAsInt(arg8));
             return BasicValue(static_cast<double>(result));
         } else {
-            // Generic pattern: (int, int, int, int, int, int, int, int) -> int
-            typedef int (*FuncType)(int, int, int, int, int, int, int, int);
+            // Generic pattern: (int, int, int, int, int, int, int, int) -> int - Windows API
+            typedef int (__stdcall *FuncType)(int, int, int, int, int, int, int, int);
             auto func = reinterpret_cast<FuncType>(func_ptr);
             int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
                              getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
@@ -2432,6 +2452,15 @@ BasicValue get_constant(const std::string& name) {
     if (name == "SDL_BUTTON_RMASK") return BasicValue(static_cast<double>(4));     // 1 << (3-1) = 1 << 2 = 4
     if (name == "SDL_BUTTON_X1MASK") return BasicValue(static_cast<double>(8));    // 1 << (4-1) = 1 << 3 = 8
     if (name == "SDL_BUTTON_X2MASK") return BasicValue(static_cast<double>(16));   // 1 << (5-1) = 1 << 4 = 16
+    
+    // SDL Texture constants
+    if (name == "SDL_PIXELFORMAT_ARGB8888") return BasicValue(static_cast<double>(372645892));  // 0x16362004
+    if (name == "SDL_PIXELFORMAT_RGB888") return BasicValue(static_cast<double>(370546692));    // 0x16161804
+    if (name == "SDL_PIXELFORMAT_RGBA8888") return BasicValue(static_cast<double>(373694468));  // 0x16462004
+    if (name == "SDL_PIXELFORMAT_ABGR8888") return BasicValue(static_cast<double>(376840196));  // 0x16762004
+    if (name == "SDL_TEXTUREACCESS_STATIC") return BasicValue(static_cast<double>(0));          // Static texture
+    if (name == "SDL_TEXTUREACCESS_STREAMING") return BasicValue(static_cast<double>(1));       // Streaming texture
+    if (name == "SDL_TEXTUREACCESS_TARGET") return BasicValue(static_cast<double>(2));          // Render target texture
     
     // SDL Key codes (these are the SDLK_* values - different from scan codes!)
     if (name == "SDLK_ESCAPE") return BasicValue(static_cast<double>(27));

@@ -123,12 +123,14 @@ rbasic is a modern BASIC language transpiler that combines BASIC simplicity with
 ```bnf
 <ffi_declaration> ::= "ffi" <string> <identifier> "(" <ffi_parameter_list>? ")" 
                      ( "as" <ffi_type> )? ";"
+                    | "ffi" <ffi_type> <identifier> "(" <ffi_parameter_list>? ")" 
+                     "from" <string> ";"
 
 <ffi_parameter_list> ::= <ffi_parameter> ( "," <ffi_parameter> )*
 
 <ffi_parameter> ::= <identifier> "as" <ffi_type>
 
-<ffi_type> ::= "integer" | "string" | "pointer" 
+<ffi_type> ::= "integer" | "string" | "pointer" | "double"
              | <identifier> "*"  // C-style pointer syntax
 ```
 
@@ -273,11 +275,47 @@ The following built-in functions are available in rbasic:
 - `str(x)` - Convert to string
 - `val(str)` - Convert string to number
 
-### Future: External Functions via FFI
-External functionality such as graphics, databases, and system integration will be available through a Foreign Function Interface system.
-
 ### System Functions
-- `sleep_ms(ms)` - Sleep milliseconds (Note: Core sleep function, not graphics-dependent)
+- `sleep_ms(ms)` - Sleep milliseconds
+
+### FFI Helper Functions
+- `alloc_buffer(size)` - Allocate memory buffer
+- `alloc_int_buffer()` - Allocate integer buffer
+- `alloc_pointer_buffer()` - Allocate pointer buffer
+- `deref_int(ptr)` - Dereference integer pointer
+- `deref_pointer(ptr)` - Dereference pointer
+- `deref_string(ptr)` - Dereference string pointer
+- `deref_int_offset(ptr, offset)` - Dereference with offset
+- `is_null(ptr)`, `not_null(ptr)` - Null pointer checks
+
+### SDL2 Structure Helpers
+- `create_sdl_rect()` - Create SDL_Rect structure
+- `create_sdl_event()` - Create SDL_Event structure
+- `get_key_code(event)` - Extract keyboard scan code from event
+
+### External Functions via FFI
+
+Production-ready FFI system provides comprehensive C library integration:
+
+```basic
+// Enhanced FFI with improved pointer support
+ffi integer SDL_Init(flags as integer) from "SDL2.dll";
+ffi pointer SDL_CreateWindow(title as string, x as integer, y as integer, 
+                           w as integer, h as integer, flags as integer) from "SDL2.dll";
+ffi pointer SDL_CreateRenderer(window as pointer, index as integer, 
+                              flags as integer) from "SDL2.dll";
+
+// Image loading with enhanced pattern matching
+ffi pointer IMG_Load(filename as string) from "SDL2_image.dll";
+ffi pointer SDL_CreateTextureFromSurface(renderer as pointer, 
+                                        surface as pointer) from "SDL2.dll";
+
+// Complete SDL2 texture pipeline working in both modes
+var window = SDL_CreateWindow("Texture Demo", 100, 100, 800, 600, SDL_WINDOW_SHOWN);
+var renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+var surface = IMG_Load("texture.png");
+var texture = SDL_CreateTextureFromSurface(renderer, surface);
+```
 
 ## Example Programs
 
@@ -299,6 +337,29 @@ function factorial(n as integer) as integer {
 
 var result = factorial(5);
 print("5! =", result);
+```
+
+### FFI Integration Example
+```basic
+// Complete SDL2 graphics with texture loading
+ffi integer SDL_Init(flags as integer) from "SDL2.dll";
+ffi pointer SDL_CreateWindow(title as string, x as integer, y as integer, 
+                           w as integer, h as integer, flags as integer) from "SDL2.dll";
+ffi pointer SDL_CreateRenderer(window as pointer, index as integer, 
+                              flags as integer) from "SDL2.dll";
+ffi pointer IMG_Load(filename as string) from "SDL2_image.dll";
+ffi pointer SDL_CreateTextureFromSurface(renderer as pointer, 
+                                        surface as pointer) from "SDL2.dll";
+
+// Works identically in interpreter and compiled modes
+SDL_Init(SDL_INIT_VIDEO);
+var window = SDL_CreateWindow("Texture Demo", 100, 100, 800, 600, SDL_WINDOW_SHOWN);
+var renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+var surface = IMG_Load("texture.png");
+if (not_null(surface)) {
+    var texture = SDL_CreateTextureFromSurface(renderer, surface);
+    print("Texture created successfully!");
+}
 ```
 
 ### Structure Usage
@@ -331,5 +392,8 @@ print("Square of 5:", numbers[5]);
 6. **Type Safety**: Basic type checking with optional type annotations
 7. **Assignment Expressions**: Support for `var y = (x = x + 1)`
 8. **Modern Comments**: C++ style `//` and `/* */` comments supported
+9. **FFI Pattern Matching**: Enhanced support for pointer-returning functions like IMG_Load
+10. **Cross-Mode Compatibility**: Identical behavior in interpreter and compiled execution modes
+11. **Production-Ready Graphics**: Complete SDL2 texture pipeline with IMG_Load and SDL_CreateTextureFromSurface support
 
 This grammar defines the complete rbasic language as implemented in the current interpreter and compiler.

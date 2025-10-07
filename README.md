@@ -29,22 +29,21 @@
 
 ## FFI and Library Integration
 
-rbasic includes a production-ready Foreign Function Interface with comprehensive wrapper libraries:
+rbasic includes a production-ready Foreign Function Interface with comprehensive wrapper libraries and support for complex pointer operations:
 
-## Key Features
+### SDL2 Graphics Programming - Production Ready
+- **Complete SDL2 Integration**: Window management, hardware-accelerated rendering, event handling
+- **Texture Operations**: Full support for `SDL_CreateTextureFromSurface` and image loading via `IMG_Load`
+- **Event Processing**: Complete keyboard and mouse event handling with scan code support
+- **Cross-Mode Compatibility**: Identical behavior in interpreter and compiled modes
+- **Memory-Safe Operations**: Automatic pointer handling and structure management
 
-- **C-Style Syntax**: Uses braces `{}`, parentheses for conditions, and modern control flow
-- **Transpiler Architecture**: Compiles BASIC to C++ executables or runs directly via interpreter  
-- **Interactive REPL**: Read-Eval-Print Loop for rapid development and testing
-- **Import System**: Modular programming with `import "file.bas"` for code organization
-- **Automatic Parallelization**: OpenMP-based automatic multi-core optimization for large array operations
-- **Comprehensive I/O**: Text and binary file operations with full file system support
-- **Typed Arrays**: High-performance `byte_array()`, `int_array()`, `double_array()` for numerical computing
-- **Proper Scoping**: C-style variable scoping within control structures (if/for/while blocks)
-- **Dual Execution**: Identical behavior in both interpreted and compiled modes
-- **Zero Dependencies**: Core language has no external dependencies  
-- **Cross-Platform**: Supports Windows, Linux, and macOS with native compilers
-- **Foreign Function Interface (FFI)**: Direct integration with C libraries and system APIs
+### Advanced FFI Features
+- **Enhanced Pattern Matching**: Improved support for pointer-returning functions (`IMG_Load`, `SDL_CreateTextureFromSurface`)
+- **Automatic Type Conversion**: Seamless conversion between BASIC and C types
+- **Structure Support**: Complete SDL2 and SQLite structure handling
+- **Memory Management**: Safe buffer allocation and pointer dereferencing
+- **Multi-Library Support**: Windows DLLs, Linux .so, macOS .dylib libraries
 
 ## Language Overview
 
@@ -152,49 +151,41 @@ print(val("3.14"));            // Convert string to number: 3.14
 
 ### SDL2 Graphics Programming
 ```basic
-import "blib/sdl2.bas";
+// Advanced SDL2 with texture loading (production-ready)
+ffi integer SDL_Init(flags as integer) from "SDL2.dll";
+ffi pointer SDL_CreateWindow(title as string, x as integer, y as integer, w as integer, h as integer, flags as integer) from "SDL2.dll";
+ffi pointer SDL_CreateRenderer(window as pointer, index as integer, flags as integer) from "SDL2.dll";
+ffi pointer IMG_Load(file as string) from "SDL2_image.dll";
+ffi pointer SDL_CreateTextureFromSurface(renderer as pointer, surface as pointer) from "SDL2.dll";
+ffi integer SDL_RenderCopy(renderer as pointer, texture as pointer, srcrect as pointer, dstrect as pointer) from "SDL2.dll";
 
 function main() {
     // Initialize SDL2
-    var result = SDL_Init(SDL_INIT_VIDEO);
+    var result = SDL_Init(32); // SDL_INIT_VIDEO
     if (result != 0) {
         print("SDL2 initialization failed");
         return 1;
     }
     
-    // Create window
-    var window = SDL_CreateWindow("rbasic Graphics", 
-                                  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                  800, 600, SDL_WINDOW_SHOWN);
+    // Create window and renderer
+    var window = SDL_CreateWindow("rbasic Graphics", 100, 100, 800, 600, 4);
+    var renderer = SDL_CreateRenderer(window, -1, 2);
     
-    // Main event loop with graphics
-    var renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    // Load and display image texture
+    var surface = IMG_Load("image.bmp");
+    var texture = SDL_CreateTextureFromSurface(renderer, surface);
+    
+    // Render loop
     var running = true;
-    
     while (running) {
-        // Handle events
-        var event = create_sdl_event();
-        while (SDL_PollEvent(event) != 0) {
-            if (get_event_type(event) == SDL_QUIT) {
-                running = false;
-            }
-        }
-        
-        // Clear screen and draw
         SDL_SetRenderDrawColor(renderer, 0, 100, 200, 255);
         SDL_RenderClear(renderer);
-        
-        // Draw rectangle
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        var rect = create_sdl_rect(100, 100, 200, 150);
-        SDL_RenderFillRect(renderer, rect);
-        
+        SDL_RenderCopy(renderer, texture, get_constant("NULL"), get_constant("NULL"));
         SDL_RenderPresent(renderer);
+        
+        // Handle events...
     }
     
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
     return 0;
 }
 ```
@@ -237,12 +228,14 @@ function main() {
 ```
 
 ### Comprehensive FFI Features
+- **Enhanced Pattern Matching**: Improved support for pointer-returning functions like `IMG_Load` and `SDL_CreateTextureFromSurface`
+- **Cross-Mode Compatibility**: Identical FFI behavior in interpreter and compiled modes (fixed SDL texture operations)
 - **Generic Type System**: Automatic conversion between BASIC and C types (int, double, string, pointer)
 - **Memory Management**: Safe buffer allocation (`alloc_buffer()`, `deref_pointer()`) 
 - **Structure Support**: SDL2 structures (`create_sdl_rect()`, `create_sdl_event()`)
 - **Constant System**: Built-in constants for SDL2, SQLite, Windows API
 - **Cross-Platform Libraries**: Windows DLLs, Linux .so, macOS .dylib support
-- **Production Ready**: Complete wrapper libraries included in `blib/` directory
+- **Production Ready**: Complete texture loading and graphics pipeline working across all execution modes
 
 ## Language Syntax
 
@@ -321,12 +314,14 @@ build.bat
 
 **Production Ready Features:**
 - ✅ Complete C-style BASIC language implementation
-- ✅ Dual execution modes with identical behavior
-- ✅ Foreign Function Interface with SDL2/SQLite wrapper libraries
+- ✅ Dual execution modes with identical behavior  
+- ✅ Enhanced Foreign Function Interface with SDL2 texture loading support
+- ✅ Cross-mode compatibility for SDL_CreateTextureFromSurface and IMG_Load
 - ✅ Import system for modular programming
 - ✅ Cross-platform support (Windows/Linux/macOS)
 - ✅ Comprehensive built-in function library
 - ✅ Interactive REPL for development
+- ✅ Production-ready SDL2 graphics pipeline in compiled mode
 
 ## Project Structure
 

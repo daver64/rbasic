@@ -95,22 +95,50 @@ The FFI system is production-ready and provides comprehensive C library integrat
 
 ### Advanced FFI Features
 - **Buffer Operations**: `alloc_buffer()`, `alloc_int_buffer()`, `alloc_pointer_buffer()`
-- **Pointer Operations**: `deref_int()`, `deref_pointer()`, `deref_string()`
+- **Pointer Operations**: `deref_int()`, `deref_pointer()`, `deref_string()`, `deref_int_offset()`
 - **Structure Support**: SDL2 structures (`create_sdl_rect()`, `create_sdl_event()`)
 - **Constant System**: Built-in constants for SDL2, SQLite, Windows API
 - **Null Handling**: `is_null()`, `not_null()` for safe pointer operations
+- **Event Processing**: Complete SDL2 event handling with `get_key_code()` for keyboard events
+
+### SDL2 Integration (Production Ready)
+- **Window Management**: Window creation, destruction, and property control
+- **Rendering System**: Hardware-accelerated 2D rendering with color management
+- **Event Handling**: Complete keyboard and mouse event processing
+  - **Keyboard Events**: Full scan code support with built-in SDL_SCANCODE_* constants
+  - **Mouse Events**: Click detection, movement tracking, button state management
+  - **Window Events**: Focus, resize, and close event handling
+- **Memory-Safe Event Access**: Direct event buffer reading with `deref_int_offset()`
+- **Cross-Mode Compatibility**: Identical event handling in interpreter and compiled modes
 
 ### Library Integration Ready
-- **SDL2**: Complete structure support, event handling, graphics primitives
+- **SDL2**: Complete structure support, event handling, graphics primitives, input management
 - **SQLite**: Database constants, prepared statement patterns
 - **Windows API**: System calls, message boxes, process management
 - **OpenGL**: Ready for graphics programming integration
 
 ### Usage Examples
 ```basic
-// SDL2 Graphics
-ffi "SDL2.dll" SDL_Init(flags as integer) as integer;
-var window = SDL_CreateWindow("Game", 100, 100, 800, 600, SDL_WINDOW_SHOWN);
+// SDL2 Graphics with Event Handling
+ffi integer SDL_Init(flags as integer) from "SDL2.dll";
+ffi pointer SDL_CreateWindow(title as string, x as integer, y as integer, w as integer, h as integer, flags as integer) from "SDL2.dll";
+ffi integer SDL_PollEvent(event as pointer) from "SDL2.dll";
+
+var window = SDL_CreateWindow("Interactive Demo", 100, 100, 800, 600, SDL_WINDOW_SHOWN);
+var event_buffer = create_sdl_event();
+while (running == 1) {
+    if (SDL_PollEvent(event_buffer) == 1) {
+        var event_type = deref_int(event_buffer);
+        if (event_type == SDL_MOUSEBUTTONDOWN) {
+            print("Mouse clicked!");
+        } else if (event_type == SDL_KEYDOWN) {
+            var key = get_key_code(event_buffer);
+            if (key == SDL_SCANCODE_ESCAPE) {
+                running = 0;
+            }
+        }
+    }
+}
 
 // SQLite Database
 ffi "sqlite3.dll" sqlite3_open(filename as string, db as pointer) as integer;

@@ -1210,7 +1210,15 @@ Both modes produce identical output and behavior.
 
 ## Foreign Function Interface (FFI)
 
-The rbasic FFI system provides production-ready integration with C libraries and system APIs. It supports comprehensive pointer operations, structure manipulation, and works identically in both interpreted and compiled modes.
+The rbasic FFI system provides production-ready integration with C libraries and system APIs. It supports comprehensive pointer operations, structure manipulation, and works identically in both interpreted and compiled modes. Recent enhancements include improved support for pointer-returning functions like `IMG_Load` and `SDL_CreateTextureFromSurface`, enabling full SDL2 texture loading capabilities.
+
+### Key FFI Features
+
+- **Enhanced Pattern Matching**: Improved support for functions returning pointers (IMG_Load, SDL_CreateTextureFromSurface)
+- **Cross-Mode Compatibility**: Identical behavior in interpreter and compiled modes
+- **Automatic Type Conversion**: Seamless conversion between BASIC and C types
+- **Memory-Safe Operations**: Safe buffer allocation and pointer dereferencing
+- **Production-Ready Graphics**: Full SDL2 texture pipeline working across all execution modes
 
 ### FFI Declaration Syntax
 
@@ -1248,59 +1256,63 @@ if (is_null(ptr_value)) {
 }
 ```
 
-#### SDL2 Integration Support
+#### SDL2 Integration Support - Production Ready
 
-The FFI system includes comprehensive SDL2 support:
+The FFI system includes comprehensive SDL2 support with full texture loading capabilities:
 
 ```basic
-// SDL2 initialization and window creation
+// SDL2 core functions
 ffi "SDL2.dll" SDL_Init(flags as integer) as integer;
 ffi "SDL2.dll" SDL_CreateWindow(title as string, x as integer, y as integer,
                                 width as integer, height as integer, flags as integer) as pointer;
 ffi "SDL2.dll" SDL_CreateRenderer(window as pointer, index as integer, flags as integer) as pointer;
+
+// Enhanced texture support (production-ready)
+ffi "SDL2_image.dll" IMG_Load(file as string) as pointer;
+ffi "SDL2.dll" SDL_CreateTextureFromSurface(renderer as pointer, surface as pointer) as pointer;
+ffi "SDL2.dll" SDL_FreeSurface(surface as pointer) as integer;
+ffi "SDL2.dll" SDL_RenderCopy(renderer as pointer, texture as pointer, srcrect as pointer, dstrect as pointer) as integer;
+
+// Event handling
 ffi "SDL2.dll" SDL_PollEvent(event as pointer) as integer;
 ffi "SDL2.dll" SDL_Quit() as integer;
 
-function sdl_graphics_demo() {
-    // Initialize with built-in constants
+function sdl_texture_demo() {
+    // Initialize SDL2
     var result = SDL_Init(SDL_INIT_VIDEO);
     if (result != 0) {
         print("SDL2 initialization failed");
         return 1;
     }
     
-    // Create window with predefined constants
-    var window = SDL_CreateWindow("rbasic Graphics Demo",
-                                  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                  800, 600, SDL_WINDOW_SHOWN);
-    
-    if (is_null(window)) {
-        print("Window creation failed");
-        SDL_Quit();
-        return 1;
-    }
-    
-    // Create renderer
+    // Create window and renderer
+    var window = SDL_CreateWindow("rbasic Texture Demo", 100, 100, 800, 600, SDL_WINDOW_SHOWN);
     var renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     
-    // Event handling with structures
-    var event = create_sdl_event();
-    var running = true;
-    
-    while (running) {
-        while (SDL_PollEvent(event) != 0) {
-            var event_type = get_event_type(event);
-            if (event_type == SDL_QUIT) {
-                running = false;
-            } else if (event_type == SDL_KEYDOWN) {
-                var key_code = get_key_code(event);
-                if (key_code == SDLK_ESCAPE) {
-                    running = false;
-                }
+    // Load and create texture (works identically in interpreter and compiled modes)
+    var surface = IMG_Load("image.bmp");
+    if (not_null(surface)) {
+        var texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_FreeSurface(surface); // Free surface after texture creation
+        
+        if (not_null(texture)) {
+            print("Texture created successfully!");
+            
+            // Display texture for 5 seconds
+            for (var frame = 0; frame < 300; frame = frame + 1) {
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+                SDL_RenderClear(renderer);
+                SDL_RenderCopy(renderer, texture, get_constant("NULL"), get_constant("NULL"));
+                SDL_RenderPresent(renderer);
+                SDL_Delay(16); // ~60 FPS
             }
+            
+            SDL_DestroyTexture(texture);
         }
     }
     
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
 }
