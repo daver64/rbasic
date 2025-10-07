@@ -1469,6 +1469,14 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         
         // Try different 2-parameter patterns based on function name and parameter types
         
+        // Pattern: (pointer, pointer) -> int (SDL2 RenderDrawRect, RenderFillRect)
+        if (std::holds_alternative<void*>(arg1) && std::holds_alternative<void*>(arg2)) {
+            typedef int (*FuncType)(void*, void*);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(getAsPointer(arg1), getAsPointer(arg2));
+            return BasicValue(static_cast<double>(result));
+        }
+        
         // Pattern 1: (string, pointer) -> int (SQLite open)
         if (!s1.empty() && p2 != nullptr) {
             typedef int (*Func1)(const char*, void*);
@@ -1497,6 +1505,14 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             typedef int (*Func2)(void*, int);
             auto func = reinterpret_cast<Func2>(funcPtr);
             return BasicValue(static_cast<double>(func(p1, i2)));
+        }
+        
+        // Pattern: (pointer, string) -> void (SDL_SetWindowTitle)
+        if (std::holds_alternative<void*>(arg1) && std::holds_alternative<std::string>(arg2)) {
+            typedef void (*FuncType)(void*, const char*);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            func(getAsPointer(arg1), getAsString(arg2).c_str());
+            return BasicValue(0.0);
         }
         
         // Pattern 3: (int, int) -> int (all integers)
@@ -1726,6 +1742,51 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             typedef int (*FuncType)(void*, int, int, void*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), getAsPointer(arg4));
+            return BasicValue(static_cast<double>(result));
+        }
+        
+        // Pattern: (pointer, pointer, pointer, pointer) -> int - SDL_RenderCopy
+        if (std::holds_alternative<void*>(arg1) &&
+            std::holds_alternative<void*>(arg2) &&
+            std::holds_alternative<void*>(arg3) &&
+            std::holds_alternative<void*>(arg4)) {
+            
+            typedef int (*FuncType)(void*, void*, void*, void*);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(getAsPointer(arg1), getAsPointer(arg2), getAsPointer(arg3), getAsPointer(arg4));
+            return BasicValue(static_cast<double>(result));
+        }
+        
+        // Pattern: (pointer, int, int, int) -> pointer - SDL_CreateTexture
+        if (std::holds_alternative<void*>(arg1) &&
+            (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
+            (std::holds_alternative<double>(arg3) || std::holds_alternative<int>(arg3)) &&
+            (std::holds_alternative<double>(arg4) || std::holds_alternative<int>(arg4))) {
+            
+            // Try as pointer return first
+            typedef void* (*FuncTypePtrRet)(void*, int, int, int);
+            auto funcPtrRet = reinterpret_cast<FuncTypePtrRet>(funcPtr);
+            void* result = funcPtrRet(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), getAsInt(arg4));
+            if (result != nullptr) {
+                return BasicValue(result);
+            }
+            
+            // Fallback to int return
+            typedef int (*FuncTypeIntRet)(void*, int, int, int);
+            auto funcIntRet = reinterpret_cast<FuncTypeIntRet>(funcPtr);
+            int intResult = funcIntRet(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), getAsInt(arg4));
+            return BasicValue(static_cast<double>(intResult));
+        }
+        
+        // Pattern: (pointer, pointer, pointer, int) -> int - SDL_UpdateTexture
+        if (std::holds_alternative<void*>(arg1) &&
+            std::holds_alternative<void*>(arg2) &&
+            std::holds_alternative<void*>(arg3) &&
+            (std::holds_alternative<double>(arg4) || std::holds_alternative<int>(arg4))) {
+            
+            typedef int (*FuncType)(void*, void*, void*, int);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(getAsPointer(arg1), getAsPointer(arg2), getAsPointer(arg3), getAsInt(arg4));
             return BasicValue(static_cast<double>(result));
         }
         
@@ -2023,13 +2084,32 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             return 0;
         };
         
-        // Pattern: (int, int, int, int, int, int, int, int) -> int
-        typedef int (*FuncType)(int, int, int, int, int, int, int, int);
-        auto func = reinterpret_cast<FuncType>(func_ptr);
-        int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
-                         getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
-                         getAsInt(arg7), getAsInt(arg8));
-        return BasicValue(static_cast<double>(result));
+        auto getAsDouble = [](const BasicValue& val) -> double {
+            if (std::holds_alternative<double>(val)) {
+                return std::get<double>(val);
+            } else if (std::holds_alternative<int>(val)) {
+                return static_cast<double>(std::get<int>(val));
+            }
+            return 0.0;
+        };
+        
+        // Check for SDL_RenderCopyEx pattern: (pointer, pointer, pointer, pointer, double, pointer, double, int) -> int
+        if (std::holds_alternative<void*>(arg1) && std::holds_alternative<double>(arg5) && std::holds_alternative<double>(arg7)) {
+            typedef int (*FuncSDLRenderCopyEx)(void*, void*, void*, void*, double, void*, double, int);
+            auto func = reinterpret_cast<FuncSDLRenderCopyEx>(func_ptr);
+            int result = func(getAsPointer(arg1), getAsPointer(arg2), getAsPointer(arg3), 
+                             getAsPointer(arg4), getAsDouble(arg5), getAsPointer(arg6), 
+                             getAsDouble(arg7), getAsInt(arg8));
+            return BasicValue(static_cast<double>(result));
+        } else {
+            // Generic pattern: (int, int, int, int, int, int, int, int) -> int
+            typedef int (*FuncType)(int, int, int, int, int, int, int, int);
+            auto func = reinterpret_cast<FuncType>(func_ptr);
+            int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
+                             getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
+                             getAsInt(arg7), getAsInt(arg8));
+            return BasicValue(static_cast<double>(result));
+        }
         
     } catch (const std::exception& e) {
         throw std::runtime_error("FFI call failed: " + std::string(e.what()));

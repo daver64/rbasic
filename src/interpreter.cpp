@@ -1525,6 +1525,48 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
                     lastValue = 0.0;
                 }
             }
+            // Pattern: (pointer, pointer) -> int (SDL2 RenderDrawRect, RenderFillRect)
+            else if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) &&
+                     (param2Type == "pointer" || param2Type.find('*') != std::string::npos)) {
+                void* param1 = getPointerValue(arg1Val);
+                void* param2 = getPointerValue(arg2Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func2)(void*, void*);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2));
+                } else if (returnsPointer) {
+                    typedef void* (*Func2)(void*, void*);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    lastValue = func(param1, param2);
+                } else {
+                    typedef void (*Func2)(void*, void*);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    func(param1, param2);
+                    lastValue = 0.0;
+                }
+            }
+            // Pattern: (pointer, string) -> void - SDL_SetWindowTitle
+            else if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) &&
+                     param2Type == "string") {
+                void* param1 = getPointerValue(arg1Val);
+                std::string param2 = getStringValue(arg2Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func2)(void*, const char*);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2.c_str()));
+                } else if (returnsPointer) {
+                    typedef void* (*Func2)(void*, const char*);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    lastValue = func(param1, param2.c_str());
+                } else {
+                    typedef void (*Func2)(void*, const char*);
+                    auto func = reinterpret_cast<Func2>(funcPtr);
+                    func(param1, param2.c_str());
+                    lastValue = 0.0;
+                }
+            }
         } else if (ffiFunc.parameters.size() == 3) {
             // Three parameters - SDL renderer creation patterns
             ValueType arg1Val = evaluate(*node.arguments[0]);
@@ -1558,7 +1600,7 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
                 }
             }
         } else if (ffiFunc.parameters.size() == 4) {
-            // Four parameters - MessageBox patterns
+            // Four parameters - critical SDL2 and Windows API patterns
             ValueType arg1Val = evaluate(*node.arguments[0]);
             ValueType arg2Val = evaluate(*node.arguments[1]);
             ValueType arg3Val = evaluate(*node.arguments[2]);
@@ -1588,6 +1630,84 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
                     typedef void (*Func4)(int, const char*, const char*, int);
                     auto func = reinterpret_cast<Func4>(funcPtr);
                     func(param1, str2.c_str(), str3.c_str(), param4);
+                    lastValue = 0.0;
+                }
+            }
+            // Pattern: (pointer, pointer, pointer, pointer) -> int - SDL_RenderCopy
+            else if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) &&
+                     (param2Type == "pointer" || param2Type.find('*') != std::string::npos) &&
+                     (param3Type == "pointer" || param3Type.find('*') != std::string::npos) &&
+                     (param4Type == "pointer" || param4Type.find('*') != std::string::npos)) {
+                
+                void* param1 = getPointerValue(arg1Val);
+                void* param2 = getPointerValue(arg2Val);
+                void* param3 = getPointerValue(arg3Val);
+                void* param4 = getPointerValue(arg4Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func4)(void*, void*, void*, void*);
+                    auto func = reinterpret_cast<Func4>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4));
+                } else if (returnsPointer) {
+                    typedef void* (*Func4)(void*, void*, void*, void*);
+                    auto func = reinterpret_cast<Func4>(funcPtr);
+                    lastValue = func(param1, param2, param3, param4);
+                } else {
+                    typedef void (*Func4)(void*, void*, void*, void*);
+                    auto func = reinterpret_cast<Func4>(funcPtr);
+                    func(param1, param2, param3, param4);
+                    lastValue = 0.0;
+                }
+            }
+            // Pattern: (pointer, int, int, int) -> pointer - SDL_CreateTexture  
+            else if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) &&
+                     (param2Type == "int" || param2Type == "integer") &&
+                     (param3Type == "int" || param3Type == "integer") &&
+                     (param4Type == "int" || param4Type == "integer")) {
+                
+                void* param1 = getPointerValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                int param3 = getIntValue(arg3Val);
+                int param4 = getIntValue(arg4Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func4)(void*, int, int, int);
+                    auto func = reinterpret_cast<Func4>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4));
+                } else if (returnsPointer) {
+                    typedef void* (*Func4)(void*, int, int, int);
+                    auto func = reinterpret_cast<Func4>(funcPtr);
+                    lastValue = func(param1, param2, param3, param4);
+                } else {
+                    typedef void (*Func4)(void*, int, int, int);
+                    auto func = reinterpret_cast<Func4>(funcPtr);
+                    func(param1, param2, param3, param4);
+                    lastValue = 0.0;
+                }
+            }
+            // Pattern: (pointer, pointer, pointer, int) -> int - SDL_UpdateTexture
+            else if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) &&
+                     (param2Type == "pointer" || param2Type.find('*') != std::string::npos) &&
+                     (param3Type == "pointer" || param3Type.find('*') != std::string::npos) &&
+                     (param4Type == "int" || param4Type == "integer")) {
+                
+                void* param1 = getPointerValue(arg1Val);
+                void* param2 = getPointerValue(arg2Val);
+                void* param3 = getPointerValue(arg3Val);
+                int param4 = getIntValue(arg4Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func4)(void*, void*, void*, int);
+                    auto func = reinterpret_cast<Func4>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4));
+                } else if (returnsPointer) {
+                    typedef void* (*Func4)(void*, void*, void*, int);
+                    auto func = reinterpret_cast<Func4>(funcPtr);
+                    lastValue = func(param1, param2, param3, param4);
+                } else {
+                    typedef void (*Func4)(void*, void*, void*, int);
+                    auto func = reinterpret_cast<Func4>(funcPtr);
+                    func(param1, param2, param3, param4);
                     lastValue = 0.0;
                 }
             }
@@ -1751,34 +1871,60 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
             ValueType arg7Val = evaluate(*node.arguments[6]);
             ValueType arg8Val = evaluate(*node.arguments[7]);
             
-            // Generic pattern: assume all int parameters for now
-            int param1 = getIntValue(arg1Val);
-            int param2 = getIntValue(arg2Val);
-            int param3 = getIntValue(arg3Val);
-            int param4 = getIntValue(arg4Val);
-            int param5 = getIntValue(arg5Val);
-            int param6 = getIntValue(arg6Val);
-            int param7 = getIntValue(arg7Val);
-            int param8 = getIntValue(arg8Val);
+            const auto& param1Type = ffiFunc.parameters[0].second;
+            const auto& param7Type = ffiFunc.parameters[6].second;
             
-            if (returnsInteger) {
-                typedef int (*Func8)(int, int, int, int, int, int, int, int);
-                auto func = reinterpret_cast<Func8>(funcPtr);
-                lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7, param8));
-            } else if (returnsPointer) {
-                typedef void* (*Func8)(int, int, int, int, int, int, int, int);
-                auto func = reinterpret_cast<Func8>(funcPtr);
-                lastValue = func(param1, param2, param3, param4, param5, param6, param7, param8);
-            } else if (returnsString) {
-                typedef const char* (*Func8)(int, int, int, int, int, int, int, int);
-                auto func = reinterpret_cast<Func8>(funcPtr);
-                const char* result = func(param1, param2, param3, param4, param5, param6, param7, param8);
-                lastValue = std::string(result ? result : "");
+            // Pattern: (pointer, pointer, pointer, pointer, double, pointer, double, int) - SDL_RenderCopyEx
+            if (param1Type == "pointer" && param7Type == "double") {
+                void* param1 = getPointerValue(arg1Val);
+                void* param2 = getPointerValue(arg2Val);
+                void* param3 = getPointerValue(arg3Val);
+                void* param4 = getPointerValue(arg4Val);
+                double param5 = getDoubleValue(arg5Val);
+                void* param6 = getPointerValue(arg6Val);
+                double param7 = getDoubleValue(arg7Val);
+                int param8 = getIntValue(arg8Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func8)(void*, void*, void*, void*, double, void*, double, int);
+                    auto func = reinterpret_cast<Func8>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7, param8));
+                } else {
+                    typedef void (*Func8)(void*, void*, void*, void*, double, void*, double, int);
+                    auto func = reinterpret_cast<Func8>(funcPtr);
+                    func(param1, param2, param3, param4, param5, param6, param7, param8);
+                    lastValue = 0.0;
+                }
             } else {
-                typedef void (*Func8)(int, int, int, int, int, int, int, int);
-                auto func = reinterpret_cast<Func8>(funcPtr);
-                func(param1, param2, param3, param4, param5, param6, param7, param8);
-                lastValue = 0.0;
+                // Generic pattern: assume all int parameters for compatibility
+                int param1 = getIntValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                int param3 = getIntValue(arg3Val);
+                int param4 = getIntValue(arg4Val);
+                int param5 = getIntValue(arg5Val);
+                int param6 = getIntValue(arg6Val);
+                int param7 = getIntValue(arg7Val);
+                int param8 = getIntValue(arg8Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func8)(int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func8>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7, param8));
+                } else if (returnsPointer) {
+                    typedef void* (*Func8)(int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func8>(funcPtr);
+                    lastValue = func(param1, param2, param3, param4, param5, param6, param7, param8);
+                } else if (returnsString) {
+                    typedef const char* (*Func8)(int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func8>(funcPtr);
+                    const char* result = func(param1, param2, param3, param4, param5, param6, param7, param8);
+                    lastValue = std::string(result ? result : "");
+                } else {
+                    typedef void (*Func8)(int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func8>(funcPtr);
+                    func(param1, param2, param3, param4, param5, param6, param7, param8);
+                    lastValue = 0.0;
+                }
             }
         } else {
             // Unsupported parameter count
@@ -1814,6 +1960,15 @@ void* Interpreter::getPointerValue(const ValueType& value) {
         return std::get<void*>(value);
     }
     return nullptr;
+}
+
+double Interpreter::getDoubleValue(const ValueType& value) {
+    if (std::holds_alternative<double>(value)) {
+        return std::get<double>(value);
+    } else if (std::holds_alternative<int>(value)) {
+        return static_cast<double>(std::get<int>(value));
+    }
+    return 0.0;
 }
 
 bool Interpreter::handleUserDefinedFunction(CallExpr& node) {

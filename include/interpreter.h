@@ -69,6 +69,7 @@ public:
     int getIntValue(const ValueType& value);
     std::string getStringValue(const ValueType& value);
     void* getPointerValue(const ValueType& value);
+    double getDoubleValue(const ValueType& value);
     bool handleUserDefinedFunction(CallExpr& node);
     
     // Visitor methods
