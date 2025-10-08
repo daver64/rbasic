@@ -91,4 +91,4 @@ print("  - Functions containing 'OpenFont' -> pointer returns");
 print("  - Functions containing 'open' -> pointer returns");
 print("");
 print("Enhanced FFI pattern test completed!");
-print("Patterns are ready for production use with appropriate library dependencies.");
+print("Patterns are ready for testing with appropriate library dependencies.");

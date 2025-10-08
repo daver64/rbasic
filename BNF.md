@@ -295,7 +295,7 @@ The following built-in functions are available in rbasic:
 
 ### External Functions via FFI
 
-Production-ready FFI system provides comprehensive C library integration:
+Comprehensive FFI system provides extensive C library integration:
 
 ```basic
 // Enhanced FFI with improved pointer support
@@ -394,6 +394,6 @@ print("Square of 5:", numbers[5]);
 8. **Modern Comments**: C++ style `//` and `/* */` comments supported
 9. **FFI Pattern Matching**: Enhanced support for pointer-returning functions like IMG_Load
 10. **Cross-Mode Compatibility**: Identical behavior in interpreter and compiled execution modes
-11. **Production-Ready Graphics**: Complete SDL2 texture pipeline with IMG_Load and SDL_CreateTextureFromSurface support
+11. **Enhanced Graphics**: Complete SDL2 texture pipeline with IMG_Load and SDL_CreateTextureFromSurface support
 
 This grammar defines the complete rbasic language as implemented in the current interpreter and compiler.

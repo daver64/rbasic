@@ -4,12 +4,12 @@ This manual provides comprehensive documentation for using the rbasic programmin
 
 ## Implementation Status
 
-**rbasic is feature-complete and production-ready** with all core language features fully implemented and tested:
+**rbasic is feature-complete and in active development** with all core language features implemented and tested in alpha phase:
 
 - ✅ **Complete Language**: All syntax, control flow, functions, and data structures working
 - ✅ **Multidimensional Arrays**: True `array[i,j,k]` syntax working in both execution modes
 - ✅ **Import System**: Complete modular programming with `import "file.bas"` syntax
-- ✅ **Foreign Function Interface (FFI)**: Production-ready C library integration with comprehensive pointer and struct support
+- ✅ **Foreign Function Interface (FFI)**: Alpha-phase C library integration with comprehensive pointer and struct support
 - ✅ **Automatic Parallelization**: OpenMP-based multi-core optimization for large array operations
 - ✅ **Triple Execution Modes**: Interpreter (`-i`), compiler (`-c`), and interactive REPL (`-r`) fully functional
 - ✅ **Portable Compilation**: MinGW64 bundled for Windows, falls back to MSVC when needed
@@ -103,7 +103,7 @@ rbasic [options] <source-file>
 # Interpret a program (fast development)
 rbasic -i calculator.bas
 
-# Compile to executable (production - uses MinGW64 or MSVC)
+# Compile to executable (deployment - uses MinGW64 or MSVC)
 rbasic -c calculator.bas -o calc
 ./calc
 
@@ -1210,7 +1210,7 @@ Both modes produce identical output and behavior.
 
 ## Foreign Function Interface (FFI)
 
-The rbasic FFI system provides production-ready integration with C libraries and system APIs. It supports comprehensive pointer operations, structure manipulation, and works identically in both interpreted and compiled modes. Recent enhancements include improved support for pointer-returning functions like `IMG_Load` and `SDL_CreateTextureFromSurface`, enabling full SDL2 texture loading capabilities.
+The rbasic FFI system provides comprehensive integration with C libraries and system APIs. It supports extensive pointer operations, structure manipulation, and works identically in both interpreted and compiled modes. Recent enhancements include improved support for pointer-returning functions like `IMG_Load` and `SDL_CreateTextureFromSurface`, enabling full SDL2 texture loading capabilities.
 
 ### Key FFI Features
 
@@ -1218,7 +1218,7 @@ The rbasic FFI system provides production-ready integration with C libraries and
 - **Cross-Mode Compatibility**: Identical behavior in interpreter and compiled modes
 - **Automatic Type Conversion**: Seamless conversion between BASIC and C types
 - **Memory-Safe Operations**: Safe buffer allocation and pointer dereferencing
-- **Production-Ready Graphics**: Full SDL2 texture pipeline working across all execution modes
+- **Enhanced Graphics**: Full SDL2 texture pipeline working across all execution modes
 
 ### FFI Declaration Syntax
 
@@ -1256,7 +1256,7 @@ if (is_null(ptr_value)) {
 }
 ```
 
-#### SDL2 Integration Support - Production Ready
+#### SDL2 Integration Support
 
 The FFI system includes comprehensive SDL2 support with full texture loading capabilities:
 
@@ -1267,7 +1267,7 @@ ffi "SDL2.dll" SDL_CreateWindow(title as string, x as integer, y as integer,
                                 width as integer, height as integer, flags as integer) as pointer;
 ffi "SDL2.dll" SDL_CreateRenderer(window as pointer, index as integer, flags as integer) as pointer;
 
-// Enhanced texture support (production-ready)
+// Enhanced texture support
 ffi "SDL2_image.dll" IMG_Load(file as string) as pointer;
 ffi "SDL2.dll" SDL_CreateTextureFromSurface(renderer as pointer, surface as pointer) as pointer;
 ffi "SDL2.dll" SDL_FreeSurface(surface as pointer) as integer;
@@ -1579,7 +1579,7 @@ FFI works identically in both execution modes:
 **Compiled Mode** (`-c`):
 - Generated C++ code with runtime FFI calls
 - Same behavior as interpreted mode
-- Optimized for production deployment
+- Optimized for deployment
 
 Both modes provide the same FFI functionality and produce identical results.
 
@@ -1815,7 +1815,7 @@ for (var i = 0; i < 100000; i = i + 1) {
 | Compiled | < 1000 elements | Serial | Optimized serial |
 | Compiled | ≥ 1000 elements | Parallel | Maximum performance |
 
-**Recommendation**: Use interpreter mode (`-i`) for development and testing, compiled mode (`-c`) for production and performance-critical applications.
+**Recommendation**: Use interpreter mode (`-i`) for development and testing, compiled mode (`-c`) for deployment and performance-critical applications.
 
 ## Best Practices
 
@@ -1923,7 +1923,7 @@ for (var i = 0; i < length; i = i + 1) {
 rbasic -i myprogram.bas
 ```
 
-#### Compile for Production
+#### Compile for Deployment
 
 ```bash
 # Create optimized executable

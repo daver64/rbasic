@@ -29,9 +29,9 @@
 
 ## FFI and Library Integration
 
-rbasic includes a production-ready Foreign Function Interface with comprehensive wrapper libraries and support for complex pointer operations:
+rbasic includes a comprehensive Foreign Function Interface with wrapper libraries and support for complex pointer operations:
 
-### SDL2 Graphics Programming - Production Ready
+### SDL2 Graphics Programming
 - **Complete SDL2 Integration**: Window management, hardware-accelerated rendering, event handling
 - **Texture Operations**: Full support for `SDL_CreateTextureFromSurface` and image loading via `IMG_Load`
 - **Event Processing**: Complete keyboard and mouse event handling with scan code support
@@ -151,7 +151,7 @@ print(val("3.14"));            // Convert string to number: 3.14
 
 ### SDL2 Graphics Programming
 ```basic
-// Advanced SDL2 with texture loading (production-ready)
+// Advanced SDL2 with texture loading
 ffi integer SDL_Init(flags as integer) from "SDL2.dll";
 ffi pointer SDL_CreateWindow(title as string, x as integer, y as integer, w as integer, h as integer, flags as integer) from "SDL2.dll";
 ffi pointer SDL_CreateRenderer(window as pointer, index as integer, flags as integer) from "SDL2.dll";
@@ -235,7 +235,7 @@ function main() {
 - **Structure Support**: SDL2 structures (`create_sdl_rect()`, `create_sdl_event()`)
 - **Constant System**: Built-in constants for SDL2, SQLite, Windows API
 - **Cross-Platform Libraries**: Windows DLLs, Linux .so, macOS .dylib support
-- **Production Ready**: Complete texture loading and graphics pipeline working across all execution modes
+- **Complete FFI System**: Complete texture loading and graphics pipeline working across all execution modes
 
 ## Language Syntax
 
@@ -312,7 +312,7 @@ build.bat
 
 ## Status
 
-**Production Ready Features:**
+**Current Alpha Features:**
 - ✅ Complete C-style BASIC language implementation
 - ✅ Dual execution modes with identical behavior  
 - ✅ Enhanced Foreign Function Interface with SDL2 texture loading support
@@ -321,7 +321,7 @@ build.bat
 - ✅ Cross-platform support (Windows/Linux/macOS)
 - ✅ Comprehensive built-in function library
 - ✅ Interactive REPL for development
-- ✅ Production-ready SDL2 graphics pipeline in compiled mode
+- ✅ Enhanced SDL2 graphics pipeline in compiled mode
 
 ## Project Structure
 

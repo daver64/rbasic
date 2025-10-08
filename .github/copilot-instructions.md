@@ -21,14 +21,14 @@ This is a C-leaning BASIC language transpiler written in C++. The project suppor
 7. **Cross-Platform Terminal** - Color support and cursor management for all platforms
 8. **Automatic Parallelization** - OpenMP-based multi-core optimization for large array operations
 9. **Import System** - Complete modular programming with compile-time and runtime import resolution
-10. **Foreign Function Interface (FFI)** - Production-ready C library integration with comprehensive API support
+10. **Foreign Function Interface (FFI)** - Comprehensive C library integration with extensive API support
 
 ## Build Instructions
 Use CMake to build the project. The executable will be placed in the project root.
 
 ## Usage
 - Interpret: `rbasic -i program.bas` (rapid prototyping with runtime imports)
-- Transpile: `rbasic -c program.bas -o program` (production deployment with resolved imports)
+- Transpile: `rbasic -c program.bas -o program` (deployment with resolved imports)
 - Interactive: `rbasic -r` (REPL mode for development and testing)
 
 ## Compilation Support
@@ -54,7 +54,7 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 - Structured data: Arrays with `dim array(size)` and `array[index]` access
 - Interactive development: Full REPL with session management
 - Modular programming: Complete import system with `import "file.bas"` syntax
-- External integration: Production-ready FFI system for C libraries
+- External integration: Comprehensive FFI system for C libraries
 
 ## Import System Features
 - **Modular Programming**: `import "filename.bas"` syntax for code organization
@@ -85,7 +85,7 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 
 ## Foreign Function Interface (FFI)
 
-The FFI system is production-ready and provides comprehensive C library integration:
+The FFI system provides comprehensive C library integration:
 
 ### Core FFI Features
 - **Library Loading**: Dynamic loading of Windows DLLs, Linux .so, and macOS .dylib files
@@ -101,7 +101,7 @@ The FFI system is production-ready and provides comprehensive C library integrat
 - **Null Handling**: `is_null()`, `not_null()` for safe pointer operations
 - **Event Processing**: Complete SDL2 event handling with `get_key_code()` for keyboard events
 
-### SDL2 Integration (Production Ready)
+### SDL2 Integration
 - **Window Management**: Window creation, destruction, and property control
 - **Rendering System**: Hardware-accelerated 2D rendering with color management
 - **Event Handling**: Complete keyboard and mouse event processing
@@ -155,7 +155,7 @@ MessageBoxA(0, "Hello from rbasic!", "FFI Demo", MB_OK);
 The project is designed as a transpiler where interpreter, REPL, and compiled output produce identical results by sharing the same AST representation and runtime function implementations. This enables:
 
 1. **Rapid Prototyping**: Use interpreter/REPL mode for development
-2. **High-Performance Deployment**: Compile to optimized C++ executables
+2. **Deployment**: Compile to optimized C++ executables
 3. **Modular Development**: Import system enables standard library ecosystem
 4. **External Integration**: FFI provides seamless C library access
 5. **Cross-Platform Consistency**: Same behavior on Windows, Linux, and macOS
