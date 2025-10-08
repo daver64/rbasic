@@ -1971,35 +1971,61 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
             ValueType arg8Val = evaluate(*node.arguments[7]);
             ValueType arg9Val = evaluate(*node.arguments[8]);
             
-            // Generic pattern: assume all int parameters for compatibility
-            int param1 = getIntValue(arg1Val);
-            int param2 = getIntValue(arg2Val);
-            int param3 = getIntValue(arg3Val);
-            int param4 = getIntValue(arg4Val);
-            int param5 = getIntValue(arg5Val);
-            int param6 = getIntValue(arg6Val);
-            int param7 = getIntValue(arg7Val);
-            int param8 = getIntValue(arg8Val);
-            int param9 = getIntValue(arg9Val);
+            const auto& param1Type = ffiFunc.parameters[0].second;
             
-            if (returnsInteger) {
-                typedef int (*Func9)(int, int, int, int, int, int, int, int, int);
-                auto func = reinterpret_cast<Func9>(funcPtr);
-                lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7, param8, param9));
-            } else if (returnsPointer) {
-                typedef void* (*Func9)(int, int, int, int, int, int, int, int, int);
-                auto func = reinterpret_cast<Func9>(funcPtr);
-                lastValue = func(param1, param2, param3, param4, param5, param6, param7, param8, param9);
-            } else if (returnsString) {
-                typedef const char* (*Func9)(int, int, int, int, int, int, int, int, int);
-                auto func = reinterpret_cast<Func9>(funcPtr);
-                const char* result = func(param1, param2, param3, param4, param5, param6, param7, param8, param9);
-                lastValue = std::string(result ? result : "");
+            // Pattern: (pointer, int, int, int, int, int, int, int, int) - SDL2_gfx ellipse functions  
+            if (param1Type == "pointer") {
+                void* param1 = getPointerValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                int param3 = getIntValue(arg3Val);
+                int param4 = getIntValue(arg4Val);
+                int param5 = getIntValue(arg5Val);
+                int param6 = getIntValue(arg6Val);
+                int param7 = getIntValue(arg7Val);
+                int param8 = getIntValue(arg8Val);
+                int param9 = getIntValue(arg9Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func9)(void*, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func9>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7, param8, param9));
+                } else {
+                    typedef void (*Func9)(void*, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func9>(funcPtr);
+                    func(param1, param2, param3, param4, param5, param6, param7, param8, param9);
+                    lastValue = 0.0;
+                }
             } else {
-                typedef void (*Func9)(int, int, int, int, int, int, int, int, int);
-                auto func = reinterpret_cast<Func9>(funcPtr);
-                func(param1, param2, param3, param4, param5, param6, param7, param8, param9);
-                lastValue = 0.0;
+                // Generic pattern: assume all int parameters for compatibility
+                int param1 = getIntValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                int param3 = getIntValue(arg3Val);
+                int param4 = getIntValue(arg4Val);
+                int param5 = getIntValue(arg5Val);
+                int param6 = getIntValue(arg6Val);
+                int param7 = getIntValue(arg7Val);
+                int param8 = getIntValue(arg8Val);
+                int param9 = getIntValue(arg9Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func9)(int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func9>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7, param8, param9));
+                } else if (returnsPointer) {
+                    typedef void* (*Func9)(int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func9>(funcPtr);
+                    lastValue = func(param1, param2, param3, param4, param5, param6, param7, param8, param9);
+                } else if (returnsString) {
+                    typedef const char* (*Func9)(int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func9>(funcPtr);
+                    const char* result = func(param1, param2, param3, param4, param5, param6, param7, param8, param9);
+                    lastValue = std::string(result ? result : "");
+                } else {
+                    typedef void (*Func9)(int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func9>(funcPtr);
+                    func(param1, param2, param3, param4, param5, param6, param7, param8, param9);
+                    lastValue = 0.0;
+                }
             }
         } else if (ffiFunc.parameters.size() == 10) {
             // Ten parameters - for functions like filledTrigonRGBA

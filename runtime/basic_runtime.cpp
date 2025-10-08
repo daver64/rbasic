@@ -2212,13 +2212,23 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             return nullptr;
         };
         
-        // Generic pattern: (int, int, int, int, int, int, int, int, int) -> int
-        typedef int (__stdcall *FuncType)(int, int, int, int, int, int, int, int, int);
-        auto func = reinterpret_cast<FuncType>(func_ptr);
-        int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
-                         getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
-                         getAsInt(arg7), getAsInt(arg8), getAsInt(arg9));
-        return BasicValue(static_cast<double>(result));
+        // Pattern for SDL2_gfx ellipse functions: (pointer, int, int, int, int, int, int, int, int) -> int  
+        if (std::holds_alternative<void*>(arg1)) {
+            typedef int (__cdecl *FuncSDL2GFX)(void*, int, int, int, int, int, int, int, int);
+            auto func = reinterpret_cast<FuncSDL2GFX>(func_ptr);
+            int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), 
+                             getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
+                             getAsInt(arg7), getAsInt(arg8), getAsInt(arg9));
+            return BasicValue(static_cast<double>(result));
+        } else {
+            // Generic pattern: (int, int, int, int, int, int, int, int, int) -> int
+            typedef int (__stdcall *FuncType)(int, int, int, int, int, int, int, int, int);
+            auto func = reinterpret_cast<FuncType>(func_ptr);
+            int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
+                             getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
+                             getAsInt(arg7), getAsInt(arg8), getAsInt(arg9));
+            return BasicValue(static_cast<double>(result));
+        }
         
     } catch (const std::exception& e) {
         throw std::runtime_error("FFI call failed: " + std::string(e.what()));

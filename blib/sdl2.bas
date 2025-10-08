@@ -19,8 +19,10 @@ ffi integer SDL_SetRenderDrawColor(renderer as pointer, r as integer, g as integ
 ffi integer SDL_RenderClear(renderer as pointer) from "SDL2.dll";
 ffi integer SDL_RenderPresent(renderer as pointer) from "SDL2.dll";
 
-// SDL2_gfx functions for filled shapes
+// SDL2_gfx functions for filled shapes (with correct signatures from SDL2_gfxPrimitives.h)
 ffi integer filledTrigonRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, x3 as integer, y3 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
+ffi integer filledCircleRGBA(renderer as pointer, x as integer, y as integer, rad as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
+ffi integer filledEllipseRGBA(renderer as pointer, x as integer, y as integer, rx as integer, ry as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
 
 // Drawing functions
 ffi integer SDL_RenderDrawLine(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer) from "SDL2.dll";
@@ -140,6 +142,22 @@ function sdl_fill_triangle(x1 as integer, y1 as integer, x2 as integer, y2 as in
     filledTrigonRGBA(sdl_renderer, x1, y1, x2, y2, x3, y3, 255, 255, 0, 255);
 }
 
+// Draw a filled circle using SDL2_gfx
+function sdl_fill_circle(x as integer, y as integer, radius as integer) {
+    // Use SDL2_gfx for filled circle rendering
+    // filledCircleRGBA(renderer, x, y, rad, r, g, b, a)
+    // Green color: r=0, g=255, b=0, a=255
+    filledCircleRGBA(sdl_renderer, x, y, radius, 0, 255, 0, 255);
+}
+
+// Draw a filled ellipse using SDL2_gfx
+function sdl_fill_ellipse(x as integer, y as integer, rx as integer, ry as integer) {
+    // Use SDL2_gfx for filled ellipse rendering
+    // filledEllipseRGBA(renderer, x, y, rx, ry, r, g, b, a)
+    // Purple color: r=128, g=0, b=128, a=255
+    filledEllipseRGBA(sdl_renderer, x, y, rx, ry, 128, 0, 128, 255);
+}
+
 // Present the rendered frame
 function sdl_present() {
     SDL_RenderPresent(sdl_renderer);
@@ -185,4 +203,4 @@ function sdl_delay(milliseconds as integer) {
 
 print("SDL2 Minimal Library loaded");
 print("Functions: sdl_init(), sdl_cleanup(), sdl_clear_blue(), sdl_present(), sdl_process_events()");
-print("Drawing: sdl_set_color(), sdl_draw_line(), sdl_draw_rect(), sdl_fill_rect(), sdl_fill_triangle()");
+print("Drawing: sdl_set_color(), sdl_draw_line(), sdl_draw_rect(), sdl_fill_rect(), sdl_fill_triangle(), sdl_fill_circle(), sdl_fill_ellipse()");
