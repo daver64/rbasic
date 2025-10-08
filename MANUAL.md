@@ -249,10 +249,10 @@ if (outer == 1) {
     
     for (var i = 0; i < 3; i = i + 1) {
         var inner = 3;
-        print("outer:", outer);   // ✓ Accessible
-        print("middle:", middle); // ✓ Accessible  
-        print("inner:", inner);   // ✓ Accessible
-        print("i:", i);           // ✓ Accessible
+        print("outer:", outer);   // [OK] Accessible
+        print("middle:", middle); // [OK] Accessible  
+        print("inner:", inner);   // [OK] Accessible
+        print("i:", i);           // [OK] Accessible
     }
     
     // print("inner:", inner);  // ERROR: inner not accessible
@@ -271,9 +271,9 @@ var global = "I'm global";
 
 function myFunction(param) {
     var local = "I'm local";
-    print(global);  // ✓ Can access global variables
-    print(param);   // ✓ Can access parameters
-    print(local);   // ✓ Can access local variables
+    print(global);  // [OK] Can access global variables
+    print(param);   // [OK] Can access parameters
+    print(local);   // [OK] Can access local variables
 }
 
 // print(param);   // ERROR: param not accessible outside function

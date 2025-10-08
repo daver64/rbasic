@@ -1396,6 +1396,15 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             return BasicValue(result);
         }
         
+        // Pattern: (int) -> pointer (malloc, calloc, and similar memory allocation functions)
+        if ((std::holds_alternative<double>(arg1) || std::holds_alternative<int>(arg1)) && 
+            (function_name == "malloc" || function_name == "calloc" || function_name.find("alloc") != std::string::npos)) {
+            typedef void* (__cdecl *FuncType)(size_t);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            void* result = func(static_cast<size_t>(getAsInt(arg1)));
+            return BasicValue(result);
+        }
+        
         // Pattern: (pointer) -> int (common for SQLite close functions)
         if (std::holds_alternative<void*>(arg1)) {
             typedef int (__cdecl *FuncType)(void*);
@@ -1484,6 +1493,25 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             typedef void* (__cdecl *FuncType)(void*, void*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
             void* result = func(getAsPointer(arg1), getAsPointer(arg2));
+            return BasicValue(result);
+        }
+        
+        // Pattern: (string, int) -> pointer (TTF_OpenFont and similar font loading functions)
+        if (std::holds_alternative<std::string>(arg1) && 
+            (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
+            (function_name == "TTF_OpenFont" || function_name.find("OpenFont") != std::string::npos)) {
+            typedef void* (__cdecl *FuncType)(const char*, int);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            void* result = func(getAsString(arg1), getAsInt(arg2));
+            return BasicValue(result);
+        }
+        
+        // Pattern: (string, string) -> pointer (fopen and similar file functions)
+        if (std::holds_alternative<std::string>(arg1) && std::holds_alternative<std::string>(arg2) &&
+            (function_name == "fopen" || function_name == "freopen" || function_name.find("open") != std::string::npos)) {
+            typedef void* (__cdecl *FuncType)(const char*, const char*);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            void* result = func(getAsString(arg1), getAsString(arg2));
             return BasicValue(result);
         }
         
@@ -1606,6 +1634,18 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             if (result != nullptr) {
                 return BasicValue(result);  // Return as void* if non-null
             }
+        }
+        
+        // Pattern: (string, int, int) -> pointer (TTF_OpenFontIndex and similar font functions)
+        if (std::holds_alternative<std::string>(arg1) && 
+            (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
+            (std::holds_alternative<double>(arg3) || std::holds_alternative<int>(arg3)) &&
+            (function_name == "TTF_OpenFontIndex" || function_name.find("OpenFont") != std::string::npos)) {
+            
+            typedef void* (__cdecl *FuncType)(const char*, int, long);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            void* result = func(getAsString(arg1), getAsInt(arg2), static_cast<long>(getAsInt(arg3)));
+            return BasicValue(result);
         }
         
         // Pattern: (pointer, int, int) -> int (common for SQLite bind functions)
