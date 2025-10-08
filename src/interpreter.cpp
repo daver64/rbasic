@@ -2419,55 +2419,36 @@ void Interpreter::visit(IfStmt& node) {
 }
 
 void Interpreter::visit(ModernForStmt& node) {
-    // Execute initialization: var i = 1 or i = 1
+    // Create a completely isolated scope for the for loop
+    // This prevents any interference with function parameters or existing variables
+    
+    // First, evaluate the initialization in the current scope to access parameters
     ValueType initValue = evaluate(*node.initialization);
     
-    // Store the loop variable in current scope (not a new scope)
-    // This allows access to parent scope variables while isolating the loop variable
-    std::string backupVariableName;
-    ValueType backupValue;
-    bool hadBackup = false;
+    // Now create a new scope for the loop to isolate the loop variable
+    pushScope();
     
-    // Check if variable already exists and back it up
-    try {
-        backupValue = getVariable(node.variable);
-        hadBackup = true;
-        backupVariableName = node.variable;
-    } catch (const RuntimeError&) {
-        // Variable doesn't exist, no backup needed
-    }
+    // Define the loop variable in this new isolated scope
+    defineVariable(node.variable, initValue);
     
-    // Set the loop variable
-    setVariable(node.variable, initValue);
-    
-    // Loop while condition is true
+    // Execute the loop
     while (isTruthy(evaluate(*node.condition))) {
         // Execute body
         for (auto& stmt : node.body) {
             stmt->accept(*this);
             if (hasReturned) {
-                // Restore original variable if it existed
-                if (hadBackup) {
-                    setVariable(backupVariableName, backupValue);
-                }
+                // Clean up on early return
+                popScope();
                 return;
             }
         }
         
-        // Execute increment: i = i + 1
-        // The increment expression should update the variable
+        // Execute increment
         evaluate(*node.increment);
     }
     
-    // Restore original variable if it existed, otherwise remove loop variable
-    if (hadBackup) {
-        setVariable(backupVariableName, backupValue);
-    } else {
-        // Remove the loop variable from current scope
-        if (!scopes.empty()) {
-            scopes.back().erase(node.variable);
-        }
-    }
+    // Normal cleanup - just pop the scope
+    popScope();
 }
 
 void Interpreter::visit(WhileStmt& node) {
