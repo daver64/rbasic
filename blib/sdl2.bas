@@ -1,0 +1,188 @@
+// Minimal SDL2 Graphics Library for rbasic
+// Simple wrapper for basic window creation, clearing, and event handling
+// Just enough functionality to create a window, clear to blue, and handle escape key
+
+// ========================================
+// Core SDL2 FFI Declarations
+// ========================================
+
+// Essential SDL2 functions for basic window and rendering
+ffi integer SDL_Init(flags as integer) from "SDL2.dll";
+ffi integer SDL_Quit() from "SDL2.dll";
+ffi pointer SDL_CreateWindow(title as string, x as integer, y as integer, w as integer, h as integer, flags as integer) from "SDL2.dll";
+ffi integer SDL_DestroyWindow(window as pointer) from "SDL2.dll";
+ffi pointer SDL_CreateRenderer(window as pointer, index as integer, flags as integer) from "SDL2.dll";
+ffi integer SDL_DestroyRenderer(renderer as pointer) from "SDL2.dll";
+
+// Rendering functions
+ffi integer SDL_SetRenderDrawColor(renderer as pointer, r as integer, g as integer, b as integer, a as integer) from "SDL2.dll";
+ffi integer SDL_RenderClear(renderer as pointer) from "SDL2.dll";
+ffi integer SDL_RenderPresent(renderer as pointer) from "SDL2.dll";
+
+// SDL2_gfx functions for filled shapes
+ffi integer filledTrigonRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, x3 as integer, y3 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
+
+// Drawing functions
+ffi integer SDL_RenderDrawLine(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer) from "SDL2.dll";
+ffi integer SDL_RenderDrawRect(renderer as pointer, rect as pointer) from "SDL2.dll";
+ffi integer SDL_RenderFillRect(renderer as pointer, rect as pointer) from "SDL2.dll";
+
+// Event handling
+ffi integer SDL_PollEvent(event as pointer) from "SDL2.dll";
+
+// Timing
+ffi integer SDL_Delay(ms as integer) from "SDL2.dll";
+
+// ========================================
+// Global State
+// ========================================
+
+var sdl_window = 0;
+var sdl_renderer = 0;
+var sdl_running = 0;
+var sdl_event_buffer = 0;
+
+// ========================================
+// Core Functions
+// ========================================
+
+// Initialize SDL and create a window with renderer
+function sdl_init(title as string, width as integer, height as integer) as integer {
+    print("Initializing SDL2...");
+    
+    // Initialize SDL video subsystem
+    var init_result = SDL_Init(get_constant("SDL_INIT_VIDEO"));
+    if (init_result != 0) {
+        print("ERROR: Failed to initialize SDL2");
+        return 0;
+    }
+    
+    // Create window (positioned at 100, 100)
+    sdl_window = SDL_CreateWindow(title, 100, 100, width, height, get_constant("SDL_WINDOW_SHOWN"));
+    if (is_null(sdl_window)) {
+        print("ERROR: Failed to create SDL window");
+        SDL_Quit();
+        return 0;
+    }
+    
+    // Create hardware-accelerated renderer
+    sdl_renderer = SDL_CreateRenderer(sdl_window, -1, get_constant("SDL_RENDERER_ACCELERATED"));
+    if (is_null(sdl_renderer)) {
+        print("ERROR: Failed to create SDL renderer");
+        SDL_DestroyWindow(sdl_window);
+        SDL_Quit();
+        return 0;
+    }
+    
+    // Create event buffer
+    sdl_event_buffer = create_sdl_event();
+    sdl_running = 1;
+    
+    print("SDL2 initialized successfully!");
+    return 1;
+}
+
+// Cleanup SDL resources
+function sdl_cleanup() {
+    if (not_null(sdl_renderer)) {
+        SDL_DestroyRenderer(sdl_renderer);
+        sdl_renderer = 0;
+    }
+    
+    if (not_null(sdl_window)) {
+        SDL_DestroyWindow(sdl_window);
+        sdl_window = 0;
+    }
+    
+    SDL_Quit();
+    sdl_running = 0;
+    print("SDL2 cleanup complete");
+}
+
+// Check if application should keep running
+function sdl_is_running() as integer {
+    return sdl_running;
+}
+
+// Clear screen to blue color
+function sdl_clear_blue() {
+    SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255); // Blue background
+    SDL_RenderClear(sdl_renderer);
+}
+
+// Set drawing color
+function sdl_set_color(r as integer, g as integer, b as integer) {
+    SDL_SetRenderDrawColor(sdl_renderer, r, g, b, 255);
+}
+
+// Draw a line
+function sdl_draw_line(x1 as integer, y1 as integer, x2 as integer, y2 as integer) {
+    SDL_RenderDrawLine(sdl_renderer, x1, y1, x2, y2);
+}
+
+// Draw a rectangle outline
+function sdl_draw_rect(x as integer, y as integer, w as integer, h as integer) {
+    var rect = create_sdl_rect(x, y, w, h);
+    SDL_RenderDrawRect(sdl_renderer, rect);
+}
+
+// Draw a filled rectangle
+function sdl_fill_rect(x as integer, y as integer, w as integer, h as integer) {
+    var rect = create_sdl_rect(x, y, w, h);
+    SDL_RenderFillRect(sdl_renderer, rect);
+}
+
+// Draw a filled triangle using three points with SDL2_gfx
+function sdl_fill_triangle(x1 as integer, y1 as integer, x2 as integer, y2 as integer, x3 as integer, y3 as integer) {
+    // Use SDL2_gfx for proper filled triangle rendering
+    // filledTrigonRGBA(renderer, x1, y1, x2, y2, x3, y3, r, g, b, a)
+    // Yellow color: r=255, g=255, b=0, a=255
+    filledTrigonRGBA(sdl_renderer, x1, y1, x2, y2, x3, y3, 255, 255, 0, 255);
+}
+
+// Present the rendered frame
+function sdl_present() {
+    SDL_RenderPresent(sdl_renderer);
+}
+
+// Process events and check for escape key
+function sdl_process_events() as integer {
+    var events_processed = 0;
+    
+    while (SDL_PollEvent(sdl_event_buffer) == 1) {
+        events_processed = events_processed + 1;
+        var event_type = deref_int(sdl_event_buffer);
+        
+        // Handle quit event (window close button)
+        if (event_type == get_constant("SDL_QUIT")) {
+            sdl_running = 0;
+            print("Quit event received");
+        }
+        
+        // Handle key press events
+        if (event_type == get_constant("SDL_KEYDOWN")) {
+            var key_code = get_key_code(sdl_event_buffer);
+            
+            // Check for escape key
+            if (key_code == get_constant("SDL_SCANCODE_ESCAPE")) {
+                sdl_running = 0;
+                print("Escape key pressed");
+            }
+        }
+    }
+    
+    return events_processed;
+}
+
+// Simple delay function
+function sdl_delay(milliseconds as integer) {
+    SDL_Delay(milliseconds);
+}
+
+// ========================================
+// Library Initialization
+// ========================================
+
+print("SDL2 Minimal Library loaded");
+print("Functions: sdl_init(), sdl_cleanup(), sdl_clear_blue(), sdl_present(), sdl_process_events()");
+print("Drawing: sdl_set_color(), sdl_draw_line(), sdl_draw_rect(), sdl_fill_rect(), sdl_fill_triangle()");

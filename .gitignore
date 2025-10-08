@@ -27,6 +27,16 @@ temp_*
 # Debug and test files in root
 debug_*.bas
 test_*.bas
+param_*.bas
+simple_*.bas
+exact_*.bas
+inline_*.bas
+typed_*.bas
+reassignment_*.bas
+function_*.bas
+
+# Generated databases
+*.db
 
 # CMake generated files
 CMakeCache.txt
@@ -69,3 +79,4 @@ ehthumbs.db
 
 # Linux
 *~
+sqlite3.def

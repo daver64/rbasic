@@ -89,6 +89,57 @@ The FFI system provides comprehensive C library integration:
 
 ### Core FFI Features
 - **Library Loading**: Dynamic loading of Windows DLLs, Linux .so, and macOS .dylib files
+- **Extended Parameter Support**: Functions with up to 11 parameters for complex graphics operations (SDL2_gfx)
+- **Function Calling**: Support for 0-11 parameter functions with flexible types
+- **Memory Management**: Safe buffer allocation, pointer dereferencing, and cleanup
+- **Type System**: Comprehensive support for integers, strings, pointers, and structures
+
+### Advanced FFI Features
+- **Buffer Operations**: `alloc_buffer()`, `alloc_int_buffer()`, `alloc_pointer_buffer()`
+- **Pointer Operations**: `deref_int()`, `deref_pointer()`, `deref_string()`, `deref_int_offset()`
+- **Structure Support**: SDL2 structures (`create_sdl_rect()`, `create_sdl_event()`)
+- **Constant System**: Built-in constants for SDL2, SQLite, Windows API
+- **Null Handling**: `is_null()`, `not_null()` for safe pointer operations
+- **Event Processing**: Complete SDL2 event handling with `get_key_code()` for keyboard events
+
+### SDL2 Integration
+- **Window Management**: Window creation, destruction, and property control
+- **Rendering System**: Hardware-accelerated 2D rendering with color management
+- **Filled Shapes**: Proper solid triangle rendering with SDL2_gfx `filledTrigonRGBA`
+- **Event Handling**: Complete keyboard and mouse event processing
+  - **Keyboard Events**: Full scan code support with built-in SDL_SCANCODE_* constants
+  - **Mouse Events**: Click detection, movement tracking, button state management
+  - **Window Events**: Focus, resize, and close event handling
+- **Memory-Safe Event Access**: Direct event buffer reading with `deref_int_offset()`
+- **Cross-Mode Compatibility**: Identical event handling in interpreter and compiled modes
+
+### Library Integration Ready
+- **SDL2**: Complete structure support, event handling, graphics primitives, input management
+- **SDL2_gfx**: Filled polygon and triangle rendering with up to 11-parameter function support
+- **SQLite**: Database constants, prepared statement patterns
+- **Windows API**: System calls, message boxes, process management
+- **OpenGL**: Ready for graphics programming integration
+
+## Recent Improvements (2025)
+
+### Variable Scoping Fix (January 2025)
+- **For Loop Scoping**: Fixed critical bug where for loop variables couldn't access parent scope
+- **Function Compatibility**: Resolved scoping issues in functions with typed parameters  
+- **Cross-Mode Consistency**: Identical scoping behavior in interpreter and compiled modes
+- **Root Cause**: Modified `ModernForStmt::visit()` to use variable backup/restore instead of isolated scopes
+
+### Extended FFI Support (January 2025)
+- **Parameter Expansion**: Extended FFI from 8 to 11 parameters for SDL2_gfx integration
+- **Runtime Compatibility**: Updated both interpreter and runtime library for consistent behavior
+- **Graphics Enhancement**: Enabled proper filled triangle rendering with `filledTrigonRGBA`
+- **Implementation**: Added cases 9, 10, and 11 to FFI parameter handling in both execution modes
+
+## Foreign Function Interface (FFI)
+
+The FFI system provides comprehensive C library integration:
+
+### Core FFI Features
+- **Library Loading**: Dynamic loading of Windows DLLs, Linux .so, and macOS .dylib files
 - **Function Calling**: Support for 0-8 parameter functions with flexible types
 - **Memory Management**: Safe buffer allocation, pointer dereferencing, and cleanup
 - **Type System**: Comprehensive support for integers, strings, pointers, and structures

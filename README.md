@@ -39,6 +39,8 @@ rbasic includes a comprehensive Foreign Function Interface with wrapper librarie
 - **Memory-Safe Operations**: Automatic pointer handling and structure management
 
 ### Advanced FFI Features
+- **Extended Parameter Support**: Functions with up to 11 parameters for complex graphics operations
+- **SDL2_gfx Integration**: Proper filled polygon and triangle rendering with `filledTrigonRGBA` 
 - **Enhanced Pattern Matching**: Improved support for pointer-returning functions (`IMG_Load`, `SDL_CreateTextureFromSurface`)
 - **Automatic Type Conversion**: Seamless conversion between BASIC and C types
 - **Structure Support**: Complete SDL2 and SQLite structure handling
@@ -335,6 +337,18 @@ rbasic/
 ├── tests/                 # Unit tests
 └── build/                 # Build output directory
 ```
+
+## Featured Examples
+
+### SDL2 Graphics Programming
+- **`examples/simple_window_demo.bas`** - Basic SDL2 window with blue background and event handling
+- **`examples/drawing_demo.bas`** - Advanced graphics with solid yellow triangle and red rectangle
+- **`examples/sqlite_simple_demo.bas`** - SQLite database integration with full CRUD operations
+
+### Language Features
+- **`examples/functions.bas`** - Function definitions, parameters, and return values
+- **`examples/arrays.bas`** - Array operations and multi-dimensional data
+- **`examples/structures.bas`** - Custom data structures and nested objects
 
 ## Documentation
 

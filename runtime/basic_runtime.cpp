@@ -2176,6 +2176,168 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
     }
 }
 
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, 
+                           const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3,
+                           const BasicValue& arg4, const BasicValue& arg5, const BasicValue& arg6,
+                           const BasicValue& arg7, const BasicValue& arg8, const BasicValue& arg9) {
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        auto library = ffi_manager.get_library(library_name);
+        if (!library) {
+            library = ffi_manager.load_library(library_name);
+        }
+        
+        if (!library || !library->is_valid()) {
+            throw std::runtime_error("Failed to load library: " + library_name);
+        }
+        
+        void* func_ptr = library->get_function_address(function_name);
+        if (!func_ptr) {
+            throw std::runtime_error("Function not found: " + function_name);
+        }
+        
+        auto getAsInt = [](const BasicValue& val) -> int {
+            if (std::holds_alternative<double>(val)) {
+                return static_cast<int>(std::get<double>(val));
+            } else if (std::holds_alternative<int>(val)) {
+                return std::get<int>(val);
+            }
+            return 0;
+        };
+        
+        auto getAsPointer = [](const BasicValue& val) -> void* {
+            if (std::holds_alternative<void*>(val)) {
+                return std::get<void*>(val);
+            }
+            return nullptr;
+        };
+        
+        // Generic pattern: (int, int, int, int, int, int, int, int, int) -> int
+        typedef int (__stdcall *FuncType)(int, int, int, int, int, int, int, int, int);
+        auto func = reinterpret_cast<FuncType>(func_ptr);
+        int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
+                         getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
+                         getAsInt(arg7), getAsInt(arg8), getAsInt(arg9));
+        return BasicValue(static_cast<double>(result));
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("FFI call failed: " + std::string(e.what()));
+    }
+}
+
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, 
+                           const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3,
+                           const BasicValue& arg4, const BasicValue& arg5, const BasicValue& arg6,
+                           const BasicValue& arg7, const BasicValue& arg8, const BasicValue& arg9,
+                           const BasicValue& arg10) {
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        auto library = ffi_manager.get_library(library_name);
+        if (!library) {
+            library = ffi_manager.load_library(library_name);
+        }
+        
+        if (!library || !library->is_valid()) {
+            throw std::runtime_error("Failed to load library: " + library_name);
+        }
+        
+        void* func_ptr = library->get_function_address(function_name);
+        if (!func_ptr) {
+            throw std::runtime_error("Function not found: " + function_name);
+        }
+        
+        auto getAsInt = [](const BasicValue& val) -> int {
+            if (std::holds_alternative<double>(val)) {
+                return static_cast<int>(std::get<double>(val));
+            } else if (std::holds_alternative<int>(val)) {
+                return std::get<int>(val);
+            }
+            return 0;
+        };
+        
+        auto getAsPointer = [](const BasicValue& val) -> void* {
+            if (std::holds_alternative<void*>(val)) {
+                return std::get<void*>(val);
+            }
+            return nullptr;
+        };
+        
+        // Generic pattern: (int, int, int, int, int, int, int, int, int, int) -> int
+        typedef int (__stdcall *FuncType)(int, int, int, int, int, int, int, int, int, int);
+        auto func = reinterpret_cast<FuncType>(func_ptr);
+        int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
+                         getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
+                         getAsInt(arg7), getAsInt(arg8), getAsInt(arg9), 
+                         getAsInt(arg10));
+        return BasicValue(static_cast<double>(result));
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("FFI call failed: " + std::string(e.what()));
+    }
+}
+
+BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, 
+                           const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3,
+                           const BasicValue& arg4, const BasicValue& arg5, const BasicValue& arg6,
+                           const BasicValue& arg7, const BasicValue& arg8, const BasicValue& arg9,
+                           const BasicValue& arg10, const BasicValue& arg11) {
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        auto library = ffi_manager.get_library(library_name);
+        if (!library) {
+            library = ffi_manager.load_library(library_name);
+        }
+        
+        if (!library || !library->is_valid()) {
+            throw std::runtime_error("Failed to load library: " + library_name);
+        }
+        
+        void* func_ptr = library->get_function_address(function_name);
+        if (!func_ptr) {
+            throw std::runtime_error("Function not found: " + function_name);
+        }
+        
+        auto getAsInt = [](const BasicValue& val) -> int {
+            if (std::holds_alternative<double>(val)) {
+                return static_cast<int>(std::get<double>(val));
+            } else if (std::holds_alternative<int>(val)) {
+                return std::get<int>(val);
+            }
+            return 0;
+        };
+        
+        auto getAsPointer = [](const BasicValue& val) -> void* {
+            if (std::holds_alternative<void*>(val)) {
+                return std::get<void*>(val);
+            }
+            return nullptr;
+        };
+        
+        // Pattern for filledTrigonRGBA: (pointer, int, int, int, int, int, int, int, int, int, int) -> int
+        if (std::holds_alternative<void*>(arg1)) {
+            typedef int (__cdecl *FuncSDL2GFX)(void*, int, int, int, int, int, int, int, int, int, int);
+            auto func = reinterpret_cast<FuncSDL2GFX>(func_ptr);
+            int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), 
+                             getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
+                             getAsInt(arg7), getAsInt(arg8), getAsInt(arg9), 
+                             getAsInt(arg10), getAsInt(arg11));
+            return BasicValue(static_cast<double>(result));
+        } else {
+            // Generic pattern: (int, int, int, int, int, int, int, int, int, int, int) -> int
+            typedef int (__stdcall *FuncType)(int, int, int, int, int, int, int, int, int, int, int);
+            auto func = reinterpret_cast<FuncType>(func_ptr);
+            int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
+                             getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
+                             getAsInt(arg7), getAsInt(arg8), getAsInt(arg9), 
+                             getAsInt(arg10), getAsInt(arg11));
+            return BasicValue(static_cast<double>(result));
+        }
+        
+    } catch (const std::exception& e) {
+        throw std::runtime_error("FFI call failed: " + std::string(e.what()));
+    }
+}
+
 // ===== BUFFER ALLOCATION AND OUTPUT PARAMETER FUNCTIONS =====
 
 BasicValue alloc_int_buffer() {

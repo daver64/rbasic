@@ -1959,6 +1959,193 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
                     lastValue = 0.0;
                 }
             }
+        } else if (ffiFunc.parameters.size() == 9) {
+            // Nine parameters
+            ValueType arg1Val = evaluate(*node.arguments[0]);
+            ValueType arg2Val = evaluate(*node.arguments[1]);
+            ValueType arg3Val = evaluate(*node.arguments[2]);
+            ValueType arg4Val = evaluate(*node.arguments[3]);
+            ValueType arg5Val = evaluate(*node.arguments[4]);
+            ValueType arg6Val = evaluate(*node.arguments[5]);
+            ValueType arg7Val = evaluate(*node.arguments[6]);
+            ValueType arg8Val = evaluate(*node.arguments[7]);
+            ValueType arg9Val = evaluate(*node.arguments[8]);
+            
+            // Generic pattern: assume all int parameters for compatibility
+            int param1 = getIntValue(arg1Val);
+            int param2 = getIntValue(arg2Val);
+            int param3 = getIntValue(arg3Val);
+            int param4 = getIntValue(arg4Val);
+            int param5 = getIntValue(arg5Val);
+            int param6 = getIntValue(arg6Val);
+            int param7 = getIntValue(arg7Val);
+            int param8 = getIntValue(arg8Val);
+            int param9 = getIntValue(arg9Val);
+            
+            if (returnsInteger) {
+                typedef int (*Func9)(int, int, int, int, int, int, int, int, int);
+                auto func = reinterpret_cast<Func9>(funcPtr);
+                lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7, param8, param9));
+            } else if (returnsPointer) {
+                typedef void* (*Func9)(int, int, int, int, int, int, int, int, int);
+                auto func = reinterpret_cast<Func9>(funcPtr);
+                lastValue = func(param1, param2, param3, param4, param5, param6, param7, param8, param9);
+            } else if (returnsString) {
+                typedef const char* (*Func9)(int, int, int, int, int, int, int, int, int);
+                auto func = reinterpret_cast<Func9>(funcPtr);
+                const char* result = func(param1, param2, param3, param4, param5, param6, param7, param8, param9);
+                lastValue = std::string(result ? result : "");
+            } else {
+                typedef void (*Func9)(int, int, int, int, int, int, int, int, int);
+                auto func = reinterpret_cast<Func9>(funcPtr);
+                func(param1, param2, param3, param4, param5, param6, param7, param8, param9);
+                lastValue = 0.0;
+            }
+        } else if (ffiFunc.parameters.size() == 10) {
+            // Ten parameters - for functions like filledTrigonRGBA
+            ValueType arg1Val = evaluate(*node.arguments[0]);
+            ValueType arg2Val = evaluate(*node.arguments[1]);
+            ValueType arg3Val = evaluate(*node.arguments[2]);
+            ValueType arg4Val = evaluate(*node.arguments[3]);
+            ValueType arg5Val = evaluate(*node.arguments[4]);
+            ValueType arg6Val = evaluate(*node.arguments[5]);
+            ValueType arg7Val = evaluate(*node.arguments[6]);
+            ValueType arg8Val = evaluate(*node.arguments[7]);
+            ValueType arg9Val = evaluate(*node.arguments[8]);
+            ValueType arg10Val = evaluate(*node.arguments[9]);
+            
+            const auto& param1Type = ffiFunc.parameters[0].second;
+            
+            // Pattern: (pointer, int, int, int, int, int, int, int, int, int) - filledTrigonRGBA
+            if (param1Type == "pointer") {
+                void* param1 = getPointerValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                int param3 = getIntValue(arg3Val);
+                int param4 = getIntValue(arg4Val);
+                int param5 = getIntValue(arg5Val);
+                int param6 = getIntValue(arg6Val);
+                int param7 = getIntValue(arg7Val);
+                int param8 = getIntValue(arg8Val);
+                int param9 = getIntValue(arg9Val);
+                int param10 = getIntValue(arg10Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func10)(void*, int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func10>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10));
+                } else {
+                    typedef void (*Func10)(void*, int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func10>(funcPtr);
+                    func(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10);
+                    lastValue = 0.0;
+                }
+            } else {
+                // Generic pattern: assume all int parameters
+                int param1 = getIntValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                int param3 = getIntValue(arg3Val);
+                int param4 = getIntValue(arg4Val);
+                int param5 = getIntValue(arg5Val);
+                int param6 = getIntValue(arg6Val);
+                int param7 = getIntValue(arg7Val);
+                int param8 = getIntValue(arg8Val);
+                int param9 = getIntValue(arg9Val);
+                int param10 = getIntValue(arg10Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func10)(int, int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func10>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10));
+                } else if (returnsPointer) {
+                    typedef void* (*Func10)(int, int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func10>(funcPtr);
+                    lastValue = func(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10);
+                } else if (returnsString) {
+                    typedef const char* (*Func10)(int, int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func10>(funcPtr);
+                    const char* result = func(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10);
+                    lastValue = std::string(result ? result : "");
+                } else {
+                    typedef void (*Func10)(int, int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func10>(funcPtr);
+                    func(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10);
+                    lastValue = 0.0;
+                }
+            }
+        } else if (ffiFunc.parameters.size() == 11) {
+            // Eleven parameters - for functions like filledTrigonRGBA
+            ValueType arg1Val = evaluate(*node.arguments[0]);
+            ValueType arg2Val = evaluate(*node.arguments[1]);
+            ValueType arg3Val = evaluate(*node.arguments[2]);
+            ValueType arg4Val = evaluate(*node.arguments[3]);
+            ValueType arg5Val = evaluate(*node.arguments[4]);
+            ValueType arg6Val = evaluate(*node.arguments[5]);
+            ValueType arg7Val = evaluate(*node.arguments[6]);
+            ValueType arg8Val = evaluate(*node.arguments[7]);
+            ValueType arg9Val = evaluate(*node.arguments[8]);
+            ValueType arg10Val = evaluate(*node.arguments[9]);
+            ValueType arg11Val = evaluate(*node.arguments[10]);
+            
+            const auto& param1Type = ffiFunc.parameters[0].second;
+            
+            // Pattern: (pointer, int, int, int, int, int, int, int, int, int, int) - filledTrigonRGBA
+            if (param1Type == "pointer") {
+                void* param1 = getPointerValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                int param3 = getIntValue(arg3Val);
+                int param4 = getIntValue(arg4Val);
+                int param5 = getIntValue(arg5Val);
+                int param6 = getIntValue(arg6Val);
+                int param7 = getIntValue(arg7Val);
+                int param8 = getIntValue(arg8Val);
+                int param9 = getIntValue(arg9Val);
+                int param10 = getIntValue(arg10Val);
+                int param11 = getIntValue(arg11Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func11)(void*, int, int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func11>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11));
+                } else {
+                    typedef void (*Func11)(void*, int, int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func11>(funcPtr);
+                    func(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11);
+                    lastValue = 0.0;
+                }
+            } else {
+                // Generic pattern: assume all int parameters
+                int param1 = getIntValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                int param3 = getIntValue(arg3Val);
+                int param4 = getIntValue(arg4Val);
+                int param5 = getIntValue(arg5Val);
+                int param6 = getIntValue(arg6Val);
+                int param7 = getIntValue(arg7Val);
+                int param8 = getIntValue(arg8Val);
+                int param9 = getIntValue(arg9Val);
+                int param10 = getIntValue(arg10Val);
+                int param11 = getIntValue(arg11Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func11)(int, int, int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func11>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11));
+                } else if (returnsPointer) {
+                    typedef void* (*Func11)(int, int, int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func11>(funcPtr);
+                    lastValue = func(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11);
+                } else if (returnsString) {
+                    typedef const char* (*Func11)(int, int, int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func11>(funcPtr);
+                    const char* result = func(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11);
+                    lastValue = std::string(result ? result : "");
+                } else {
+                    typedef void (*Func11)(int, int, int, int, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func11>(funcPtr);
+                    func(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11);
+                    lastValue = 0.0;
+                }
+            }
         } else {
             // Unsupported parameter count
             throw RuntimeError("FFI functions with " + std::to_string(ffiFunc.parameters.size()) + 
@@ -2232,12 +2419,26 @@ void Interpreter::visit(IfStmt& node) {
 }
 
 void Interpreter::visit(ModernForStmt& node) {
-    // Create new scope for the for loop to isolate loop variables
-    pushScope();
-    
     // Execute initialization: var i = 1 or i = 1
     ValueType initValue = evaluate(*node.initialization);
-    setVariable(node.variable, initValue);  // Use setVariable to handle both new and existing variables
+    
+    // Store the loop variable in current scope (not a new scope)
+    // This allows access to parent scope variables while isolating the loop variable
+    std::string backupVariableName;
+    ValueType backupValue;
+    bool hadBackup = false;
+    
+    // Check if variable already exists and back it up
+    try {
+        backupValue = getVariable(node.variable);
+        hadBackup = true;
+        backupVariableName = node.variable;
+    } catch (const RuntimeError&) {
+        // Variable doesn't exist, no backup needed
+    }
+    
+    // Set the loop variable
+    setVariable(node.variable, initValue);
     
     // Loop while condition is true
     while (isTruthy(evaluate(*node.condition))) {
@@ -2245,7 +2446,10 @@ void Interpreter::visit(ModernForStmt& node) {
         for (auto& stmt : node.body) {
             stmt->accept(*this);
             if (hasReturned) {
-                popScope();
+                // Restore original variable if it existed
+                if (hadBackup) {
+                    setVariable(backupVariableName, backupValue);
+                }
                 return;
             }
         }
@@ -2255,8 +2459,15 @@ void Interpreter::visit(ModernForStmt& node) {
         evaluate(*node.increment);
     }
     
-    // Pop the for loop scope
-    popScope();
+    // Restore original variable if it existed, otherwise remove loop variable
+    if (hadBackup) {
+        setVariable(backupVariableName, backupValue);
+    } else {
+        // Remove the loop variable from current scope
+        if (!scopes.empty()) {
+            scopes.back().erase(node.variable);
+        }
+    }
 }
 
 void Interpreter::visit(WhileStmt& node) {
