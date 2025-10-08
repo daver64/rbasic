@@ -1907,8 +1907,29 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
             const auto& param1Type = ffiFunc.parameters[0].second;
             const auto& param7Type = ffiFunc.parameters[6].second;
             
+            // Pattern: (pointer, int, int, int, int, int, int, int) - SDL2_gfx circle functions
+            if (param1Type == "pointer" && param7Type == "integer") {
+                void* param1 = getPointerValue(arg1Val);
+                int param2 = getIntValue(arg2Val);
+                int param3 = getIntValue(arg3Val);
+                int param4 = getIntValue(arg4Val);
+                int param5 = getIntValue(arg5Val);
+                int param6 = getIntValue(arg6Val);
+                int param7 = getIntValue(arg7Val);
+                int param8 = getIntValue(arg8Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func8)(void*, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func8>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4, param5, param6, param7, param8));
+                } else {
+                    typedef void (*Func8)(void*, int, int, int, int, int, int, int);
+                    auto func = reinterpret_cast<Func8>(funcPtr);
+                    func(param1, param2, param3, param4, param5, param6, param7, param8);
+                    lastValue = 0.0;
+                }
             // Pattern: (pointer, pointer, pointer, pointer, double, pointer, double, int) - SDL_RenderCopyEx
-            if (param1Type == "pointer" && param7Type == "double") {
+            } else if (param1Type == "pointer" && param7Type == "double") {
                 void* param1 = getPointerValue(arg1Val);
                 void* param2 = getPointerValue(arg2Val);
                 void* param3 = getPointerValue(arg3Val);

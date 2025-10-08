@@ -24,6 +24,11 @@ ffi integer filledTrigonRGBA(renderer as pointer, x1 as integer, y1 as integer, 
 ffi integer filledCircleRGBA(renderer as pointer, x as integer, y as integer, rad as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
 ffi integer filledEllipseRGBA(renderer as pointer, x as integer, y as integer, rx as integer, ry as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
 
+// SDL2_gfx functions for lines and rectangles  
+ffi integer lineRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
+ffi integer rectangleRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
+ffi integer boxRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
+
 // Drawing functions
 ffi integer SDL_RenderDrawLine(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer) from "SDL2.dll";
 ffi integer SDL_RenderDrawRect(renderer as pointer, rect as pointer) from "SDL2.dll";
@@ -158,6 +163,27 @@ function sdl_fill_ellipse(x as integer, y as integer, rx as integer, ry as integ
     filledEllipseRGBA(sdl_renderer, x, y, rx, ry, 128, 0, 128, 255);
 }
 
+// Draw a colored line using SDL2_gfx
+function sdl_draw_colored_line(x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer) {
+    // Use SDL2_gfx for colored line rendering
+    // lineRGBA(renderer, x1, y1, x2, y2, r, g, b, a)
+    lineRGBA(sdl_renderer, x1, y1, x2, y2, r, g, b, 255);
+}
+
+// Draw a rectangle outline using SDL2_gfx
+function sdl_draw_colored_rect(x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer) {
+    // Use SDL2_gfx for colored rectangle outline
+    // rectangleRGBA(renderer, x1, y1, x2, y2, r, g, b, a)
+    rectangleRGBA(sdl_renderer, x1, y1, x2, y2, r, g, b, 255);
+}
+
+// Draw a filled rectangle using SDL2_gfx
+function sdl_fill_colored_rect(x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer) {
+    // Use SDL2_gfx for filled colored rectangle
+    // boxRGBA(renderer, x1, y1, x2, y2, r, g, b, a)
+    boxRGBA(sdl_renderer, x1, y1, x2, y2, r, g, b, 255);
+}
+
 // Present the rendered frame
 function sdl_present() {
     SDL_RenderPresent(sdl_renderer);
@@ -204,3 +230,4 @@ function sdl_delay(milliseconds as integer) {
 print("SDL2 Minimal Library loaded");
 print("Functions: sdl_init(), sdl_cleanup(), sdl_clear_blue(), sdl_present(), sdl_process_events()");
 print("Drawing: sdl_set_color(), sdl_draw_line(), sdl_draw_rect(), sdl_fill_rect(), sdl_fill_triangle(), sdl_fill_circle(), sdl_fill_ellipse()");
+print("Colored: sdl_draw_colored_line(), sdl_draw_colored_rect(), sdl_fill_colored_rect()");

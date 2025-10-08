@@ -2153,8 +2153,16 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             return 0.0;
         };
         
+        // Check for SDL2_gfx circle pattern: (pointer, int, int, int, int, int, int, int) -> int
+        if (std::holds_alternative<void*>(arg1) && std::holds_alternative<double>(arg2) && !std::holds_alternative<double>(arg5)) {
+            typedef int (__cdecl *FuncSDL2GFXCircle)(void*, int, int, int, int, int, int, int);
+            auto func = reinterpret_cast<FuncSDL2GFXCircle>(func_ptr);
+            int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), 
+                             getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
+                             getAsInt(arg7), getAsInt(arg8));
+            return BasicValue(static_cast<double>(result));
         // Check for SDL_RenderCopyEx pattern: (pointer, pointer, pointer, pointer, double, pointer, double, int) -> int
-        if (std::holds_alternative<void*>(arg1) && std::holds_alternative<double>(arg5) && std::holds_alternative<double>(arg7)) {
+        } else if (std::holds_alternative<void*>(arg1) && std::holds_alternative<double>(arg5) && std::holds_alternative<double>(arg7)) {
             typedef int (__cdecl *FuncSDLRenderCopyEx)(void*, void*, void*, void*, double, void*, double, int);
             auto func = reinterpret_cast<FuncSDLRenderCopyEx>(func_ptr);
             int result = func(getAsPointer(arg1), getAsPointer(arg2), getAsPointer(arg3), 
