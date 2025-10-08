@@ -2154,7 +2154,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         };
         
         // Check for SDL2_gfx circle pattern: (pointer, int, int, int, int, int, int, int) -> int
-        if (std::holds_alternative<void*>(arg1) && std::holds_alternative<double>(arg2) && !std::holds_alternative<double>(arg5)) {
+        if (std::holds_alternative<void*>(arg1) && !std::holds_alternative<void*>(arg2) && !std::holds_alternative<double>(arg5)) {
             typedef int (__cdecl *FuncSDL2GFXCircle)(void*, int, int, int, int, int, int, int);
             auto func = reinterpret_cast<FuncSDL2GFXCircle>(func_ptr);
             int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), 
