@@ -1502,7 +1502,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             (function_name == "TTF_OpenFont" || function_name.find("OpenFont") != std::string::npos)) {
             typedef void* (__cdecl *FuncType)(const char*, int);
             auto func = reinterpret_cast<FuncType>(funcPtr);
-            void* result = func(getAsString(arg1), getAsInt(arg2));
+            void* result = func(getAsString(arg1).c_str(), getAsInt(arg2));
             return BasicValue(result);
         }
         
@@ -1511,7 +1511,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             (function_name == "fopen" || function_name == "freopen" || function_name.find("open") != std::string::npos)) {
             typedef void* (__cdecl *FuncType)(const char*, const char*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
-            void* result = func(getAsString(arg1), getAsString(arg2));
+            void* result = func(getAsString(arg1).c_str(), getAsString(arg2).c_str());
             return BasicValue(result);
         }
         
@@ -2456,28 +2456,102 @@ BasicValue get_constant(const std::string& name) {
     // SDL2 constants
     if (name == "SDL_INIT_VIDEO") return BasicValue(static_cast<double>(0x00000020));
     if (name == "SDL_INIT_AUDIO") return BasicValue(static_cast<double>(0x00000010));
+    if (name == "SDL_INIT_TIMER") return BasicValue(static_cast<double>(0x00000001));
+    if (name == "SDL_INIT_JOYSTICK") return BasicValue(static_cast<double>(0x00000200));
+    if (name == "SDL_INIT_HAPTIC") return BasicValue(static_cast<double>(0x00001000));
+    if (name == "SDL_INIT_GAMECONTROLLER") return BasicValue(static_cast<double>(0x00002000));
     if (name == "SDL_INIT_EVENTS") return BasicValue(static_cast<double>(0x00004000));
     if (name == "SDL_INIT_EVERYTHING") return BasicValue(static_cast<double>(0x0000FFFF));
     
-    if (name == "SDL_WINDOW_SHOWN") return BasicValue(static_cast<double>(0x00000004));
-    if (name == "SDL_WINDOW_RESIZABLE") return BasicValue(static_cast<double>(0x00000020));
+    // SDL Window flags
     if (name == "SDL_WINDOW_FULLSCREEN") return BasicValue(static_cast<double>(0x00000001));
+    if (name == "SDL_WINDOW_OPENGL") return BasicValue(static_cast<double>(0x00000002));
+    if (name == "SDL_WINDOW_SHOWN") return BasicValue(static_cast<double>(0x00000004));
+    if (name == "SDL_WINDOW_HIDDEN") return BasicValue(static_cast<double>(0x00000008));
+    if (name == "SDL_WINDOW_BORDERLESS") return BasicValue(static_cast<double>(0x00000010));
+    if (name == "SDL_WINDOW_RESIZABLE") return BasicValue(static_cast<double>(0x00000020));
+    if (name == "SDL_WINDOW_MINIMIZED") return BasicValue(static_cast<double>(0x00000040));
+    if (name == "SDL_WINDOW_MAXIMIZED") return BasicValue(static_cast<double>(0x00000080));
     if (name == "SDL_WINDOW_FULLSCREEN_DESKTOP") return BasicValue(static_cast<double>(0x00001001));
+    if (name == "SDL_WINDOW_FOREIGN") return BasicValue(static_cast<double>(0x00000800));
+    if (name == "SDL_WINDOW_ALLOW_HIGHDPI") return BasicValue(static_cast<double>(0x00002000));
+    if (name == "SDL_WINDOW_MOUSE_CAPTURE") return BasicValue(static_cast<double>(0x00004000));
+    if (name == "SDL_WINDOW_ALWAYS_ON_TOP") return BasicValue(static_cast<double>(0x00008000));
+    if (name == "SDL_WINDOW_SKIP_TASKBAR") return BasicValue(static_cast<double>(0x00010000));
+    if (name == "SDL_WINDOW_UTILITY") return BasicValue(static_cast<double>(0x00020000));
+    if (name == "SDL_WINDOW_TOOLTIP") return BasicValue(static_cast<double>(0x00040000));
+    if (name == "SDL_WINDOW_POPUP_MENU") return BasicValue(static_cast<double>(0x00080000));
     
     if (name == "SDL_WINDOWPOS_UNDEFINED") return BasicValue(static_cast<double>(0x1FFF0000));
     if (name == "SDL_WINDOWPOS_CENTERED") return BasicValue(static_cast<double>(0x2FFF0000));
     
+    // SDL Renderer flags
+    if (name == "SDL_RENDERER_SOFTWARE") return BasicValue(static_cast<double>(0x00000001));
     if (name == "SDL_RENDERER_ACCELERATED") return BasicValue(static_cast<double>(0x00000002));
     if (name == "SDL_RENDERER_PRESENTVSYNC") return BasicValue(static_cast<double>(0x00000004));
+    if (name == "SDL_RENDERER_TARGETTEXTURE") return BasicValue(static_cast<double>(0x00000008));
     
     // SDL Event types
+    if (name == "SDL_FIRSTEVENT") return BasicValue(static_cast<double>(0));
     if (name == "SDL_QUIT") return BasicValue(static_cast<double>(0x100));
+    if (name == "SDL_APP_TERMINATING") return BasicValue(static_cast<double>(0x101));
+    if (name == "SDL_APP_LOWMEMORY") return BasicValue(static_cast<double>(0x102));
+    if (name == "SDL_APP_WILLENTERBACKGROUND") return BasicValue(static_cast<double>(0x103));
+    if (name == "SDL_APP_DIDENTERBACKGROUND") return BasicValue(static_cast<double>(0x104));
+    if (name == "SDL_APP_WILLENTERFOREGROUND") return BasicValue(static_cast<double>(0x105));
+    if (name == "SDL_APP_DIDENTERFOREGROUND") return BasicValue(static_cast<double>(0x106));
+    
+    // Window events
+    if (name == "SDL_WINDOWEVENT") return BasicValue(static_cast<double>(0x200));
+    if (name == "SDL_SYSWMEVENT") return BasicValue(static_cast<double>(0x201));
+    
+    // Keyboard events
     if (name == "SDL_KEYDOWN") return BasicValue(static_cast<double>(0x300));
     if (name == "SDL_KEYUP") return BasicValue(static_cast<double>(0x301));
+    if (name == "SDL_TEXTEDITING") return BasicValue(static_cast<double>(0x302));
+    if (name == "SDL_TEXTINPUT") return BasicValue(static_cast<double>(0x303));
+    
+    // Mouse events
     if (name == "SDL_MOUSEBUTTONDOWN") return BasicValue(static_cast<double>(0x401));
     if (name == "SDL_MOUSEBUTTONUP") return BasicValue(static_cast<double>(0x402));
     if (name == "SDL_MOUSEMOTION") return BasicValue(static_cast<double>(0x400));
     if (name == "SDL_MOUSEWHEEL") return BasicValue(static_cast<double>(0x403));
+    
+    // Joystick events
+    if (name == "SDL_JOYAXISMOTION") return BasicValue(static_cast<double>(0x600));
+    if (name == "SDL_JOYBALLMOTION") return BasicValue(static_cast<double>(0x601));
+    if (name == "SDL_JOYHATMOTION") return BasicValue(static_cast<double>(0x602));
+    if (name == "SDL_JOYBUTTONDOWN") return BasicValue(static_cast<double>(0x603));
+    if (name == "SDL_JOYBUTTONUP") return BasicValue(static_cast<double>(0x604));
+    if (name == "SDL_JOYDEVICEADDED") return BasicValue(static_cast<double>(0x605));
+    if (name == "SDL_JOYDEVICEREMOVED") return BasicValue(static_cast<double>(0x606));
+    
+    // Game controller events
+    if (name == "SDL_CONTROLLERAXISMOTION") return BasicValue(static_cast<double>(0x650));
+    if (name == "SDL_CONTROLLERBUTTONDOWN") return BasicValue(static_cast<double>(0x651));
+    if (name == "SDL_CONTROLLERBUTTONUP") return BasicValue(static_cast<double>(0x652));
+    if (name == "SDL_CONTROLLERDEVICEADDED") return BasicValue(static_cast<double>(0x653));
+    if (name == "SDL_CONTROLLERDEVICEREMOVED") return BasicValue(static_cast<double>(0x654));
+    if (name == "SDL_CONTROLLERDEVICEREMAPPED") return BasicValue(static_cast<double>(0x655));
+    
+    // Touch events
+    if (name == "SDL_FINGERDOWN") return BasicValue(static_cast<double>(0x700));
+    if (name == "SDL_FINGERUP") return BasicValue(static_cast<double>(0x701));
+    if (name == "SDL_FINGERMOTION") return BasicValue(static_cast<double>(0x702));
+    
+    // Drop events
+    if (name == "SDL_DROPFILE") return BasicValue(static_cast<double>(0x1000));
+    if (name == "SDL_DROPTEXT") return BasicValue(static_cast<double>(0x1001));
+    if (name == "SDL_DROPBEGIN") return BasicValue(static_cast<double>(0x1002));
+    if (name == "SDL_DROPCOMPLETE") return BasicValue(static_cast<double>(0x1003));
+    
+    // Audio events
+    if (name == "SDL_AUDIODEVICEADDED") return BasicValue(static_cast<double>(0x1100));
+    if (name == "SDL_AUDIODEVICEREMOVED") return BasicValue(static_cast<double>(0x1101));
+    
+    // User events
+    if (name == "SDL_USEREVENT") return BasicValue(static_cast<double>(0x8000));
+    if (name == "SDL_LASTEVENT") return BasicValue(static_cast<double>(0xFFFF));
     
     // SDL Mouse button constants
     if (name == "SDL_BUTTON_LEFT") return BasicValue(static_cast<double>(1));
@@ -2494,13 +2568,49 @@ BasicValue get_constant(const std::string& name) {
     if (name == "SDL_BUTTON_X2MASK") return BasicValue(static_cast<double>(16));   // 1 << (5-1) = 1 << 4 = 16
     
     // SDL Texture constants
-    if (name == "SDL_PIXELFORMAT_ARGB8888") return BasicValue(static_cast<double>(372645892));  // 0x16362004
+    if (name == "SDL_PIXELFORMAT_UNKNOWN") return BasicValue(static_cast<double>(0));
+    if (name == "SDL_PIXELFORMAT_INDEX1LSB") return BasicValue(static_cast<double>(286261504));
+    if (name == "SDL_PIXELFORMAT_INDEX1MSB") return BasicValue(static_cast<double>(287310080));
+    if (name == "SDL_PIXELFORMAT_INDEX4LSB") return BasicValue(static_cast<double>(303039488));
+    if (name == "SDL_PIXELFORMAT_INDEX4MSB") return BasicValue(static_cast<double>(304088064));
+    if (name == "SDL_PIXELFORMAT_INDEX8") return BasicValue(static_cast<double>(318769153));
+    if (name == "SDL_PIXELFORMAT_RGB332") return BasicValue(static_cast<double>(336660481));
+    if (name == "SDL_PIXELFORMAT_RGB444") return BasicValue(static_cast<double>(353504258));
+    if (name == "SDL_PIXELFORMAT_RGB555") return BasicValue(static_cast<double>(353570562));
+    if (name == "SDL_PIXELFORMAT_BGR555") return BasicValue(static_cast<double>(357764866));
+    if (name == "SDL_PIXELFORMAT_ARGB4444") return BasicValue(static_cast<double>(355602434));
+    if (name == "SDL_PIXELFORMAT_RGBA4444") return BasicValue(static_cast<double>(356651010));
+    if (name == "SDL_PIXELFORMAT_ABGR4444") return BasicValue(static_cast<double>(359796738));
+    if (name == "SDL_PIXELFORMAT_BGRA4444") return BasicValue(static_cast<double>(360845314));
+    if (name == "SDL_PIXELFORMAT_ARGB1555") return BasicValue(static_cast<double>(355667970));
+    if (name == "SDL_PIXELFORMAT_RGBA5551") return BasicValue(static_cast<double>(356782082));
+    if (name == "SDL_PIXELFORMAT_ABGR1555") return BasicValue(static_cast<double>(359862274));
+    if (name == "SDL_PIXELFORMAT_BGRA5551") return BasicValue(static_cast<double>(360976386));
+    if (name == "SDL_PIXELFORMAT_RGB565") return BasicValue(static_cast<double>(353701890));
+    if (name == "SDL_PIXELFORMAT_BGR565") return BasicValue(static_cast<double>(357896194));
+    if (name == "SDL_PIXELFORMAT_RGB24") return BasicValue(static_cast<double>(386930691));
+    if (name == "SDL_PIXELFORMAT_BGR24") return BasicValue(static_cast<double>(390076419));
     if (name == "SDL_PIXELFORMAT_RGB888") return BasicValue(static_cast<double>(370546692));    // 0x16161804
+    if (name == "SDL_PIXELFORMAT_RGBX8888") return BasicValue(static_cast<double>(371595268));
+    if (name == "SDL_PIXELFORMAT_BGR888") return BasicValue(static_cast<double>(374740996));
+    if (name == "SDL_PIXELFORMAT_BGRX8888") return BasicValue(static_cast<double>(375789572));
+    if (name == "SDL_PIXELFORMAT_ARGB8888") return BasicValue(static_cast<double>(372645892));  // 0x16362004
     if (name == "SDL_PIXELFORMAT_RGBA8888") return BasicValue(static_cast<double>(373694468));  // 0x16462004
     if (name == "SDL_PIXELFORMAT_ABGR8888") return BasicValue(static_cast<double>(376840196));  // 0x16762004
+    if (name == "SDL_PIXELFORMAT_BGRA8888") return BasicValue(static_cast<double>(377888772));
+    if (name == "SDL_PIXELFORMAT_ARGB2101010") return BasicValue(static_cast<double>(372711428));
+    
     if (name == "SDL_TEXTUREACCESS_STATIC") return BasicValue(static_cast<double>(0));          // Static texture
     if (name == "SDL_TEXTUREACCESS_STREAMING") return BasicValue(static_cast<double>(1));       // Streaming texture
     if (name == "SDL_TEXTUREACCESS_TARGET") return BasicValue(static_cast<double>(2));          // Render target texture
+    
+    // SDL Blend modes
+    if (name == "SDL_BLENDMODE_NONE") return BasicValue(static_cast<double>(0x00000000));
+    if (name == "SDL_BLENDMODE_BLEND") return BasicValue(static_cast<double>(0x00000001));
+    if (name == "SDL_BLENDMODE_ADD") return BasicValue(static_cast<double>(0x00000002));
+    if (name == "SDL_BLENDMODE_MOD") return BasicValue(static_cast<double>(0x00000004));
+    if (name == "SDL_BLENDMODE_MUL") return BasicValue(static_cast<double>(0x00000008));
+    if (name == "SDL_BLENDMODE_INVALID") return BasicValue(static_cast<double>(0x7FFFFFFF));
     
     // SDL Key codes (these are the SDLK_* values - different from scan codes!)
     if (name == "SDLK_ESCAPE") return BasicValue(static_cast<double>(27));
@@ -2510,6 +2620,19 @@ BasicValue get_constant(const std::string& name) {
     if (name == "SDLK_DOWN") return BasicValue(static_cast<double>(1073741905));
     if (name == "SDLK_LEFT") return BasicValue(static_cast<double>(1073741904));
     if (name == "SDLK_RIGHT") return BasicValue(static_cast<double>(1073741903));
+    
+    // SDL Scan codes (these are the SDL_SCANCODE_* values used for keyboard input)
+    if (name == "SDL_SCANCODE_ESCAPE") return BasicValue(static_cast<double>(41));
+    if (name == "SDL_SCANCODE_SPACE") return BasicValue(static_cast<double>(44));
+    if (name == "SDL_SCANCODE_RETURN") return BasicValue(static_cast<double>(40));
+    if (name == "SDL_SCANCODE_UP") return BasicValue(static_cast<double>(82));
+    if (name == "SDL_SCANCODE_DOWN") return BasicValue(static_cast<double>(81));
+    if (name == "SDL_SCANCODE_LEFT") return BasicValue(static_cast<double>(80));
+    if (name == "SDL_SCANCODE_RIGHT") return BasicValue(static_cast<double>(79));
+    if (name == "SDL_SCANCODE_W") return BasicValue(static_cast<double>(26));
+    if (name == "SDL_SCANCODE_A") return BasicValue(static_cast<double>(4));
+    if (name == "SDL_SCANCODE_S") return BasicValue(static_cast<double>(22));
+    if (name == "SDL_SCANCODE_D") return BasicValue(static_cast<double>(7));
     
     // SDL Scan codes (these are what get_key_code() actually returns!)
     if (name == "SDL_SCANCODE_A") return BasicValue(static_cast<double>(4));
@@ -2606,28 +2729,170 @@ BasicValue get_constant(const std::string& name) {
     if (name == "SDL_SCANCODE_RALT") return BasicValue(static_cast<double>(230));
     if (name == "SDL_SCANCODE_RGUI") return BasicValue(static_cast<double>(231));
     
-    // SQLite constants
+    // SQLite result codes
     if (name == "SQLITE_OK") return BasicValue(static_cast<double>(0));
     if (name == "SQLITE_ERROR") return BasicValue(static_cast<double>(1));
+    if (name == "SQLITE_INTERNAL") return BasicValue(static_cast<double>(2));
+    if (name == "SQLITE_PERM") return BasicValue(static_cast<double>(3));
+    if (name == "SQLITE_ABORT") return BasicValue(static_cast<double>(4));
     if (name == "SQLITE_BUSY") return BasicValue(static_cast<double>(5));
     if (name == "SQLITE_LOCKED") return BasicValue(static_cast<double>(6));
     if (name == "SQLITE_NOMEM") return BasicValue(static_cast<double>(7));
     if (name == "SQLITE_READONLY") return BasicValue(static_cast<double>(8));
-    if (name == "SQLITE_DONE") return BasicValue(static_cast<double>(101));
+    if (name == "SQLITE_INTERRUPT") return BasicValue(static_cast<double>(9));
+    if (name == "SQLITE_IOERR") return BasicValue(static_cast<double>(10));
+    if (name == "SQLITE_CORRUPT") return BasicValue(static_cast<double>(11));
+    if (name == "SQLITE_NOTFOUND") return BasicValue(static_cast<double>(12));
+    if (name == "SQLITE_FULL") return BasicValue(static_cast<double>(13));
+    if (name == "SQLITE_CANTOPEN") return BasicValue(static_cast<double>(14));
+    if (name == "SQLITE_PROTOCOL") return BasicValue(static_cast<double>(15));
+    if (name == "SQLITE_EMPTY") return BasicValue(static_cast<double>(16));
+    if (name == "SQLITE_SCHEMA") return BasicValue(static_cast<double>(17));
+    if (name == "SQLITE_TOOBIG") return BasicValue(static_cast<double>(18));
+    if (name == "SQLITE_CONSTRAINT") return BasicValue(static_cast<double>(19));
+    if (name == "SQLITE_MISMATCH") return BasicValue(static_cast<double>(20));
+    if (name == "SQLITE_MISUSE") return BasicValue(static_cast<double>(21));
+    if (name == "SQLITE_NOLFS") return BasicValue(static_cast<double>(22));
+    if (name == "SQLITE_AUTH") return BasicValue(static_cast<double>(23));
+    if (name == "SQLITE_FORMAT") return BasicValue(static_cast<double>(24));
+    if (name == "SQLITE_RANGE") return BasicValue(static_cast<double>(25));
+    if (name == "SQLITE_NOTADB") return BasicValue(static_cast<double>(26));
+    if (name == "SQLITE_NOTICE") return BasicValue(static_cast<double>(27));
+    if (name == "SQLITE_WARNING") return BasicValue(static_cast<double>(28));
     if (name == "SQLITE_ROW") return BasicValue(static_cast<double>(100));
+    if (name == "SQLITE_DONE") return BasicValue(static_cast<double>(101));
     
     // SQLite open flags
     if (name == "SQLITE_OPEN_READONLY") return BasicValue(static_cast<double>(0x00000001));
     if (name == "SQLITE_OPEN_READWRITE") return BasicValue(static_cast<double>(0x00000002));
     if (name == "SQLITE_OPEN_CREATE") return BasicValue(static_cast<double>(0x00000004));
+    if (name == "SQLITE_OPEN_DELETEONCLOSE") return BasicValue(static_cast<double>(0x00000008));
+    if (name == "SQLITE_OPEN_EXCLUSIVE") return BasicValue(static_cast<double>(0x00000010));
+    if (name == "SQLITE_OPEN_AUTOPROXY") return BasicValue(static_cast<double>(0x00000020));
+    if (name == "SQLITE_OPEN_URI") return BasicValue(static_cast<double>(0x00000040));
+    if (name == "SQLITE_OPEN_MEMORY") return BasicValue(static_cast<double>(0x00000080));
+    if (name == "SQLITE_OPEN_MAIN_DB") return BasicValue(static_cast<double>(0x00000100));
+    if (name == "SQLITE_OPEN_TEMP_DB") return BasicValue(static_cast<double>(0x00000200));
+    if (name == "SQLITE_OPEN_TRANSIENT_DB") return BasicValue(static_cast<double>(0x00000400));
+    if (name == "SQLITE_OPEN_MAIN_JOURNAL") return BasicValue(static_cast<double>(0x00000800));
+    if (name == "SQLITE_OPEN_TEMP_JOURNAL") return BasicValue(static_cast<double>(0x00001000));
+    if (name == "SQLITE_OPEN_SUBJOURNAL") return BasicValue(static_cast<double>(0x00002000));
+    if (name == "SQLITE_OPEN_MASTER_JOURNAL") return BasicValue(static_cast<double>(0x00004000));
+    if (name == "SQLITE_OPEN_NOMUTEX") return BasicValue(static_cast<double>(0x00008000));
+    if (name == "SQLITE_OPEN_FULLMUTEX") return BasicValue(static_cast<double>(0x00010000));
+    if (name == "SQLITE_OPEN_SHAREDCACHE") return BasicValue(static_cast<double>(0x00020000));
+    if (name == "SQLITE_OPEN_PRIVATECACHE") return BasicValue(static_cast<double>(0x00040000));
+    if (name == "SQLITE_OPEN_WAL") return BasicValue(static_cast<double>(0x00080000));
+    
+    // SQLite data types
+    if (name == "SQLITE_INTEGER") return BasicValue(static_cast<double>(1));
+    if (name == "SQLITE_FLOAT") return BasicValue(static_cast<double>(2));
+    if (name == "SQLITE_BLOB") return BasicValue(static_cast<double>(4));
+    if (name == "SQLITE_NULL") return BasicValue(static_cast<double>(5));
+    if (name == "SQLITE_TEXT") return BasicValue(static_cast<double>(3));
+    if (name == "SQLITE3_TEXT") return BasicValue(static_cast<double>(3));
+    
+    // SQLite transaction types
+    if (name == "SQLITE_TXN_NONE") return BasicValue(static_cast<double>(0));
+    if (name == "SQLITE_TXN_READ") return BasicValue(static_cast<double>(1));
+    if (name == "SQLITE_TXN_WRITE") return BasicValue(static_cast<double>(2));
+    
+    // SQLite synchronous modes  
+    if (name == "SQLITE_SYNC_OFF") return BasicValue(static_cast<double>(0));
+    if (name == "SQLITE_SYNC_NORMAL") return BasicValue(static_cast<double>(1));
+    if (name == "SQLITE_SYNC_FULL") return BasicValue(static_cast<double>(2));
+    if (name == "SQLITE_SYNC_EXTRA") return BasicValue(static_cast<double>(3));
     
     // Windows API constants (useful for MessageBox etc.)
     if (name == "MB_OK") return BasicValue(static_cast<double>(0x00000000));
     if (name == "MB_OKCANCEL") return BasicValue(static_cast<double>(0x00000001));
+    if (name == "MB_ABORTRETRYIGNORE") return BasicValue(static_cast<double>(0x00000002));
+    if (name == "MB_YESNOCANCEL") return BasicValue(static_cast<double>(0x00000003));
     if (name == "MB_YESNO") return BasicValue(static_cast<double>(0x00000004));
+    if (name == "MB_RETRYCANCEL") return BasicValue(static_cast<double>(0x00000005));
+    if (name == "MB_CANCELTRYCONTINUE") return BasicValue(static_cast<double>(0x00000006));
+    
+    if (name == "MB_ICONHAND") return BasicValue(static_cast<double>(0x00000010));
     if (name == "MB_ICONERROR") return BasicValue(static_cast<double>(0x00000010));
+    if (name == "MB_ICONSTOP") return BasicValue(static_cast<double>(0x00000010));
+    if (name == "MB_ICONQUESTION") return BasicValue(static_cast<double>(0x00000020));
+    if (name == "MB_ICONEXCLAMATION") return BasicValue(static_cast<double>(0x00000030));
     if (name == "MB_ICONWARNING") return BasicValue(static_cast<double>(0x00000030));
+    if (name == "MB_ICONASTERISK") return BasicValue(static_cast<double>(0x00000040));
     if (name == "MB_ICONINFORMATION") return BasicValue(static_cast<double>(0x00000040));
+    
+    if (name == "MB_DEFBUTTON1") return BasicValue(static_cast<double>(0x00000000));
+    if (name == "MB_DEFBUTTON2") return BasicValue(static_cast<double>(0x00000100));
+    if (name == "MB_DEFBUTTON3") return BasicValue(static_cast<double>(0x00000200));
+    if (name == "MB_DEFBUTTON4") return BasicValue(static_cast<double>(0x00000300));
+    
+    if (name == "MB_APPLMODAL") return BasicValue(static_cast<double>(0x00000000));
+    if (name == "MB_SYSTEMMODAL") return BasicValue(static_cast<double>(0x00001000));
+    if (name == "MB_TASKMODAL") return BasicValue(static_cast<double>(0x00002000));
+    
+    // MessageBox return values
+    if (name == "IDOK") return BasicValue(static_cast<double>(1));
+    if (name == "IDCANCEL") return BasicValue(static_cast<double>(2));
+    if (name == "IDABORT") return BasicValue(static_cast<double>(3));
+    if (name == "IDRETRY") return BasicValue(static_cast<double>(4));
+    if (name == "IDIGNORE") return BasicValue(static_cast<double>(5));
+    if (name == "IDYES") return BasicValue(static_cast<double>(6));
+    if (name == "IDNO") return BasicValue(static_cast<double>(7));
+    if (name == "IDCLOSE") return BasicValue(static_cast<double>(8));
+    if (name == "IDHELP") return BasicValue(static_cast<double>(9));
+    if (name == "IDTRYAGAIN") return BasicValue(static_cast<double>(10));
+    if (name == "IDCONTINUE") return BasicValue(static_cast<double>(11));
+    
+    // File attributes
+    if (name == "FILE_ATTRIBUTE_READONLY") return BasicValue(static_cast<double>(0x00000001));
+    if (name == "FILE_ATTRIBUTE_HIDDEN") return BasicValue(static_cast<double>(0x00000002));
+    if (name == "FILE_ATTRIBUTE_SYSTEM") return BasicValue(static_cast<double>(0x00000004));
+    if (name == "FILE_ATTRIBUTE_DIRECTORY") return BasicValue(static_cast<double>(0x00000010));
+    if (name == "FILE_ATTRIBUTE_ARCHIVE") return BasicValue(static_cast<double>(0x00000020));
+    if (name == "FILE_ATTRIBUTE_DEVICE") return BasicValue(static_cast<double>(0x00000040));
+    if (name == "FILE_ATTRIBUTE_NORMAL") return BasicValue(static_cast<double>(0x00000080));
+    if (name == "FILE_ATTRIBUTE_TEMPORARY") return BasicValue(static_cast<double>(0x00000100));
+    if (name == "FILE_ATTRIBUTE_SPARSE_FILE") return BasicValue(static_cast<double>(0x00000200));
+    if (name == "FILE_ATTRIBUTE_COMPRESSED") return BasicValue(static_cast<double>(0x00000800));
+    
+    // Generic access rights
+    if (name == "GENERIC_READ") return BasicValue(static_cast<double>(0x80000000));
+    if (name == "GENERIC_WRITE") return BasicValue(static_cast<double>(0x40000000));
+    if (name == "GENERIC_EXECUTE") return BasicValue(static_cast<double>(0x20000000));
+    if (name == "GENERIC_ALL") return BasicValue(static_cast<double>(0x10000000));
+    
+    // Standard I/O handles
+    if (name == "STD_INPUT_HANDLE") return BasicValue(static_cast<double>(-10));
+    if (name == "STD_OUTPUT_HANDLE") return BasicValue(static_cast<double>(-11));
+    if (name == "STD_ERROR_HANDLE") return BasicValue(static_cast<double>(-12));
+    
+    // Common color constants for convenience
+    if (name == "COLOR_BLACK") return BasicValue(static_cast<double>(0x000000));
+    if (name == "COLOR_WHITE") return BasicValue(static_cast<double>(0xFFFFFF));
+    if (name == "COLOR_RED") return BasicValue(static_cast<double>(0xFF0000));
+    if (name == "COLOR_GREEN") return BasicValue(static_cast<double>(0x00FF00));
+    if (name == "COLOR_BLUE") return BasicValue(static_cast<double>(0x0000FF));
+    if (name == "COLOR_YELLOW") return BasicValue(static_cast<double>(0xFFFF00));
+    if (name == "COLOR_MAGENTA") return BasicValue(static_cast<double>(0xFF00FF));
+    if (name == "COLOR_CYAN") return BasicValue(static_cast<double>(0x00FFFF));
+    if (name == "COLOR_GRAY") return BasicValue(static_cast<double>(0x808080));
+    if (name == "COLOR_DARKGRAY") return BasicValue(static_cast<double>(0x404040));
+    if (name == "COLOR_LIGHTGRAY") return BasicValue(static_cast<double>(0xC0C0C0));
+    
+    // Math constants
+    if (name == "PI") return BasicValue(3.14159265358979323846);
+    if (name == "E") return BasicValue(2.71828182845904523536);
+    if (name == "SQRT2") return BasicValue(1.41421356237309504880);
+    if (name == "SQRT3") return BasicValue(1.73205080756887729352);
+    if (name == "LOG2E") return BasicValue(1.44269504088896340736);
+    if (name == "LOG10E") return BasicValue(0.43429448190325182765);
+    if (name == "LN2") return BasicValue(0.69314718055994530942);
+    if (name == "LN10") return BasicValue(2.30258509299404568402);
+    
+    // Size constants
+    if (name == "KILOBYTE") return BasicValue(static_cast<double>(1024));
+    if (name == "MEGABYTE") return BasicValue(static_cast<double>(1024 * 1024));
+    if (name == "GIGABYTE") return BasicValue(static_cast<double>(1024 * 1024 * 1024));
     
     // Return 0 for unknown constants (could also throw error)
     return BasicValue(static_cast<double>(0));
