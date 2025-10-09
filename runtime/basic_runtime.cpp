@@ -3,6 +3,7 @@
 #include "../include/common.h"
 #include "../include/terminal.h"
 #include "../include/ffi.h"
+#include "../include/ffi_utils.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -1462,33 +1463,16 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             throw std::runtime_error("Function not found: " + function_name);
         }
         
-        // Generic 2-parameter FFI call with automatic type conversion
+        // Generic 2-parameter FFI call with automatic type conversion - OPTIMIZED
         
-        // Helper lambdas for converting BasicValue to appropriate C types
-        auto getAsPointer = [](const BasicValue& val) -> void* {
-            if (std::holds_alternative<void*>(val)) return std::get<void*>(val);
-            return nullptr;
-        };
+        // Use unified FFI type conversion utilities (replaces 22+ duplicate lambdas)
+        void* p1 = FFITypeConverter::getAsPointer(arg1);
+        std::string s1 = FFITypeConverter::getAsString(arg1);
+        int i1 = FFITypeConverter::getAsInt(arg1);
         
-        auto getAsString = [](const BasicValue& val) -> std::string {
-            if (std::holds_alternative<std::string>(val)) return std::get<std::string>(val);
-            return "";
-        };
-        
-        auto getAsInt = [](const BasicValue& val) -> int {
-            if (std::holds_alternative<int>(val)) return std::get<int>(val);
-            if (std::holds_alternative<double>(val)) return static_cast<int>(std::get<double>(val));
-            return 0;
-        };
-        
-        // Extract parameters with automatic type conversion
-        void* p1 = getAsPointer(arg1);
-        std::string s1 = getAsString(arg1);
-        int i1 = getAsInt(arg1);
-        
-        void* p2 = getAsPointer(arg2);
-        std::string s2 = getAsString(arg2);
-        int i2 = getAsInt(arg2);
+        void* p2 = FFITypeConverter::getAsPointer(arg2);
+        std::string s2 = FFITypeConverter::getAsString(arg2);
+        int i2 = FFITypeConverter::getAsInt(arg2);
         
         // Try different 2-parameter patterns based on function name and parameter types
         
@@ -1497,7 +1481,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             std::holds_alternative<void*>(arg1) && std::holds_alternative<void*>(arg2)) {
             typedef void* (__cdecl *FuncType)(void*, void*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
-            void* result = func(getAsPointer(arg1), getAsPointer(arg2));
+            void* result = func(p1, p2);
             return BasicValue(result);
         }
         
@@ -1507,7 +1491,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             (function_name == "TTF_OpenFont" || function_name.find("OpenFont") != std::string::npos)) {
             typedef void* (__cdecl *FuncType)(const char*, int);
             auto func = reinterpret_cast<FuncType>(funcPtr);
-            void* result = func(getAsString(arg1).c_str(), getAsInt(arg2));
+            void* result = func(s1.c_str(), i2);
             return BasicValue(result);
         }
         
@@ -1516,7 +1500,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             (function_name == "fopen" || function_name == "freopen" || function_name.find("open") != std::string::npos)) {
             typedef void* (__cdecl *FuncType)(const char*, const char*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
-            void* result = func(getAsString(arg1).c_str(), getAsString(arg2).c_str());
+            void* result = func(s1.c_str(), s2.c_str());
             return BasicValue(result);
         }
         
@@ -1524,7 +1508,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         if (std::holds_alternative<void*>(arg1) && std::holds_alternative<void*>(arg2)) {
             typedef int (__cdecl *FuncType)(void*, void*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
-            int result = func(getAsPointer(arg1), getAsPointer(arg2));
+            int result = func(p1, p2);
             return BasicValue(static_cast<double>(result));
         }
         
@@ -1562,7 +1546,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         if (std::holds_alternative<void*>(arg1) && std::holds_alternative<std::string>(arg2)) {
             typedef void (__cdecl *FuncType)(void*, const char*);
             auto func = reinterpret_cast<FuncType>(funcPtr);
-            func(getAsPointer(arg1), getAsString(arg2).c_str());
+            func(p1, s2.c_str());
             return BasicValue(0.0);
         }
         

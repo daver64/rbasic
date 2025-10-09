@@ -52,6 +52,7 @@ set(SOURCES
     src/terminal.cpp
     src/repl.cpp
     src/math_utils.cpp
+    src/ffi_utils.cpp
 )
 
 # Header files
@@ -71,6 +72,7 @@ set(HEADERS
     include/repl.h
     include/ffi.h
     include/math_utils.h
+    include/ffi_utils.h
 )
 
 # Create main executable
@@ -132,6 +134,7 @@ add_executable(rbasic_tests
     src/terminal.cpp
     src/repl.cpp
     src/math_utils.cpp
+    src/ffi_utils.cpp
 )
 
 target_include_directories(rbasic_tests PRIVATE include)
