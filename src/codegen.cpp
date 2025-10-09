@@ -159,7 +159,7 @@ void CodeGenerator::visit(BinaryExpr& node) {
         write(", ");
         node.right->accept(*this);
         write(")");
-    } else if (node.operator_ == "mod") {
+    } else if (node.operator_ == "mod" || node.operator_ == "%") {
         write("mod_val(");
         node.left->accept(*this);
         write(", ");
@@ -328,7 +328,7 @@ void CodeGenerator::visit(CallExpr& node) {
             node.arguments[1]->accept(*this);
             write(")");
             return;
-        } else if (node.name == "mod") {
+        } else if (node.name == "mod" || node.name == "%") {
             write("mod_val(");
             node.arguments[0]->accept(*this);
             write(", ");
