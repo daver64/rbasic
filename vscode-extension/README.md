@@ -1,6 +1,8 @@
-# rbasic VS Code Extension
+# rbasic VS Code Extension (Alpha)
 
-This folder contains the VS Code extension files for rbasic syntax highlighting and basic IntelliSense support.
+This folder contains experimental VS Code extension files for rbasic syntax highlighting and basic language support.
+
+⚠️ **Alpha Extension**: This extension is in early development and features may be incomplete or change significantly.
 
 ## Installation
 
@@ -20,13 +22,13 @@ This folder contains the VS Code extension files for rbasic syntax highlighting 
 - `language-configuration.json` - Language settings for brackets, comments, indentation
 - `syntaxes/rbasic.tmLanguage.json` - TextMate grammar for syntax highlighting
 
-### Features
-- ✅ **Syntax Highlighting**: Keywords, functions, strings, comments, numbers
+### Current Features (Alpha)
+- ✅ **Basic Syntax Highlighting**: Keywords, functions, strings, comments, numbers
 - ✅ **Auto-Closing**: Brackets, braces, parentheses, quotes
 - ✅ **Comment Toggle**: Ctrl+/ for line comments, Shift+Alt+A for block comments
-- ✅ **Smart Indentation**: Automatic indenting for code blocks
+- ✅ **Smart Indentation**: Basic automatic indenting for code blocks
 - ✅ **Bracket Matching**: Highlight matching brackets/braces
-- ✅ **Word-based IntelliSense**: Basic auto-completion from document words
+- ⚠️ **Word-based IntelliSense**: Basic auto-completion (limited functionality)
 
 ## Language Support
 

@@ -1,5 +1,7 @@
 # rbasic Project Instructions
 
+**⚠️ ALPHA SOFTWARE**: This project is in active Alpha development. While core features are functional, expect bugs, breaking changes, and incomplete functionality. Not recommended for production use.
+
 This is a C-leaning BASIC language transpiler written in C++. The project supports interpreting BASIC programs directly, transpiling them to native C++ executables, and interactive development via REPL, all with identical behavior.
 
 ## Project Structure

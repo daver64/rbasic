@@ -1,16 +1,17 @@
-# rbasic - Modern BASIC Language Transpiler
+# rbasic - Modern BASIC Language Transpiler (Alpha)
 
-**rbasic** is a modern BASIC language transpiler that implements C-style syntax while maintaining BASIC's simplicity. It supports both interpretation for rapid development and compilation to native C++ executables with a comprehensive Foreign Function Interface (FFI) system for direct C library integration.
+**rbasic** is an experimental modern BASIC language transpiler that implements C-style syntax while maintaining BASIC's simplicity. Currently in Alpha development, it supports both interpretation for rapid development and compilation to native C++ executables with a Foreign Function Interface (FFI) system for C library integration.
 
-## Key Features
+⚠️ **Alpha Software**: This project is in early development. Features may be incomplete, unstable, or subject to breaking changes.
 
-- **C-Style Syntax**: Modern control structures with braces `{}` and proper scoping
+## Current Alpha Features
+
+- **C-Style Syntax**: Modern control structures with braces `{}` and basic scoping
 - **Dual Execution**: Interpret for development (`-i`) or compile to native executables (`-c`) 
 - **Interactive REPL**: Read-Eval-Print Loop for rapid prototyping (`-r`)
-- **Import System**: Modular programming with `import "file.bas"` syntax
-- **Foreign Function Interface**: Direct integration with C libraries (SDL2, SQLite, Windows API)
-- **Comprehensive Standard Library**: Pre-built wrappers for graphics, databases, and system APIs
-- **Automatic Parallelization**: OpenMP-based multi-core optimization for large arrays
+- **Import System**: Basic modular programming with `import "file.bas"` syntax
+- **Foreign Function Interface**: Basic integration with C libraries (SDL2, SQLite, Windows API)
+- **Standard Library**: Growing collection of wrapper libraries for graphics and databases
 - **Cross-Platform**: Windows (MinGW64/MSVC), Linux (GCC), macOS (Clang)
 
 ## Quick Start
@@ -27,24 +28,21 @@
 ./rbasic -r
 ```
 
-## FFI and Library Integration
+## FFI and Library Integration (Alpha)
 
-rbasic includes a comprehensive Foreign Function Interface with wrapper libraries and support for complex pointer operations:
+rbasic includes a basic Foreign Function Interface with experimental wrapper libraries:
 
-### SDL2 Graphics Programming
-- **Complete SDL2 Integration**: Window management, hardware-accelerated rendering, event handling
-- **Texture Operations**: Full support for `SDL_CreateTextureFromSurface` and image loading via `IMG_Load`
-- **Event Processing**: Complete keyboard and mouse event handling with scan code support
-- **Cross-Mode Compatibility**: Identical behavior in interpreter and compiled modes
-- **Memory-Safe Operations**: Automatic pointer handling and structure management
+### SDL2 Graphics Programming (Experimental)
+- **Basic SDL2 Integration**: Window management, basic rendering, event handling
+- **Graphics Operations**: Basic drawing operations and simple shapes
+- **Event Processing**: Basic keyboard and mouse event handling
+- **Cross-Mode Support**: FFI works in both interpreter and compiled modes (with some limitations)
 
-### Advanced FFI Features
-- **Extended Parameter Support**: Functions with up to 11 parameters for complex graphics operations
-- **SDL2_gfx Integration**: Proper filled polygon and triangle rendering with `filledTrigonRGBA` 
-- **Enhanced Pattern Matching**: Improved support for pointer-returning functions (`IMG_Load`, `SDL_CreateTextureFromSurface`)
-- **Automatic Type Conversion**: Seamless conversion between BASIC and C types
-- **Structure Support**: Complete SDL2 and SQLite structure handling
-- **Memory Management**: Safe buffer allocation and pointer dereferencing
+### Alpha FFI Features
+- **Basic Parameter Support**: Functions with multiple parameters
+- **SDL2 Integration**: Basic graphics operations and window management
+- **Memory Operations**: Basic buffer allocation and pointer handling
+- **Structure Support**: Limited SDL2 and SQLite structure support
 - **Multi-Library Support**: Windows DLLs, Linux .so, macOS .dylib libraries
 
 ## Language Overview
@@ -312,18 +310,24 @@ build.bat
 ./rbasic -r
 ```
 
-## Status
+## Status (Alpha Development)
 
 **Current Alpha Features:**
-- ✅ Complete C-style BASIC language implementation
-- ✅ Dual execution modes with identical behavior  
-- ✅ Enhanced Foreign Function Interface with SDL2 texture loading support
-- ✅ Cross-mode compatibility for SDL_CreateTextureFromSurface and IMG_Load
+- ✅ Basic C-style BASIC language implementation
+- ✅ Dual execution modes (interpreter and compiled)
+- ✅ Basic Foreign Function Interface with SDL2 support
 - ✅ Import system for modular programming
 - ✅ Cross-platform support (Windows/Linux/macOS)
-- ✅ Comprehensive built-in function library
+- ✅ Basic built-in function library
 - ✅ Interactive REPL for development
-- ✅ Enhanced SDL2 graphics pipeline in compiled mode
+
+**Known Limitations:**
+- ⚠️ Variable scoping may have edge cases
+- ⚠️ FFI parameter support limited to basic types
+- ⚠️ Error handling and reporting needs improvement
+- ⚠️ Performance optimizations not implemented
+- ⚠️ Standard library is incomplete
+- ⚠️ Documentation is work-in-progress
 
 ## Project Structure
 

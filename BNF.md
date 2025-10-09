@@ -1,14 +1,16 @@
-# rbasic Language Grammar (BNF)
+# rbasic Language Grammar (BNF) - Alpha
 
-This document defines the complete Backus-Naur Form (BNF) grammar for the rbasic programming language.
+This document defines the Backus-Naur Form (BNF) grammar for the rbasic programming language as currently implemented.
+
+⚠️ **Alpha Grammar**: This grammar represents the current Alpha implementation and may change as the language evolves.
 
 ## Overview
 
-rbasic is a modern BASIC language transpiler that combines BASIC simplicity with C-style syntax:
+rbasic is an experimental modern BASIC language transpiler that combines BASIC simplicity with C-style syntax:
 - C-style control structures with braces `{}`
-- Import system for modular programming
-- Foreign Function Interface (FFI) for C library integration
-- Comprehensive built-in function library
+- Basic import system for modular programming  
+- Alpha Foreign Function Interface (FFI) for C library integration
+- Growing built-in function library
 - Dual execution modes (interpreter and compiler)
 
 ## Lexical Elements

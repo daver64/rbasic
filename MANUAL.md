@@ -1,23 +1,24 @@
-# rbasic User Manual
+# rbasic User Manual (Alpha)
 
-This manual provides comprehensive documentation for using the rbasic programming language, including all keywords, built-in functions, and tools.
+This manual provides documentation for using the rbasic programming language, including implemented keywords, built-in functions, and tools. 
 
-## Implementation Status
+⚠️ **Alpha Software**: This documentation covers features currently implemented, but rbasic is still in early development.
 
-**rbasic is feature-complete and in active development** with all core language features implemented and tested in alpha phase:
+## Implementation Status (Alpha)
 
-- ✅ **Complete Language**: All syntax, control flow, functions, and data structures working
-- ✅ **Multidimensional Arrays**: True `array[i,j,k]` syntax working in both execution modes
-- ✅ **Import System**: Complete modular programming with `import "file.bas"` syntax
-- ✅ **Foreign Function Interface (FFI)**: Alpha-phase C library integration with comprehensive pointer and struct support
-- ✅ **Automatic Parallelization**: OpenMP-based multi-core optimization for large array operations
-- ✅ **Triple Execution Modes**: Interpreter (`-i`), compiler (`-c`), and interactive REPL (`-r`) fully functional
-- ✅ **Portable Compilation**: MinGW64 bundled for Windows, falls back to MSVC when needed
-- ✅ **File I/O**: Complete text and binary file operations
-- ✅ **Built-in Functions**: Math, string, array, and file functions all implemented
-- ✅ **Error Handling**: Source position tracking with detailed error messages
-- ✅ **Cross-Platform**: Works on Windows (MinGW64/MSVC) and Linux/macOS (g++)
-- ✅ **All Tests Passing**: Comprehensive test suite validates functionality
+**rbasic is in Alpha development** with core language features implemented but subject to change:
+
+- ✅ **Core Language**: Basic syntax, control flow, functions, and data structures working
+- ✅ **Arrays**: Basic array support with `array[i]` syntax 
+- ✅ **Import System**: Basic modular programming with `import "file.bas"` syntax
+- ✅ **Foreign Function Interface (FFI)**: Alpha-phase C library integration with basic pointer support
+- ✅ **Execution Modes**: Interpreter (`-i`), compiler (`-c`), and interactive REPL (`-r`)
+- ✅ **Cross-Platform**: Basic support for Windows (MinGW64/MSVC) and Linux/macOS (GCC)
+- ✅ **Built-in Functions**: Core math, string, and basic file functions
+- ⚠️ **Variable Scoping**: Basic implementation with some edge cases
+- ⚠️ **Error Handling**: Basic error reporting, needs improvement
+- ⚠️ **Testing**: Limited test coverage, expanding
+- ⚠️ **Performance**: Not optimized, proof-of-concept stage
 
 ## Table of Contents
 
