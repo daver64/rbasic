@@ -16,78 +16,90 @@
 
 namespace rbasic {
 
-bool Terminal::initialized = false;
-bool Terminal::colorSupported = false;
-
+// Terminal state structure for proper encapsulation
+struct TerminalState {
+    bool initialized = false;
+    bool colorSupported = false;
+    
 #ifdef _WIN32
-void* Terminal::hConsole = nullptr;
-void* Terminal::hStdin = nullptr;
-unsigned long Terminal::originalConsoleMode = 0;
-static int savedCursorRow = 0;
-static int savedCursorCol = 0;
+    void* hConsole = nullptr;
+    void* hStdin = nullptr;
+    unsigned long originalConsoleMode = 0;
+    int savedCursorRow = 0;
+    int savedCursorCol = 0;
 #else
-// Linux: Save original terminal attributes
-static struct termios originalTermios;
-static bool termiosWasSaved = false;
-static int savedCursorRow = 0;
-static int savedCursorCol = 0;
+    struct termios originalTermios;
+    bool termiosWasSaved = false;
+    int savedCursorRow = 0;
+    int savedCursorCol = 0;
 #endif
+};
+
+// Thread-safe singleton for terminal state
+TerminalState& getTerminalState() {
+    static TerminalState state;
+    return state;
+}
 
 bool Terminal::initialize() {
-    if (initialized) {
+    TerminalState& state = getTerminalState();
+    
+    if (state.initialized) {
         return true;
     }
     
 #ifdef _WIN32
     // Windows Console API initialization
-    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    hStdin = GetStdHandle(STD_INPUT_HANDLE);
+    state.hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    state.hStdin = GetStdHandle(STD_INPUT_HANDLE);
     
-    if (hConsole == INVALID_HANDLE_VALUE || hStdin == INVALID_HANDLE_VALUE) {
+    if (state.hConsole == INVALID_HANDLE_VALUE || state.hStdin == INVALID_HANDLE_VALUE) {
         return false;
     }
     
     // Enable virtual terminal processing for ANSI escape sequences
     DWORD consoleMode = 0;
-    if (GetConsoleMode(hConsole, &consoleMode)) {
-        if (SetConsoleMode(hConsole, consoleMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)) {
-            colorSupported = true;
+    if (GetConsoleMode(state.hConsole, &consoleMode)) {
+        if (SetConsoleMode(state.hConsole, consoleMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)) {
+            state.colorSupported = true;
         } else {
             // If ANSI escape sequences fail, we can still use Windows Console API
-            colorSupported = true;
+            state.colorSupported = true;
         }
     } else {
         // Even if we can't get/set console mode, we can still try Windows Console API
-        colorSupported = true;
+        state.colorSupported = true;
     }
     
     // Save original input mode
-    GetConsoleMode(hStdin, &originalConsoleMode);
+    GetConsoleMode(state.hStdin, &state.originalConsoleMode);
     
 #else
     // Linux/macOS: Check for color support via environment
     const char* term = getenv("TERM");
     if (term && (strstr(term, "color") || strstr(term, "xterm") || strstr(term, "screen"))) {
-        colorSupported = true;
+        state.colorSupported = true;
     }
     
     // Check if stdout is a terminal
     if (isatty(STDOUT_FILENO)) {
-        colorSupported = true;
+        state.colorSupported = true;
     }
     
     // Save original terminal attributes for proper cleanup
-    if (tcgetattr(STDIN_FILENO, &originalTermios) == 0) {
-        termiosWasSaved = true;
+    if (tcgetattr(STDIN_FILENO, &state.originalTermios) == 0) {
+        state.termiosWasSaved = true;
     }
 #endif
 
-    initialized = true;
+    state.initialized = true;
     return true;
 }
 
 void Terminal::cleanup() {
-    if (!initialized) {
+    TerminalState& state = getTerminalState();
+    
+    if (!state.initialized) {
         return;
     }
     
@@ -97,71 +109,78 @@ void Terminal::cleanup() {
     
 #ifdef _WIN32
     // Restore original console mode
-    if (hStdin && originalConsoleMode != 0) {
-        SetConsoleMode(hStdin, originalConsoleMode);
+    if (state.hStdin && state.originalConsoleMode != 0) {
+        SetConsoleMode(state.hStdin, state.originalConsoleMode);
     }
 #else
     // Reset terminal state and restore original attributes
     std::cout << "\033[0m" << std::flush; // Reset all attributes
     
     // Restore original terminal attributes if we saved them
-    if (termiosWasSaved) {
-        tcsetattr(STDIN_FILENO, TCSANOW, &originalTermios);
-        termiosWasSaved = false;
+    if (state.termiosWasSaved) {
+        tcsetattr(STDIN_FILENO, TCSANOW, &state.originalTermios);
+        state.termiosWasSaved = false;
     }
 #endif
 
-    initialized = false;
+    state.initialized = false;
 }
 
 bool Terminal::supportsColor() {
-    return colorSupported;
+    TerminalState& state = getTerminalState();
+    return state.colorSupported;
 }
 
 void Terminal::clear() {
+    TerminalState& state = getTerminalState();
+    
 #ifdef _WIN32
     COORD coordScreen = {0, 0};
     DWORD cCharsWritten;
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     DWORD dwConSize;
     
-    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+    if (!GetConsoleScreenBufferInfo(state.hConsole, &csbi)) {
         return;
     }
     
     dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
     
-    if (!FillConsoleOutputCharacter(hConsole, ' ', dwConSize, coordScreen, &cCharsWritten)) {
+    if (!FillConsoleOutputCharacter(state.hConsole, ' ', dwConSize, coordScreen, &cCharsWritten)) {
         return;
     }
     
-    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+    if (!GetConsoleScreenBufferInfo(state.hConsole, &csbi)) {
         return;
     }
     
-    if (!FillConsoleOutputAttribute(hConsole, csbi.wAttributes, dwConSize, coordScreen, &cCharsWritten)) {
+    if (!FillConsoleOutputAttribute(state.hConsole, csbi.wAttributes, dwConSize, coordScreen, &cCharsWritten)) {
         return;
     }
     
-    SetConsoleCursorPosition(hConsole, coordScreen);
+    SetConsoleCursorPosition(state.hConsole, coordScreen);
 #else
     std::cout << "\033[2J\033[H" << std::flush;
 #endif
 }
 
 void Terminal::setCursor(int row, int col) {
+    TerminalState& state = getTerminalState();
+    
 #ifdef _WIN32
     COORD coord = {static_cast<SHORT>(col), static_cast<SHORT>(row)};
-    SetConsoleCursorPosition(hConsole, coord);
+    SetConsoleCursorPosition(state.hConsole, coord);
 #else
     std::cout << "\033[" << (row + 1) << ";" << (col + 1) << "H" << std::flush;
 #endif
 }
 
 void Terminal::getCursor(int& row, int& col) {
+    TerminalState& state = getTerminalState();
+    
 #ifdef _WIN32
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+    if (GetConsoleScreenBufferInfo(state.hConsole, &csbi)) {
         row = csbi.dwCursorPosition.Y;
         col = csbi.dwCursorPosition.X;
     } else {
@@ -230,30 +249,36 @@ void Terminal::getCursor(int& row, int& col) {
 }
 
 void Terminal::saveCursor() {
+    TerminalState& state = getTerminalState();
+    
 #ifdef _WIN32
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
-        savedCursorRow = csbi.dwCursorPosition.Y;
-        savedCursorCol = csbi.dwCursorPosition.X;
+    if (GetConsoleScreenBufferInfo(state.hConsole, &csbi)) {
+        state.savedCursorRow = csbi.dwCursorPosition.Y;
+        state.savedCursorCol = csbi.dwCursorPosition.X;
     }
 #else
     // For Linux, get the current cursor position and save it
-    getCursor(savedCursorRow, savedCursorCol);
+    getCursor(state.savedCursorRow, state.savedCursorCol);
 #endif
 }
 
 void Terminal::restoreCursor() {
+    TerminalState& state = getTerminalState();
+    
 #ifdef _WIN32
-    COORD coord = {static_cast<SHORT>(savedCursorCol), static_cast<SHORT>(savedCursorRow)};
-    SetConsoleCursorPosition(hConsole, coord);
+    COORD coord = {static_cast<SHORT>(state.savedCursorCol), static_cast<SHORT>(state.savedCursorRow)};
+    SetConsoleCursorPosition(state.hConsole, coord);
 #else
     // For Linux, set cursor to saved position
-    setCursor(savedCursorRow, savedCursorCol);
+    setCursor(state.savedCursorRow, state.savedCursorCol);
 #endif
 }
 
 void Terminal::setColor(Color foreground, Color background) {
-    if (!colorSupported) {
+    TerminalState& state = getTerminalState();
+    
+    if (!state.colorSupported) {
         return;
     }
     
@@ -286,7 +311,7 @@ void Terminal::setColor(Color foreground, Color background) {
         if (bg & 4) attributes |= BACKGROUND_BLUE;
     }
     
-    SetConsoleTextAttribute(hConsole, attributes);
+    SetConsoleTextAttribute(state.hConsole, attributes);
 #else
     std::ostringstream oss;
     oss << "\033[";
@@ -313,12 +338,14 @@ void Terminal::setColor(Color foreground, Color background) {
 }
 
 void Terminal::resetColor() {
-    if (!colorSupported) {
+    TerminalState& state = getTerminalState();
+    
+    if (!state.colorSupported) {
         return;
     }
     
 #ifdef _WIN32
-    SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+    SetConsoleTextAttribute(state.hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 #else
     std::cout << "\033[0m" << std::flush;
 #endif
@@ -339,9 +366,11 @@ void Terminal::println(const std::string& text, Color foreground, Color backgrou
 }
 
 void Terminal::getSize(int& rows, int& cols) {
+    TerminalState& state = getTerminalState();
+    
 #ifdef _WIN32
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+    if (GetConsoleScreenBufferInfo(state.hConsole, &csbi)) {
         rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
         cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
     } else {
@@ -408,11 +437,13 @@ std::string Terminal::getline(const std::string& prompt, Color promptColor) {
 }
 
 void Terminal::showCursor(bool visible) {
+    TerminalState& state = getTerminalState();
+    
 #ifdef _WIN32
     CONSOLE_CURSOR_INFO cursorInfo;
-    if (GetConsoleCursorInfo(hConsole, &cursorInfo)) {
+    if (GetConsoleCursorInfo(state.hConsole, &cursorInfo)) {
         cursorInfo.bVisible = visible ? TRUE : FALSE;
-        SetConsoleCursorInfo(hConsole, &cursorInfo);
+        SetConsoleCursorInfo(state.hConsole, &cursorInfo);
     }
 #else
     if (visible) {
@@ -424,15 +455,17 @@ void Terminal::showCursor(bool visible) {
 }
 
 void Terminal::setEcho(bool enabled) {
+    TerminalState& state = getTerminalState();
+    
 #ifdef _WIN32
     DWORD mode;
-    if (GetConsoleMode(hStdin, &mode)) {
+    if (GetConsoleMode(state.hStdin, &mode)) {
         if (enabled) {
             mode |= ENABLE_ECHO_INPUT;
         } else {
             mode &= ~ENABLE_ECHO_INPUT;
         }
-        SetConsoleMode(hStdin, mode);
+        SetConsoleMode(state.hStdin, mode);
     }
 #else
     struct termios tty;

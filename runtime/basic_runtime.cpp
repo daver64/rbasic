@@ -2490,7 +2490,40 @@ void set_pointer_buffer(const BasicValue& ptr, const BasicValue& value) {
     }
 }
 
-// ===== SDL RESOURCE MANAGEMENT =====
+// ===== SDL SAFE STRUCTURE DEFINITIONS =====
+
+// Safe SDL structure representations (matching actual SDL structures)
+struct SafeSDLRect {
+    int x, y, w, h;
+};
+
+struct SafeSDLKeysym {
+    uint32_t scancode;
+    uint32_t sym;
+    uint16_t mod;
+    uint32_t unused;
+};
+
+struct SafeSDLKeyboardEvent {
+    uint32_t type;        // Event type
+    uint32_t timestamp;   // Timestamp
+    uint32_t windowID;    // Window ID
+    uint8_t state;        // Key state
+    uint8_t repeat;       // Key repeat
+    uint8_t padding2;     // Padding
+    uint8_t padding3;     // Padding
+    SafeSDLKeysym keysym; // Key symbol
+};
+
+struct SafeSDLEvent {
+    uint32_t type;        // Event type (first 4 bytes)
+    uint8_t padding[52];  // Rest of the event (56 bytes total)
+    
+    // Helper to get keyboard event data safely
+    SafeSDLKeyboardEvent* as_keyboard() {
+        return reinterpret_cast<SafeSDLKeyboardEvent*>(this);
+    }
+};
 
 // Track allocated SDL resources for cleanup
 static std::vector<void*> allocated_sdl_resources;
@@ -2507,14 +2540,11 @@ void cleanup_sdl_resources() {
 // ===== SDL STRUCT HELPERS =====
 
 BasicValue create_sdl_rect(int x, int y, int w, int h) {
-    // Create SDL_Rect structure (4 ints: x, y, w, h)
-    struct SDLRect {
-        int x, y, w, h;
-    };
+    // Create SDL_Rect structure using safe structure definition
     
     // Use new[] for consistency with cleanup
-    uint8_t* buffer = new uint8_t[sizeof(SDLRect)];
-    SDLRect* rect = reinterpret_cast<SDLRect*>(buffer);
+    uint8_t* buffer = new uint8_t[sizeof(SafeSDLRect)];
+    SafeSDLRect* rect = reinterpret_cast<SafeSDLRect*>(buffer);
     rect->x = x;
     rect->y = y;
     rect->w = w;
@@ -2525,16 +2555,15 @@ BasicValue create_sdl_rect(int x, int y, int w, int h) {
 }
 
 BasicValue create_sdl_event() {
-    // Create SDL_Event buffer (56 bytes on most platforms)
-    constexpr size_t SDL_EVENT_SIZE = 56;
-    uint8_t* event_buffer = new uint8_t[SDL_EVENT_SIZE]();  // Zero-initialize
+    // Create SDL_Event buffer using safe structure definition
+    uint8_t* event_buffer = new uint8_t[sizeof(SafeSDLEvent)]();  // Zero-initialize
     
     allocated_sdl_resources.push_back(event_buffer);
     return BasicValue(static_cast<void*>(event_buffer));
 }
 
 BasicValue get_event_type(const BasicValue& event) {
-    // Get event.type from SDL_Event (first 4 bytes as uint32)
+    // Get event.type from SDL_Event using safe structure access
     if (!std::holds_alternative<void*>(event)) {
         throw std::runtime_error("get_event_type requires a pointer");
     }
@@ -2544,14 +2573,13 @@ BasicValue get_event_type(const BasicValue& event) {
         throw std::runtime_error("Cannot read from null event pointer");
     }
     
-    uint32_t* type_ptr = static_cast<uint32_t*>(raw_ptr);
-    return BasicValue(static_cast<double>(*type_ptr));
+    // Use safe structure access instead of raw pointer arithmetic
+    SafeSDLEvent* event_ptr = static_cast<SafeSDLEvent*>(raw_ptr);
+    return BasicValue(static_cast<double>(event_ptr->type));
 }
 
 BasicValue get_key_code(const BasicValue& event) {
-    // Get key code from SDL_Event
-    // SDL_Event structure: type(4) + timestamp(4) + key.state(1) + repeat(1) + padding(2) + keysym.scancode(4) + keysym.sym(4)
-    // keysym.sym is at offset 16 from start
+    // Get key code from SDL_Event using safe structure access
     if (!std::holds_alternative<void*>(event)) {
         throw std::runtime_error("get_key_code requires a pointer");
     }
@@ -2561,13 +2589,14 @@ BasicValue get_key_code(const BasicValue& event) {
         throw std::runtime_error("Cannot read from null event pointer");
     }
     
-    uint8_t* event_bytes = static_cast<uint8_t*>(raw_ptr);
-    uint32_t* key_sym = reinterpret_cast<uint32_t*>(event_bytes + 16);
-    return BasicValue(static_cast<double>(*key_sym));
+    // Use safe structure access instead of hardcoded offset arithmetic
+    SafeSDLEvent* event_ptr = static_cast<SafeSDLEvent*>(raw_ptr);
+    SafeSDLKeyboardEvent* kbd_event = event_ptr->as_keyboard();
+    return BasicValue(static_cast<double>(kbd_event->keysym.sym));
 }
 
 BasicValue get_rect_field(const BasicValue& rect, const std::string& field) {
-    // Get x, y, w, h from SDL_Rect
+    // Get x, y, w, h from SDL_Rect using safe structure access
     if (!std::holds_alternative<void*>(rect)) {
         throw std::runtime_error("get_rect_field requires a pointer");
     }
@@ -2577,11 +2606,8 @@ BasicValue get_rect_field(const BasicValue& rect, const std::string& field) {
         throw std::runtime_error("Cannot read from null rect pointer");
     }
     
-    struct SDLRect {
-        int x, y, w, h;
-    };
-    
-    SDLRect* rect_ptr = static_cast<SDLRect*>(raw_ptr);
+    // Use safe structure access instead of local struct definition
+    SafeSDLRect* rect_ptr = static_cast<SafeSDLRect*>(raw_ptr);
     
     if (field == "x") {
         return BasicValue(static_cast<double>(rect_ptr->x));

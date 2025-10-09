@@ -558,6 +558,22 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
 
+    if (node.name == "get_event_type" && node.arguments.size() == 1) {
+        write("basic_runtime::get_event_type(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    if (node.name == "get_rect_field" && node.arguments.size() == 2) {
+        write("basic_runtime::get_rect_field(");
+        node.arguments[0]->accept(*this);
+        write(", to_string(");
+        node.arguments[1]->accept(*this);
+        write("))");
+        return;
+    }
+
     if (node.name == "deref_int_offset" && node.arguments.size() == 2) {
         write("basic_runtime::deref_int_offset(");
         node.arguments[0]->accept(*this);
@@ -577,6 +593,42 @@ void CodeGenerator::visit(CallExpr& node) {
     
     if (node.name == "sdl_cleanup_all" && node.arguments.size() == 0) {
         write("basic_runtime::sdl_cleanup_all()");
+        return;
+    }
+
+    // Terminal functions
+    if (node.name == "terminal_supports_color" && node.arguments.size() == 0) {
+        write("basic_runtime::terminal_supports_color()");
+        return;
+    }
+    
+    if (node.name == "terminal_clear" && node.arguments.size() == 0) {
+        write("basic_runtime::terminal_clear()");
+        return;
+    }
+    
+    if (node.name == "terminal_set_cursor" && node.arguments.size() == 2) {
+        write("basic_runtime::terminal_set_cursor(to_int(");
+        node.arguments[0]->accept(*this);
+        write("), to_int(");
+        node.arguments[1]->accept(*this);
+        write("))");
+        return;
+    }
+    
+    if (node.name == "terminal_print" && node.arguments.size() == 3) {
+        write("basic_runtime::terminal_print(to_string(");
+        node.arguments[0]->accept(*this);
+        write("), to_int(");
+        node.arguments[1]->accept(*this);
+        write("), to_int(");
+        node.arguments[2]->accept(*this);
+        write("))");
+        return;
+    }
+    
+    if (node.name == "terminal_reset_color" && node.arguments.size() == 0) {
+        write("basic_runtime::terminal_reset_color()");
         return;
     }
 

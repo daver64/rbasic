@@ -81,14 +81,8 @@ public:
     static void setEcho(bool enabled);
 
 private:
-    static bool initialized;
-    static bool colorSupported;
-    
-#ifdef _WIN32
-    static void* hConsole;
-    static void* hStdin;
-    static unsigned long originalConsoleMode;
-#endif
+    // All state is now encapsulated in TerminalState (see terminal.cpp)
+    // No static members needed - using thread-safe singleton pattern
 };
 
 } // namespace rbasic
