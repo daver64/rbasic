@@ -260,6 +260,20 @@ function sdl_delay(milliseconds as integer) {
 }
 
 // ========================================
+// SDL Resource Management
+// ========================================
+
+// Free a specific SDL resource (rect, event buffer, etc.)
+function sdl_free_resource(ptr as pointer) as integer {
+    return free_sdl_resource(ptr);
+}
+
+// Clean up all allocated SDL resources
+function sdl_cleanup_resources() {
+    sdl_cleanup_all();
+}
+
+// ========================================
 // Library Initialization
 // ========================================
 
@@ -269,3 +283,4 @@ print("Drawing: sdl_set_color(), sdl_draw_point(), sdl_draw_line(), sdl_draw_rec
 print("Colored: sdl_draw_colored_line(), sdl_draw_colored_rect(), sdl_fill_colored_rect()");
 print("Window: sdl_set_window_title(), sdl_set_window_size()");
 print("Timing: sdl_get_ticks(), sdl_get_performance_time()");
+print("Memory: sdl_free_resource(), sdl_cleanup_resources()");

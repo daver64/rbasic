@@ -1218,6 +1218,25 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
         return true;
     }
     
+    // SDL resource management functions
+    if (node.name == "free_sdl_resource" && node.arguments.size() == 1) {
+        ValueType ptrVal = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<void*>(ptrVal)) {
+            BasicValue bv = std::get<void*>(ptrVal);
+            BasicValue result = basic_runtime::free_sdl_resource(bv);
+            lastValue = std::get<bool>(result);
+        } else {
+            lastValue = false;
+        }
+        return true;
+    }
+    
+    if (node.name == "sdl_cleanup_all" && node.arguments.size() == 0) {
+        basic_runtime::sdl_cleanup_all();
+        lastValue = true;
+        return true;
+    }
+    
     // Constant/NULL handling functions
     if (node.name == "get_constant" && node.arguments.size() == 1) {
         ValueType nameVal = evaluate(*node.arguments[0]);
@@ -2729,17 +2748,39 @@ std::string Interpreter::resolveImportPath(const std::string& filename) {
 
 std::string Interpreter::getCurrentExecutablePath() {
 #ifdef _WIN32
-    char buffer[MAX_PATH];
-    GetModuleFileNameA(NULL, buffer, MAX_PATH);
-    return std::string(buffer);
-#else
-    char buffer[1024];
-    ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
-    if (len != -1) {
-        buffer[len] = '\0';
-        return std::string(buffer);
+    // Use dynamic allocation for safety
+    std::vector<char> buffer(MAX_PATH);
+    DWORD result = GetModuleFileNameA(NULL, buffer.data(), static_cast<DWORD>(buffer.size()));
+    
+    // Handle case where buffer is too small
+    while (result == buffer.size() && GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+        buffer.resize(buffer.size() * 2);
+        result = GetModuleFileNameA(NULL, buffer.data(), static_cast<DWORD>(buffer.size()));
     }
-    return "";
+    
+    if (result == 0) {
+        return ""; // Failed to get path
+    }
+    
+    return std::string(buffer.data(), result);
+#else
+    // Use dynamic allocation with proper bounds checking
+    constexpr size_t initial_size = 1024;
+    std::vector<char> buffer(initial_size);
+    
+    ssize_t len = readlink("/proc/self/exe", buffer.data(), buffer.size() - 1);
+    
+    // If buffer was too small, try with larger buffer
+    if (len == static_cast<ssize_t>(buffer.size() - 1)) {
+        buffer.resize(4096); // Try larger buffer
+        len = readlink("/proc/self/exe", buffer.data(), buffer.size() - 1);
+    }
+    
+    if (len == -1) {
+        return ""; // Failed to read link
+    }
+    
+    return std::string(buffer.data(), len);
 #endif
 }
 

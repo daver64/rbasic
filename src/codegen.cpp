@@ -567,6 +567,19 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
 
+    // SDL resource management functions
+    if (node.name == "free_sdl_resource" && node.arguments.size() == 1) {
+        write("basic_runtime::free_sdl_resource(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    if (node.name == "sdl_cleanup_all" && node.arguments.size() == 0) {
+        write("basic_runtime::sdl_cleanup_all()");
+        return;
+    }
+
     // Check if this is an FFI function call
     auto ffiIt = ffiFunctions.find(node.name);
     if (ffiIt != ffiFunctions.end()) {

@@ -25,6 +25,10 @@
 #include <omp.h>
 #endif
 
+// Forward declarations
+namespace basic_runtime {
+    void cleanup_sdl_resources();
+}
 
 namespace basic_runtime {
 
@@ -147,6 +151,7 @@ void init_runtime() {
     
     // Register cleanup function to be called on exit
     std::atexit([]() {
+        basic_runtime::cleanup_sdl_resources();  // Clean up SDL resources first
         rbasic::Terminal::cleanup();
     });
 }
@@ -2485,6 +2490,20 @@ void set_pointer_buffer(const BasicValue& ptr, const BasicValue& value) {
     }
 }
 
+// ===== SDL RESOURCE MANAGEMENT =====
+
+// Track allocated SDL resources for cleanup
+static std::vector<void*> allocated_sdl_resources;
+
+void cleanup_sdl_resources() {
+    for (void* ptr : allocated_sdl_resources) {
+        if (ptr) {
+            delete[] static_cast<uint8_t*>(ptr);
+        }
+    }
+    allocated_sdl_resources.clear();
+}
+
 // ===== SDL STRUCT HELPERS =====
 
 BasicValue create_sdl_rect(int x, int y, int w, int h) {
@@ -2493,7 +2512,15 @@ BasicValue create_sdl_rect(int x, int y, int w, int h) {
         int x, y, w, h;
     };
     
-    SDLRect* rect = new SDLRect{x, y, w, h};
+    // Use new[] for consistency with cleanup
+    uint8_t* buffer = new uint8_t[sizeof(SDLRect)];
+    SDLRect* rect = reinterpret_cast<SDLRect*>(buffer);
+    rect->x = x;
+    rect->y = y;
+    rect->w = w;
+    rect->h = h;
+    
+    allocated_sdl_resources.push_back(buffer);
     return BasicValue(static_cast<void*>(rect));
 }
 
@@ -2501,6 +2528,8 @@ BasicValue create_sdl_event() {
     // Create SDL_Event buffer (56 bytes on most platforms)
     constexpr size_t SDL_EVENT_SIZE = 56;
     uint8_t* event_buffer = new uint8_t[SDL_EVENT_SIZE]();  // Zero-initialize
+    
+    allocated_sdl_resources.push_back(event_buffer);
     return BasicValue(static_cast<void*>(event_buffer));
 }
 
@@ -2617,6 +2646,15 @@ BasicValue func_get_key_code(const BasicValue& event) {
 BasicValue func_get_rect_field(const BasicValue& rect, const BasicValue& field) {
     std::string fieldStr = to_string(field);
     return get_rect_field(rect, fieldStr);
+}
+
+BasicValue func_free_sdl_resource(const BasicValue& ptr) {
+    return free_sdl_resource(ptr);
+}
+
+BasicValue func_sdl_cleanup_all() {
+    sdl_cleanup_all();
+    return BasicValue(true);
 }
 
 // ===== CONSTANT/NULL HANDLING SYSTEM =====
@@ -3092,6 +3130,35 @@ BasicValue not_null(const BasicValue& value) {
         return BasicValue(std::get<void*>(value) != nullptr);
     }
     return BasicValue(true); // Non-pointer values are considered "not null"
+}
+
+// ===== SDL RESOURCE CLEANUP FUNCTIONS =====
+
+BasicValue free_sdl_resource(const BasicValue& ptr) {
+    // Manually free a specific SDL resource
+    if (!std::holds_alternative<void*>(ptr)) {
+        return BasicValue(false);
+    }
+    
+    void* raw_ptr = std::get<void*>(ptr);
+    if (!raw_ptr) {
+        return BasicValue(false);
+    }
+    
+    // Find and remove from tracking
+    auto it = std::find(allocated_sdl_resources.begin(), allocated_sdl_resources.end(), raw_ptr);
+    if (it != allocated_sdl_resources.end()) {
+        delete[] static_cast<uint8_t*>(raw_ptr);
+        allocated_sdl_resources.erase(it);
+        return BasicValue(true);
+    }
+    
+    return BasicValue(false); // Not found in tracking
+}
+
+void sdl_cleanup_all() {
+    // Clean up all allocated SDL resources
+    cleanup_sdl_resources();
 }
 
 // ===== WRAPPER FUNCTIONS FOR CODE GENERATOR =====

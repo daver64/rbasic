@@ -5,6 +5,7 @@
 #include <variant>
 #include <vector>
 #include <map>
+#include <algorithm>  // For std::find
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
@@ -334,6 +335,8 @@ BasicValue func_create_sdl_event();
 BasicValue func_get_event_type(const BasicValue& event);
 BasicValue func_get_key_code(const BasicValue& event);
 BasicValue func_get_rect_field(const BasicValue& rect, const BasicValue& field);
+BasicValue func_free_sdl_resource(const BasicValue& ptr);
+BasicValue func_sdl_cleanup_all();
 
 // Terminal wrapper functions for code generator (with func_ prefix)
 BasicValue func_terminal_init();
@@ -392,6 +395,10 @@ BasicValue create_sdl_event();                           // Creates SDL_Event bu
 BasicValue get_event_type(const BasicValue& event);     // Gets event.type from SDL_Event
 BasicValue get_key_code(const BasicValue& event);       // Gets key code from SDL_Event
 BasicValue get_rect_field(const BasicValue& rect, const std::string& field); // Gets x,y,w,h from SDL_Rect
+
+// SDL resource management
+BasicValue free_sdl_resource(const BasicValue& ptr);    // Free a specific SDL resource
+void sdl_cleanup_all();                                  // Clean up all allocated SDL resources
 
 // Type conversion
 int to_int(const BasicValue& value);
