@@ -5,6 +5,7 @@
 #include "terminal.h"
 #include "lexer.h"
 #include "parser.h"
+#include "math_utils.h"
 #include "../runtime/basic_runtime.h"
 #include "../include/ffi.h"
 #include <iostream>
@@ -447,64 +448,35 @@ bool Interpreter::handleIOFunctions(CallExpr& node) {
 }
 
 bool Interpreter::handleMathFunctions(CallExpr& node) {
-    // Built-in math functions (single argument)
-    if (node.arguments.size() == 1 && 
-        (node.name == "sqr" || node.name == "sqrt" || node.name == "abs" || 
-         node.name == "sin" || node.name == "cos" || node.name == "tan" ||
-         node.name == "asin" || node.name == "acos" || node.name == "atan" ||
-         node.name == "log" || node.name == "log10" || node.name == "exp" ||
-         node.name == "floor" || node.name == "ceil" || node.name == "round" ||
-         node.name == "int")) {
-        ValueType arg = evaluate(*node.arguments[0]);
-        double numArg = 0.0;
-        
-        // Convert argument to double
-        if (std::holds_alternative<int>(arg)) {
-            numArg = static_cast<double>(std::get<int>(arg));
-        } else if (std::holds_alternative<double>(arg)) {
-            numArg = std::get<double>(arg);
-        } else {
-            throw RuntimeError(node.name + " requires a numeric argument");
-        }
-        
-        if (node.name == "sqr" || node.name == "sqrt") {
-            lastValue = std::sqrt(numArg);
-        } else if (node.name == "abs") {
-            lastValue = std::abs(numArg);
-        } else if (node.name == "sin") {
-            lastValue = std::sin(numArg);
-        } else if (node.name == "cos") {
-            lastValue = std::cos(numArg);
-        } else if (node.name == "tan") {
-            lastValue = std::tan(numArg);
-        } else if (node.name == "asin") {
-            lastValue = std::asin(numArg);
-        } else if (node.name == "acos") {
-            lastValue = std::acos(numArg);
-        } else if (node.name == "atan") {
-            lastValue = std::atan(numArg);
-        } else if (node.name == "log") {
-            if (numArg <= 0) {
-                throw RuntimeError("LOG requires a positive argument");
+    // Built-in math functions (single argument) - optimized with dispatcher
+    if (node.arguments.size() == 1) {
+        auto& dispatcher = MathFunctionDispatcher::getInstance();
+        if (dispatcher.hasFunction(node.name)) {
+            ValueType arg = evaluate(*node.arguments[0]);
+            double numArg = 0.0;
+            
+            // Convert argument to double
+            if (std::holds_alternative<int>(arg)) {
+                numArg = static_cast<double>(std::get<int>(arg));
+            } else if (std::holds_alternative<double>(arg)) {
+                numArg = std::get<double>(arg);
+            } else {
+                throw RuntimeError(node.name + " requires a numeric argument");
             }
-            lastValue = std::log(numArg);
-        } else if (node.name == "log10") {
-            if (numArg <= 0) {
-                throw RuntimeError("LOG10 requires a positive argument");
+            
+            try {
+                double result = dispatcher.callFunction(node.name, numArg);
+                // Convert back to int for int() function
+                if (node.name == "int") {
+                    lastValue = static_cast<int>(result);
+                } else {
+                    lastValue = result;
+                }
+            } catch (const std::exception& e) {
+                throw RuntimeError(e.what());
             }
-            lastValue = std::log10(numArg);
-        } else if (node.name == "exp") {
-            lastValue = std::exp(numArg);
-        } else if (node.name == "floor") {
-            lastValue = std::floor(numArg);
-        } else if (node.name == "ceil") {
-            lastValue = std::ceil(numArg);
-        } else if (node.name == "round") {
-            lastValue = std::round(numArg);
-        } else if (node.name == "int") {
-            lastValue = static_cast<int>(numArg);
+            return true;
         }
-        return true;
     }
     
     // Two-argument math functions
