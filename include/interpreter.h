@@ -29,6 +29,7 @@ private:
     
     void defineVariable(const std::string& name, const ValueType& value);
     ValueType getVariable(const std::string& name);
+    bool variableExists(const std::string& name);
     void setVariable(const std::string& name, const ValueType& value);
     
     void pushScope();

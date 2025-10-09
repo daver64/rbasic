@@ -30,9 +30,20 @@ ffi integer rectangleRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 
 ffi integer boxRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
 
 // Drawing functions
+ffi integer SDL_RenderDrawPoint(renderer as pointer, x as integer, y as integer) from "SDL2.dll";
 ffi integer SDL_RenderDrawLine(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer) from "SDL2.dll";
 ffi integer SDL_RenderDrawRect(renderer as pointer, rect as pointer) from "SDL2.dll";
 ffi integer SDL_RenderFillRect(renderer as pointer, rect as pointer) from "SDL2.dll";
+
+// Window management functions
+ffi integer SDL_SetWindowTitle(window as pointer, title as string) from "SDL2.dll";
+ffi integer SDL_GetWindowSize(window as pointer, w as pointer, h as pointer) from "SDL2.dll";
+ffi integer SDL_SetWindowSize(window as pointer, w as integer, h as integer) from "SDL2.dll";
+
+// Timing functions  
+ffi integer SDL_GetTicks() from "SDL2.dll";
+ffi integer SDL_GetPerformanceCounter() from "SDL2.dll";
+ffi integer SDL_GetPerformanceFrequency() from "SDL2.dll";
 
 // Event handling
 ffi integer SDL_PollEvent(event as pointer) from "SDL2.dll";
@@ -122,9 +133,34 @@ function sdl_set_color(r as integer, g as integer, b as integer) {
     SDL_SetRenderDrawColor(sdl_renderer, r, g, b, 255);
 }
 
+// Draw a single point
+function sdl_draw_point(x as integer, y as integer) {
+    SDL_RenderDrawPoint(sdl_renderer, x, y);
+}
+
 // Draw a line
 function sdl_draw_line(x1 as integer, y1 as integer, x2 as integer, y2 as integer) {
     SDL_RenderDrawLine(sdl_renderer, x1, y1, x2, y2);
+}
+
+// Window management functions
+function sdl_set_window_title(title as string) {
+    SDL_SetWindowTitle(sdl_window, title);
+}
+
+function sdl_set_window_size(width as integer, height as integer) {
+    SDL_SetWindowSize(sdl_window, width, height);
+}
+
+// Timing functions
+function sdl_get_ticks() as integer {
+    return SDL_GetTicks();
+}
+
+function sdl_get_performance_time() as double {
+    var counter = SDL_GetPerformanceCounter();
+    var frequency = SDL_GetPerformanceFrequency();
+    return counter / frequency;
 }
 
 // Draw a rectangle outline
@@ -229,5 +265,7 @@ function sdl_delay(milliseconds as integer) {
 
 print("SDL2 Minimal Library loaded");
 print("Functions: sdl_init(), sdl_cleanup(), sdl_clear_blue(), sdl_present(), sdl_process_events()");
-print("Drawing: sdl_set_color(), sdl_draw_line(), sdl_draw_rect(), sdl_fill_rect(), sdl_fill_triangle(), sdl_fill_circle(), sdl_fill_ellipse()");
+print("Drawing: sdl_set_color(), sdl_draw_point(), sdl_draw_line(), sdl_draw_rect(), sdl_fill_rect(), sdl_fill_triangle(), sdl_fill_circle(), sdl_fill_ellipse()");
 print("Colored: sdl_draw_colored_line(), sdl_draw_colored_rect(), sdl_fill_colored_rect()");
+print("Window: sdl_set_window_title(), sdl_set_window_size()");
+print("Timing: sdl_get_ticks(), sdl_get_performance_time()");

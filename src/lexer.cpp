@@ -215,6 +215,7 @@ Token Lexer::nextToken() {
         case '-': return Token(TokenType::MINUS, "-", startLine, startColumn);
         case '*': return Token(TokenType::MULTIPLY, "*", startLine, startColumn);
         case '/': return Token(TokenType::DIVIDE, "/", startLine, startColumn);
+        case '%': return Token(TokenType::MODULO, "%", startLine, startColumn);
         case '^': return Token(TokenType::POWER, "^", startLine, startColumn);
         case '(': return Token(TokenType::LEFT_PAREN, "(", startLine, startColumn);
         case ')': return Token(TokenType::RIGHT_PAREN, ")", startLine, startColumn);

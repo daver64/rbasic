@@ -70,6 +70,22 @@ ValueType Interpreter::getVariable(const std::string& name) {
     throw RuntimeError("Undefined variable '" + name + "'", getCurrentPosition());
 }
 
+bool Interpreter::variableExists(const std::string& name) {
+    // Search through scope stack from top to bottom (reverse vector order)
+    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
+        if (it->find(name) != it->end()) {
+            return true;
+        }
+    }
+    
+    // Check global scope
+    if (globals.find(name) != globals.end()) {
+        return true;
+    }
+    
+    return false;
+}
+
 void Interpreter::setVariable(const std::string& name, const ValueType& value) {
     // Search through scope stack from top to bottom to find existing variable
     for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
@@ -252,7 +268,7 @@ void Interpreter::visit(BinaryExpr& node) {
         lastValue = multiplyValues(left, right);
     } else if (node.operator_ == "/") {
         lastValue = divideValues(left, right);
-    } else if (node.operator_ == "mod") {
+    } else if (node.operator_ == "mod" || node.operator_ == "%") {
         // Implement modulo operation
         int leftInt = TypeUtils::toInt(left);
         int rightInt = TypeUtils::toInt(right);
@@ -2466,26 +2482,32 @@ void Interpreter::visit(IfStmt& node) {
 }
 
 void Interpreter::visit(ModernForStmt& node) {
-    // Create a completely isolated scope for the for loop
-    // This prevents any interference with function parameters or existing variables
+    // Use variable backup/restore instead of isolated scope
+    // This allows access to parent scope while protecting loop variable
     
-    // First, evaluate the initialization in the current scope to access parameters
+    ValueType backupValue;
+    bool hadVariable = false;
+    
+    // Check if loop variable already exists and back it up
+    if (variableExists(node.variable)) {
+        backupValue = getVariable(node.variable);
+        hadVariable = true;
+    }
+    
+    // Initialize loop variable in current scope (not isolated)
     ValueType initValue = evaluate(*node.initialization);
-    
-    // Now create a new scope for the loop to isolate the loop variable
-    pushScope();
-    
-    // Define the loop variable in this new isolated scope
-    defineVariable(node.variable, initValue);
+    setVariable(node.variable, initValue);
     
     // Execute the loop
     while (isTruthy(evaluate(*node.condition))) {
-        // Execute body
+        // Execute body - can access all parent scope variables
         for (auto& stmt : node.body) {
             stmt->accept(*this);
             if (hasReturned) {
-                // Clean up on early return
-                popScope();
+                // Restore on early return
+                if (hadVariable) {
+                    setVariable(node.variable, backupValue);
+                }
                 return;
             }
         }
@@ -2494,8 +2516,15 @@ void Interpreter::visit(ModernForStmt& node) {
         evaluate(*node.increment);
     }
     
-    // Normal cleanup - just pop the scope
-    popScope();
+    // Restore or remove loop variable
+    if (hadVariable) {
+        setVariable(node.variable, backupValue);
+    } else {
+        // Remove the loop variable if it didn't exist before
+        if (!scopes.empty()) {
+            scopes.back().erase(node.variable);
+        }
+    }
 }
 
 void Interpreter::visit(WhileStmt& node) {
