@@ -372,7 +372,10 @@ UnifiedValue SafeFunctionCall::call_with_signature() {
         double result = static_cast<double>(func());
         return make_double(result);
     } else if (return_type_ == "pointer") {
-        void* result = reinterpret_cast<void*>(func());
+        // For pointer return types, we need to use a different function signature
+        typedef void* (*ptr_func_ptr_t)();
+        ptr_func_ptr_t ptr_func = reinterpret_cast<ptr_func_ptr_t>(function_ptr_);
+        void* result = ptr_func();
         return make_pointer(result);
     }
     

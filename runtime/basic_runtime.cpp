@@ -1458,6 +1458,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         std::string s1 = FFITypeConverter::getAsString(arg1);
         int i1 = FFITypeConverter::getAsInt(arg1);
         double d1 = FFITypeConverter::getAsDouble(arg1);
+        (void)d1; // Suppress unused variable warning
         
         // Try different 1-parameter patterns in order of likelihood in order of likelihood
         
@@ -1661,6 +1662,9 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         int i3 = FFITypeConverter::getAsInt(arg3);
         double d3 = FFITypeConverter::getAsDouble(arg3);
         
+        // Suppress unused variable warnings for extracted but not always used parameters
+        (void)i1; (void)d1; (void)d2; (void)p2; (void)p3;
+        
         // Try different return type patterns in order of likelihood
         
         // Pattern: (pointer, int, int) -> pointer (SDL_CreateRenderer)
@@ -1780,6 +1784,9 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         std::string s4 = FFITypeConverter::getAsString(arg4);
         int i4 = FFITypeConverter::getAsInt(arg4);
         double d4 = FFITypeConverter::getAsDouble(arg4);
+        
+        // Suppress unused variable warnings for extracted but not always used parameters
+        (void)d1; (void)d2; (void)d3; (void)d4;
         
         // Try different 4-parameter patterns in order of likelihood
         
@@ -1932,6 +1939,9 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         int i5 = FFITypeConverter::getAsInt(arg5);
         double d5 = FFITypeConverter::getAsDouble(arg5);
         
+        // Suppress unused variable warnings for extracted but not always used parameters
+        (void)d1; (void)d2; (void)d3; (void)d4; (void)d5; (void)p3; (void)p2;
+        
         // Try different 5-parameter patterns in order of likelihood
         
         // Pattern: (pointer, int, int, int, int) -> int (SDL2 SetRenderDrawColor)
@@ -2034,6 +2044,9 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         int i6 = FFITypeConverter::getAsInt(arg6);
         double d6 = FFITypeConverter::getAsDouble(arg6);
         
+        // Suppress unused variable warnings for extracted but not always used parameters
+        (void)d1; (void)d2; (void)d3; (void)d4; (void)d5; (void)d6; (void)p2; (void)p3; (void)p4; (void)p5; (void)p6;
+        
         // Try different 6-parameter patterns in order of likelihood
         
         // Pattern: (string, int, int, int, int, int) -> pointer (SDL_CreateWindow)
@@ -2120,6 +2133,9 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         int i7 = FFITypeConverter::getAsInt(arg7);
         double d7 = FFITypeConverter::getAsDouble(arg7);
         
+        // Suppress unused variable warnings for extracted but not always used parameters
+        (void)d1; (void)d2; (void)d3; (void)d4; (void)d5; (void)d6; (void)d7; (void)p1; (void)p2; (void)p3; (void)p4; (void)p5; (void)p6; (void)p7;
+        
         // Try different 7-parameter patterns in order of likelihood
         
         // Pattern: (int, int, int, int, int, int, int) -> int
@@ -2194,6 +2210,9 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         std::string s8 = FFITypeConverter::getAsString(arg8);
         int i8 = FFITypeConverter::getAsInt(arg8);
         double d8 = FFITypeConverter::getAsDouble(arg8);
+        
+        // Suppress unused variable warnings for extracted but not always used parameters
+        (void)d1; (void)d2; (void)d3; (void)d4; (void)d5; (void)d6; (void)d7; (void)d8; (void)p5; (void)p7; (void)p8;
         
         // Try different 8-parameter patterns in order of likelihood
         
@@ -2288,6 +2307,9 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         int i9 = FFITypeConverter::getAsInt(arg9);
         double d9 = FFITypeConverter::getAsDouble(arg9);
         
+        // Suppress unused variable warnings for extracted but not always used parameters
+        (void)d1; (void)d2; (void)d3; (void)d4; (void)d5; (void)d6; (void)d7; (void)d8; (void)d9; (void)p2; (void)p3; (void)p4; (void)p5; (void)p6; (void)p7; (void)p8; (void)p9;
+        
         // Try different 9-parameter patterns in order of likelihood
         
         // Pattern for SDL2_gfx ellipse functions: (pointer, int, int, int, int, int, int, int, int) -> int  
@@ -2381,6 +2403,9 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         int i10 = FFITypeConverter::getAsInt(arg10);
         double d10 = FFITypeConverter::getAsDouble(arg10);
         
+        // Suppress unused variable warnings for extracted but not always used parameters
+        (void)d1; (void)d2; (void)d3; (void)d4; (void)d5; (void)d6; (void)d7; (void)d8; (void)d9; (void)d10; (void)p1; (void)p2; (void)p3; (void)p4; (void)p5; (void)p6; (void)p7; (void)p8; (void)p9; (void)p10;
+        
         // Try different 10-parameter patterns in order of likelihood
         
         // Generic pattern: (int, int, int, int, int, int, int, int, int, int) -> int
@@ -2470,6 +2495,10 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         std::string s11 = FFITypeConverter::getAsString(arg11);
         int i11 = FFITypeConverter::getAsInt(arg11);
         double d11 = FFITypeConverter::getAsDouble(arg11);
+        
+        // Suppress unused variable warnings for extracted but not always used parameters
+        (void)d1; (void)d2; (void)d3; (void)d4; (void)d5; (void)d6; (void)d7; (void)d8; (void)d9; (void)d10; (void)d11; 
+        (void)p2; (void)p3; (void)p4; (void)p5; (void)p6; (void)p7; (void)p8; (void)p9; (void)p10; (void)p11;
         
         // Try different 11-parameter patterns in order of likelihood
         

@@ -109,7 +109,8 @@ Token Lexer::makeIdentifier() {
     
     // Convert to lowercase for case-insensitive keywords
     std::string lowercase = value;
-    std::transform(lowercase.begin(), lowercase.end(), lowercase.begin(), ::tolower);
+    std::transform(lowercase.begin(), lowercase.end(), lowercase.begin(), 
+                   [](unsigned char c) { return static_cast<char>(::tolower(c)); });
     
     TokenType type = getKeywordType(lowercase);
     if (type == TokenType::INVALID) {

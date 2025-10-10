@@ -942,7 +942,7 @@ bool Interpreter::handleFileFunctions(CallExpr& node) {
                 } else {
                     lastValue = -1;  // File doesn't exist
                 }
-            } catch (const std::filesystem::filesystem_error& e) {
+            } catch (const std::filesystem::filesystem_error& /* e */) {
                 lastValue = -1;  // Filesystem error
             } catch (...) {
                 lastValue = -1;  // Other error
@@ -1612,7 +1612,7 @@ bool Interpreter::handleFFIFunctions(CallExpr& node) {
                     auto& safe_ffi_manager = rbasic::ffi::SafeFFIManager::instance();
                     bool success = safe_ffi_manager.unload_library(libName);
                     lastValue = success ? 1.0 : 0.0; // Return double for consistency
-                } catch (const rbasic::ffi::SafeFFIError& e) {
+                } catch (const rbasic::ffi::SafeFFIError& /* e */) {
                     lastValue = 0.0;
                 } catch (...) {
                     lastValue = 0.0;
@@ -1684,7 +1684,7 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
         bool returnsPointer = (ffiFunc.returnType == "pointer" || ffiFunc.returnType.find('*') != std::string::npos);
         bool returnsInteger = (ffiFunc.returnType == "int" || ffiFunc.returnType == "integer");
         bool returnsString = (ffiFunc.returnType == "string" || ffiFunc.returnType == "char*");
-        bool returnsVoid = (ffiFunc.returnType == "void");
+        // bool returnsVoid = (ffiFunc.returnType == "void");  // Currently unused
         
         // Handle function calls based on parameter count and signature
         if (ffiFunc.parameters.size() == 0) {

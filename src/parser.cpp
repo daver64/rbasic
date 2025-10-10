@@ -45,22 +45,22 @@ bool Parser::match(std::initializer_list<TokenType> types) {
 Token Parser::consume(TokenType type, const std::string& message) {
     if (check(type)) return advance();
     
-    Token current = peek();
-    throw SyntaxError(message + " at '" + current.value + "'", current.line);
+    Token current_token = peek();
+    throw SyntaxError(message + " at '" + current_token.value + "'", current_token.line);
 }
 
 Token Parser::consumeIdentifierOrKeyword(const std::string& message) {
-    Token current = peek();
+    Token current_token = peek();
     
     // Allow identifiers and keywords that can serve as parameter names
-    if (current.type == TokenType::IDENTIFIER ||
-        current.type == TokenType::TYPE ||
-        current.type == TokenType::VAR ||
-        current.type == TokenType::FUNCTION) {
+    if (current_token.type == TokenType::IDENTIFIER ||
+        current_token.type == TokenType::TYPE ||
+        current_token.type == TokenType::VAR ||
+        current_token.type == TokenType::FUNCTION) {
         return advance();
     }
     
-    throw SyntaxError(message + " at '" + current.value + "'", current.line);
+    throw SyntaxError(message + " at '" + current_token.value + "'", current_token.line);
 }
 
 void Parser::synchronize() {
@@ -119,8 +119,8 @@ std::unique_ptr<Expression> Parser::assignment() {
             expr.release(); // Release the variable expression since we're not using it
             return std::make_unique<AssignExpr>(variable, std::move(value), std::move(indices));
         } else {
-            Token current = peek();
-            throw SyntaxError("Invalid assignment target", current.line);
+            Token current_token = peek();
+            throw SyntaxError("Invalid assignment target", current_token.line);
         }
     }
     
@@ -238,8 +238,8 @@ std::unique_ptr<Expression> Parser::call() {
                     expr = std::make_unique<CallExpr>(name, std::move(args));
                 }
             } else {
-                Token current = peek();
-                throw SyntaxError("Invalid function call", current.line);
+                Token current_token = peek();
+                throw SyntaxError("Invalid function call", current_token.line);
             }
         } else if (match({TokenType::LEFT_BRACE})) {
             // Handle struct literal: StructName { value1, value2, ... }
@@ -258,8 +258,8 @@ std::unique_ptr<Expression> Parser::call() {
                 expr.release(); // Release ownership
                 expr = std::make_unique<StructLiteralExpr>(name, std::move(values));
             } else {
-                Token current = peek();
-                throw SyntaxError("Invalid struct literal", current.line);
+                Token current_token = peek();
+                throw SyntaxError("Invalid struct literal", current_token.line);
             }
         } else if (match({TokenType::LEFT_BRACKET})) {
             std::vector<std::unique_ptr<Expression>> indices;
@@ -333,8 +333,8 @@ std::unique_ptr<Expression> Parser::primary() {
         return expr;
     }
     
-    Token current = peek();
-    throw SyntaxError("Expected expression", current.line);
+    Token current_token = peek();
+    throw SyntaxError("Expected expression", current_token.line);
 }
 
 std::vector<std::unique_ptr<Expression>> Parser::arguments() {
@@ -557,8 +557,8 @@ std::unique_ptr<Statement> Parser::structDeclaration() {
             // End of struct body
             break;
         } else {
-            Token current = peek();
-            throw SyntaxError("Expected ',' or '}' after field name", current.line);
+            Token current_token = peek();
+            throw SyntaxError("Expected ',' or '}' after field name", current_token.line);
         }
     }
     
@@ -784,7 +784,7 @@ std::unique_ptr<Program> Parser::parse() {
     while (!isAtEnd()) {
         try {
             statements.push_back(statement());
-        } catch (const std::exception& e) {
+        } catch (const std::exception& /* e */) {
             // Error recovery - skip to next statement
             synchronize();
         }

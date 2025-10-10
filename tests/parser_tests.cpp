@@ -17,6 +17,7 @@ void test_parser() {
         auto varStmt = dynamic_cast<VarStmt*>(program->statements[0].get());
         assert(varStmt != nullptr);
         assert(varStmt->variable == "x");
+        (void)varStmt; // Suppress unused variable warning
     }
     
     // Test print statement
@@ -30,6 +31,7 @@ void test_parser() {
         auto printStmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
         assert(printStmt != nullptr);
         assert(printStmt->expressions.size() == 1);
+        (void)printStmt; // Suppress unused variable warning
     }
     
     // Test binary expression
@@ -46,6 +48,7 @@ void test_parser() {
         auto binaryExpr = dynamic_cast<BinaryExpr*>(varStmt->value.get());
         assert(binaryExpr != nullptr);
         assert(binaryExpr->operator_ == "+");
+        (void)binaryExpr; // Suppress unused variable warning
     }
     
     // Test if statement  
@@ -58,5 +61,6 @@ void test_parser() {
         assert(program->statements.size() == 1);
         auto ifStmt = dynamic_cast<IfStmt*>(program->statements[0].get());
         assert(ifStmt != nullptr);
+        (void)ifStmt; // Suppress unused variable warning
     }
 }

@@ -16,7 +16,7 @@ ValueType Runtime::basicPrint(const std::vector<ValueType>& args) {
     return 0;
 }
 
-ValueType Runtime::basicInput(const std::vector<ValueType>& args) {
+ValueType Runtime::basicInput(const std::vector<ValueType>& /* args */) {
     std::string line;
     std::getline(std::cin, line);
     
@@ -42,7 +42,7 @@ ValueType Runtime::basicMid(const std::vector<ValueType>& args) {
     
     std::string str = toString(args[0]);
     int start = toInt(args[1]) - 1; // BASIC is 1-indexed
-    int length = (args.size() > 2) ? toInt(args[2]) : str.length() - start;
+    int length = (args.size() > 2) ? toInt(args[2]) : static_cast<int>(str.length()) - start;
     
     if (start < 0 || start >= static_cast<int>(str.length())) {
         return std::string("");
@@ -92,7 +92,7 @@ ValueType Runtime::basicInt(const std::vector<ValueType>& args) {
     return toInt(args[0]);
 }
 
-ValueType Runtime::basicRnd(const std::vector<ValueType>& args) {
+ValueType Runtime::basicRnd(const std::vector<ValueType>& /* args */) {
     return static_cast<double>(std::rand()) / RAND_MAX;
 }
 
