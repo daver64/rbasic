@@ -240,10 +240,10 @@ public:
     std::vector<std::unique_ptr<Statement>> body;
     
     FunctionDecl(std::string n, std::vector<std::string> params, 
-                 std::vector<std::string> paramTypes, std::string retType,
+                 std::vector<std::string> paramTypes_, std::string retType,
                  std::vector<std::unique_ptr<Statement>> stmts)
         : name(std::move(n)), parameters(std::move(params)), 
-          paramTypes(std::move(paramTypes)), returnType(std::move(retType)), 
+          paramTypes(std::move(paramTypes_)), returnType(std::move(retType)), 
           body(std::move(stmts)) {}
     void accept(ASTVisitor& visitor) override;
 };

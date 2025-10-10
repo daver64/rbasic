@@ -160,6 +160,7 @@ void Terminal::clear() {
     
     SetConsoleCursorPosition(state.hConsole, coordScreen);
 #else
+    (void)state; // Suppress unused variable warning on non-Windows
     std::cout << "\033[2J\033[H" << std::flush;
 #endif
 }
@@ -171,6 +172,7 @@ void Terminal::setCursor(int row, int col) {
     COORD coord = {static_cast<SHORT>(col), static_cast<SHORT>(row)};
     SetConsoleCursorPosition(state.hConsole, coord);
 #else
+    (void)state; // Suppress unused variable warning on non-Windows
     std::cout << "\033[" << (row + 1) << ";" << (col + 1) << "H" << std::flush;
 #endif
 }
@@ -187,6 +189,7 @@ void Terminal::getCursor(int& row, int& col) {
         row = col = 0;
     }
 #else
+    (void)state; // Suppress unused variable warning on non-Windows
     // For Linux, we need to use raw terminal I/O to avoid interfering with stdout
     // Save terminal settings
     struct termios oldTermios;
@@ -378,6 +381,7 @@ void Terminal::getSize(int& rows, int& cols) {
         cols = 80;
     }
 #else
+    (void)state; // Suppress unused variable warning on non-Windows
     struct winsize w;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0) {
         rows = w.ws_row;
@@ -446,6 +450,7 @@ void Terminal::showCursor(bool visible) {
         SetConsoleCursorInfo(state.hConsole, &cursorInfo);
     }
 #else
+    (void)state; // Suppress unused variable warning on non-Windows
     if (visible) {
         std::cout << "\033[?25h" << std::flush; // Show cursor
     } else {
@@ -468,6 +473,7 @@ void Terminal::setEcho(bool enabled) {
         SetConsoleMode(state.hStdin, mode);
     }
 #else
+    (void)state; // Suppress unused variable warning on non-Windows
     struct termios tty;
     tcgetattr(STDIN_FILENO, &tty);
     

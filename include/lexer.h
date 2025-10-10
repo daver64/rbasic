@@ -121,7 +121,7 @@ private:
     TokenType getKeywordType(const std::string& text) const;
     
 public:
-    explicit Lexer(const std::string& source);
+    explicit Lexer(const std::string& source_code);
     
     std::vector<Token> tokenize();
     Token nextToken();

@@ -122,6 +122,8 @@ bool ConsoleIOHandler::key_pressed(const std::string& key) {
         if (c >= 'A' && c <= 'Z') return GetAsyncKeyState(c) & 0x8000;
         if (c >= 'a' && c <= 'z') return GetAsyncKeyState(c - 32) & 0x8000;
     }
+#else
+    (void)key; // Suppress unused parameter warning on non-Windows
 #endif
     return false; // Limited console key detection
 }

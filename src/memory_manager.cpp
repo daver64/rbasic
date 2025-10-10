@@ -27,7 +27,7 @@ MemoryManager::managed_ptr<T> MemoryManager::allocate_sdl_resource(size_t size) 
     track_resource(ptr, size);
     
     return managed_ptr<T>(typed_ptr, [this, size](T* p) {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> inner_lock(mutex_);
         auto* raw_ptr = reinterpret_cast<uint8_t*>(p);
         untrack_resource(raw_ptr, size);
         delete[] raw_ptr;
@@ -41,7 +41,7 @@ MemoryManager::managed_ptr<int> MemoryManager::allocate_int_buffer() {
     track_resource(ptr, sizeof(int));
     
     return managed_ptr<int>(ptr, [this](int* p) {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> inner_lock(mutex_);
         untrack_resource(p, sizeof(int));
         delete p;
     });
@@ -54,7 +54,7 @@ MemoryManager::managed_ptr<void*> MemoryManager::allocate_pointer_buffer() {
     track_resource(ptr, sizeof(void*));
     
     return managed_ptr<void*>(ptr, [this](void** p) {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> inner_lock(mutex_);
         untrack_resource(p, sizeof(void*));
         delete p;
     });
@@ -69,7 +69,7 @@ MemoryManager::managed_ptr<uint8_t[]> MemoryManager::allocate_buffer(size_t size
     
     // Create the deleter with correct signature for array type
     auto deleter = [this, size](uint8_t* p) {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> inner_lock(mutex_);
         untrack_resource(p, size);
         delete[] p;
     };
@@ -174,6 +174,9 @@ char* FFIScope::allocate_string_buffer(size_t size) {
 }
 
 } // namespace rbasic
+
+// Explicit template instantiations for common types
+template char* rbasic::FFIScope::allocate_temp<char>(size_t);
 
 // Explicit template instantiations for SDL types
 template rbasic::ffi::SafeSDLRect* rbasic::MemoryManager::SafeBuffer::as<rbasic::ffi::SafeSDLRect>(size_t);

@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <functional>
 #include <type_traits>
+#include <stdexcept>
 
 namespace rbasic {
 

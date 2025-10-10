@@ -147,20 +147,6 @@ private:
     mutable std::unordered_map<std::string, ProfileEntry> call_profiles_;
 };
 
-// Template implementation for compile-time type checking
-template<typename R, typename... Args>
-bool SafeFFIManager::validate_function_signature(const std::string& library_name, const std::string& function_name) {
-    // This is a compile-time type safety check that can be extended
-    // For now, we verify the function exists and can be called
-    auto library = get_library(library_name);
-    if (!library) {
-        return false;
-    }
-    
-    void* func_ptr = library->get_function_address(function_name);
-    return func_ptr != nullptr;
-}
-
 // RAII library wrapper with automatic cleanup
 class SafeLibrary {
 public:
@@ -308,7 +294,7 @@ private:
 struct SafeSDLRect {
     int x, y, w, h;
     
-    SafeSDLRect(int x = 0, int y = 0, int w = 0, int h = 0) : x(x), y(y), w(w), h(h) {}
+    SafeSDLRect(int x_ = 0, int y_ = 0, int w_ = 0, int h_ = 0) : x(x_), y(y_), w(w_), h(h_) {}
 };
 
 struct SafeSDLEvent {

@@ -56,7 +56,7 @@ private:
     std::vector<std::unique_ptr<Statement>> blockUntil(TokenType endToken);
     
 public:
-    explicit Parser(std::vector<Token> tokens);
+    explicit Parser(std::vector<Token> token_list);
     
     std::unique_ptr<Program> parse();
 };

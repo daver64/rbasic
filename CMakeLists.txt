@@ -166,12 +166,8 @@ if(NOT WIN32)
     target_link_libraries(rbasic_tests stdc++fs)
 endif()
 
-# Add OpenMP compile definitions
-if(OpenMP_CXX_FOUND)
-    target_compile_definitions(rbasic PRIVATE _OPENMP)
-    target_compile_definitions(rbasic_runtime PRIVATE _OPENMP)
-    target_compile_definitions(rbasic_tests PRIVATE _OPENMP)
-endif()
+# OpenMP definitions are automatically provided by OpenMP::OpenMP_CXX
+# No need to manually define _OPENMP as it's automatically defined by the compiler
 
 # Compiler-specific options (set after all targets are defined)
 if(MSVC)

@@ -5,8 +5,8 @@
 
 namespace rbasic {
 
-Lexer::Lexer(const std::string& source) 
-    : source(source), current(0), line(1), column(1) {}
+Lexer::Lexer(const std::string& source_code) 
+    : source(source_code), current(0), line(1), column(1) {}
 
 char Lexer::peek(int offset) const {
     size_t pos = current + offset;

@@ -618,5 +618,19 @@ void SafeFFIManager::reset_call_profiles() {
     call_profiles_.clear();
 }
 
+// Template implementation for compile-time type checking
+template<typename R, typename... Args>
+bool SafeFFIManager::validate_function_signature(const std::string& library_name, const std::string& function_name) {
+    // This is a compile-time type safety check that can be extended
+    // For now, we verify the function exists and can be called
+    auto library = get_library(library_name);
+    if (!library) {
+        return false;
+    }
+    
+    void* func_ptr = library->get_function_address(function_name);
+    return func_ptr != nullptr;
+}
+
 } // namespace ffi
 } // namespace rbasic

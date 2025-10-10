@@ -2,7 +2,7 @@
 
 namespace rbasic {
 
-Parser::Parser(std::vector<Token> tokens) : tokens(std::move(tokens)), current(0) {}
+Parser::Parser(std::vector<Token> token_list) : tokens(std::move(token_list)), current(0) {}
 
 Token Parser::peek() const {
     if (current >= tokens.size()) {

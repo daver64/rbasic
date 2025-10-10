@@ -91,6 +91,7 @@ bool compileToExecutable(const std::string& cppFile, const std::string& outputFi
             std::cout << "Compiling with MSVC (OpenMP enabled)..." << std::endl;
         }
 #else
+        (void)exePath; // Suppress unused parameter warning on non-Windows
         // Linux/Unix: Use g++ compiler
         builder.compiler("g++")
                .compileFlags({"-std=c++17", "-O2", "-fopenmp", "-I", "include"})

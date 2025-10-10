@@ -2,7 +2,7 @@
 
 namespace rbasic {
 
-CodeGenerator::CodeGenerator() : indentLevel(0), tempVarCounter(0), currentFunction("") {}
+CodeGenerator::CodeGenerator() : indentLevel(0), currentFunction(""), tempVarCounter(0) {}
 
 void CodeGenerator::indent() {
     for (int i = 0; i < indentLevel; i++) {
