@@ -17,6 +17,9 @@ var frame_count = 0;
 var x_pos = 0;  // Pre-define to avoid scoping issues
 var current_time = 0;
 var elapsed_ms = 0;
+var final_time = 0;  // Pre-declare to avoid scoping issues
+var total_runtime = 0;  // Pre-declare to avoid scoping issues
+var average_fps = 0;  // Pre-declare to avoid scoping issues
 
 print("Demo running - ESC to quit");
 
@@ -161,9 +164,13 @@ while (sdl_is_running()) {
 }
 
 // Final report
-var final_time = sdl_get_ticks();
-var total_runtime = final_time - start_time;
-var average_fps = frame_count * 1000 / total_runtime;
+final_time = sdl_get_ticks();
+total_runtime = final_time - start_time;
+if (total_runtime > 0) {
+    average_fps = frame_count * 1000 / total_runtime;
+} else {
+    average_fps = 0;
+}
 
 print("");
 print("SDL2 Core Functions Demo Completed!");
@@ -174,11 +181,11 @@ print("  Runtime: " + str(total_runtime) + " ms (" + str(total_runtime / 1000) +
 print("  Average FPS: " + str(average_fps));
 print("");
 print("Functions Successfully Demonstrated:");
-print("  ✓ SDL_RenderDrawPoint() - Pixel-level graphics");
-print("  ✓ SDL_SetWindowTitle() - Dynamic window titles");
-print("  ✓ SDL_SetWindowSize() - Runtime window resizing"); 
-print("  ✓ SDL_GetTicks() - High-precision timing");
-print("  ✓ SDL_RenderDrawLine() - Vector graphics");
+print("  [OK] SDL_RenderDrawPoint() - Pixel-level graphics");
+print("  [OK] SDL_SetWindowTitle() - Dynamic window titles");
+print("  [OK] SDL_SetWindowSize() - Runtime window resizing"); 
+print("  [OK] SDL_GetTicks() - High-precision timing");
+print("  [OK] SDL_RenderDrawLine() - Vector graphics");
 print("");
 print("All new SDL2 core functions working correctly!");
 

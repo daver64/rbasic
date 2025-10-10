@@ -1917,48 +1917,44 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             throw std::runtime_error("Function not found: " + function_name);
         }
         
-        // Generic parameter conversion for 6-parameter functions
-        auto getAsPointer = [](const BasicValue& val) -> void* {
-            if (std::holds_alternative<void*>(val)) {
-                return std::get<void*>(val);
-            }
-            return nullptr;
-        };
+        // Generic parameter conversion for 6-parameter functions - OPTIMIZED
+        void* p1 = FFITypeConverter::getAsPointer(arg1);
+        std::string s1 = FFITypeConverter::getAsString(arg1);
+        int i1 = FFITypeConverter::getAsInt(arg1);
+        double d1 = FFITypeConverter::getAsDouble(arg1);
         
-        auto getAsInt = [](const BasicValue& val) -> int {
-            if (std::holds_alternative<double>(val)) {
-                return static_cast<int>(std::get<double>(val));
-            } else if (std::holds_alternative<int>(val)) {
-                return std::get<int>(val);
-            }
-            return 0;
-        };
+        void* p2 = FFITypeConverter::getAsPointer(arg2);
+        std::string s2 = FFITypeConverter::getAsString(arg2);
+        int i2 = FFITypeConverter::getAsInt(arg2);
+        double d2 = FFITypeConverter::getAsDouble(arg2);
         
-        auto getAsDouble = [](const BasicValue& val) -> double {
-            if (std::holds_alternative<double>(val)) {
-                return std::get<double>(val);
-            } else if (std::holds_alternative<int>(val)) {
-                return static_cast<double>(std::get<int>(val));
-            }
-            return 0.0;
-        };
+        void* p3 = FFITypeConverter::getAsPointer(arg3);
+        std::string s3 = FFITypeConverter::getAsString(arg3);
+        int i3 = FFITypeConverter::getAsInt(arg3);
+        double d3 = FFITypeConverter::getAsDouble(arg3);
         
-        // Store strings to ensure pointer stability
-        std::string str1, str2, str3, str4, str5, str6;
-        auto getAsString = [&](const BasicValue& val, std::string& storage) -> const char* {
-            if (std::holds_alternative<std::string>(val)) {
-                storage = std::get<std::string>(val);
-                return storage.c_str();
-            }
-            return nullptr;
-        };
+        void* p4 = FFITypeConverter::getAsPointer(arg4);
+        std::string s4 = FFITypeConverter::getAsString(arg4);
+        int i4 = FFITypeConverter::getAsInt(arg4);
+        double d4 = FFITypeConverter::getAsDouble(arg4);
+        
+        void* p5 = FFITypeConverter::getAsPointer(arg5);
+        std::string s5 = FFITypeConverter::getAsString(arg5);
+        int i5 = FFITypeConverter::getAsInt(arg5);
+        double d5 = FFITypeConverter::getAsDouble(arg5);
+        
+        void* p6 = FFITypeConverter::getAsPointer(arg6);
+        std::string s6 = FFITypeConverter::getAsString(arg6);
+        int i6 = FFITypeConverter::getAsInt(arg6);
+        double d6 = FFITypeConverter::getAsDouble(arg6);
+        
+        // Try different 6-parameter patterns in order of likelihood
         
         // Pattern: (string, int, int, int, int, int) -> pointer (SDL_CreateWindow)
         if (std::holds_alternative<std::string>(arg1)) {
             typedef void* (__cdecl *FuncType)(const char*, int, int, int, int, int);
             auto func = reinterpret_cast<FuncType>(func_ptr);
-            void* result = func(getAsString(arg1, str1), getAsInt(arg2), getAsInt(arg3), 
-                               getAsInt(arg4), getAsInt(arg5), getAsInt(arg6));
+            void* result = func(s1.c_str(), i2, i3, i4, i5, i6);
             return BasicValue(result);
         }
         
@@ -1966,16 +1962,14 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         if (std::holds_alternative<void*>(arg1)) {
             typedef int (__cdecl *FuncType)(void*, int, int, int, int, int);
             auto func = reinterpret_cast<FuncType>(func_ptr);
-            int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), 
-                             getAsInt(arg4), getAsInt(arg5), getAsInt(arg6));
+            int result = func(p1, i2, i3, i4, i5, i6);
             return BasicValue(static_cast<double>(result));
         }
         
         // Pattern: (int, int, int, int, int, int) -> int
         typedef int (__stdcall *FuncType)(int, int, int, int, int, int);
         auto func = reinterpret_cast<FuncType>(func_ptr);
-        int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
-                         getAsInt(arg4), getAsInt(arg5), getAsInt(arg6));
+        int result = func(i1, i2, i3, i4, i5, i6);
         return BasicValue(static_cast<double>(result));
         
     } catch (const std::exception& e) {
@@ -2004,35 +1998,48 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             throw std::runtime_error("Function not found: " + function_name);
         }
         
-        // Generic parameter conversion for 7-parameter functions
-        auto getAsPointer = [](const BasicValue& val) -> void* {
-            if (std::holds_alternative<void*>(val)) {
-                return std::get<void*>(val);
-            }
-            return nullptr;
-        };
+        // Generic parameter conversion for 7-parameter functions - OPTIMIZED
+        void* p1 = FFITypeConverter::getAsPointer(arg1);
+        std::string s1 = FFITypeConverter::getAsString(arg1);
+        int i1 = FFITypeConverter::getAsInt(arg1);
+        double d1 = FFITypeConverter::getAsDouble(arg1);
         
-        auto getAsString = [](const BasicValue& val) -> const char* {
-            if (std::holds_alternative<std::string>(val)) {
-                return std::get<std::string>(val).c_str();
-            }
-            return nullptr;
-        };
+        void* p2 = FFITypeConverter::getAsPointer(arg2);
+        std::string s2 = FFITypeConverter::getAsString(arg2);
+        int i2 = FFITypeConverter::getAsInt(arg2);
+        double d2 = FFITypeConverter::getAsDouble(arg2);
         
-        auto getAsInt = [](const BasicValue& val) -> int {
-            if (std::holds_alternative<double>(val)) {
-                return static_cast<int>(std::get<double>(val));
-            } else if (std::holds_alternative<int>(val)) {
-                return std::get<int>(val);
-            }
-            return 0;
-        };
+        void* p3 = FFITypeConverter::getAsPointer(arg3);
+        std::string s3 = FFITypeConverter::getAsString(arg3);
+        int i3 = FFITypeConverter::getAsInt(arg3);
+        double d3 = FFITypeConverter::getAsDouble(arg3);
+        
+        void* p4 = FFITypeConverter::getAsPointer(arg4);
+        std::string s4 = FFITypeConverter::getAsString(arg4);
+        int i4 = FFITypeConverter::getAsInt(arg4);
+        double d4 = FFITypeConverter::getAsDouble(arg4);
+        
+        void* p5 = FFITypeConverter::getAsPointer(arg5);
+        std::string s5 = FFITypeConverter::getAsString(arg5);
+        int i5 = FFITypeConverter::getAsInt(arg5);
+        double d5 = FFITypeConverter::getAsDouble(arg5);
+        
+        void* p6 = FFITypeConverter::getAsPointer(arg6);
+        std::string s6 = FFITypeConverter::getAsString(arg6);
+        int i6 = FFITypeConverter::getAsInt(arg6);
+        double d6 = FFITypeConverter::getAsDouble(arg6);
+        
+        void* p7 = FFITypeConverter::getAsPointer(arg7);
+        std::string s7 = FFITypeConverter::getAsString(arg7);
+        int i7 = FFITypeConverter::getAsInt(arg7);
+        double d7 = FFITypeConverter::getAsDouble(arg7);
+        
+        // Try different 7-parameter patterns in order of likelihood
         
         // Pattern: (int, int, int, int, int, int, int) -> int
         typedef int (__stdcall *FuncType)(int, int, int, int, int, int, int);
         auto func = reinterpret_cast<FuncType>(func_ptr);
-        int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
-                         getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), getAsInt(arg7));
+        int result = func(i1, i2, i3, i4, i5, i6, i7);
         return BasicValue(static_cast<double>(result));
         
     } catch (const std::exception& e) {
@@ -2061,62 +2068,66 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             throw std::runtime_error("Function not found: " + function_name);
         }
         
-        // Generic parameter conversion for 8-parameter functions
-        auto getAsPointer = [](const BasicValue& val) -> void* {
-            if (std::holds_alternative<void*>(val)) {
-                return std::get<void*>(val);
-            }
-            return nullptr;
-        };
+        // Generic parameter conversion for 8-parameter functions - OPTIMIZED
+        void* p1 = FFITypeConverter::getAsPointer(arg1);
+        std::string s1 = FFITypeConverter::getAsString(arg1);
+        int i1 = FFITypeConverter::getAsInt(arg1);
+        double d1 = FFITypeConverter::getAsDouble(arg1);
         
-        auto getAsString = [](const BasicValue& val) -> const char* {
-            if (std::holds_alternative<std::string>(val)) {
-                return std::get<std::string>(val).c_str();
-            }
-            return nullptr;
-        };
+        void* p2 = FFITypeConverter::getAsPointer(arg2);
+        std::string s2 = FFITypeConverter::getAsString(arg2);
+        int i2 = FFITypeConverter::getAsInt(arg2);
+        double d2 = FFITypeConverter::getAsDouble(arg2);
         
-        auto getAsInt = [](const BasicValue& val) -> int {
-            if (std::holds_alternative<double>(val)) {
-                return static_cast<int>(std::get<double>(val));
-            } else if (std::holds_alternative<int>(val)) {
-                return std::get<int>(val);
-            }
-            return 0;
-        };
+        void* p3 = FFITypeConverter::getAsPointer(arg3);
+        std::string s3 = FFITypeConverter::getAsString(arg3);
+        int i3 = FFITypeConverter::getAsInt(arg3);
+        double d3 = FFITypeConverter::getAsDouble(arg3);
         
-        auto getAsDouble = [](const BasicValue& val) -> double {
-            if (std::holds_alternative<double>(val)) {
-                return std::get<double>(val);
-            } else if (std::holds_alternative<int>(val)) {
-                return static_cast<double>(std::get<int>(val));
-            }
-            return 0.0;
-        };
+        void* p4 = FFITypeConverter::getAsPointer(arg4);
+        std::string s4 = FFITypeConverter::getAsString(arg4);
+        int i4 = FFITypeConverter::getAsInt(arg4);
+        double d4 = FFITypeConverter::getAsDouble(arg4);
+        
+        void* p5 = FFITypeConverter::getAsPointer(arg5);
+        std::string s5 = FFITypeConverter::getAsString(arg5);
+        int i5 = FFITypeConverter::getAsInt(arg5);
+        double d5 = FFITypeConverter::getAsDouble(arg5);
+        
+        void* p6 = FFITypeConverter::getAsPointer(arg6);
+        std::string s6 = FFITypeConverter::getAsString(arg6);
+        int i6 = FFITypeConverter::getAsInt(arg6);
+        double d6 = FFITypeConverter::getAsDouble(arg6);
+        
+        void* p7 = FFITypeConverter::getAsPointer(arg7);
+        std::string s7 = FFITypeConverter::getAsString(arg7);
+        int i7 = FFITypeConverter::getAsInt(arg7);
+        double d7 = FFITypeConverter::getAsDouble(arg7);
+        
+        void* p8 = FFITypeConverter::getAsPointer(arg8);
+        std::string s8 = FFITypeConverter::getAsString(arg8);
+        int i8 = FFITypeConverter::getAsInt(arg8);
+        double d8 = FFITypeConverter::getAsDouble(arg8);
+        
+        // Try different 8-parameter patterns in order of likelihood
         
         // Check for SDL2_gfx circle pattern: (pointer, int, int, int, int, int, int, int) -> int
         if (std::holds_alternative<void*>(arg1) && !std::holds_alternative<void*>(arg2) && !std::holds_alternative<double>(arg5)) {
             typedef int (__cdecl *FuncSDL2GFXCircle)(void*, int, int, int, int, int, int, int);
             auto func = reinterpret_cast<FuncSDL2GFXCircle>(func_ptr);
-            int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), 
-                             getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
-                             getAsInt(arg7), getAsInt(arg8));
+            int result = func(p1, i2, i3, i4, i5, i6, i7, i8);
             return BasicValue(static_cast<double>(result));
         // Check for SDL_RenderCopyEx pattern: (pointer, pointer, pointer, pointer, double, pointer, double, int) -> int
         } else if (std::holds_alternative<void*>(arg1) && std::holds_alternative<double>(arg5) && std::holds_alternative<double>(arg7)) {
             typedef int (__cdecl *FuncSDLRenderCopyEx)(void*, void*, void*, void*, double, void*, double, int);
             auto func = reinterpret_cast<FuncSDLRenderCopyEx>(func_ptr);
-            int result = func(getAsPointer(arg1), getAsPointer(arg2), getAsPointer(arg3), 
-                             getAsPointer(arg4), getAsDouble(arg5), getAsPointer(arg6), 
-                             getAsDouble(arg7), getAsInt(arg8));
+            int result = func(p1, p2, p3, p4, d5, p6, d7, i8);
             return BasicValue(static_cast<double>(result));
         } else {
             // Generic pattern: (int, int, int, int, int, int, int, int) -> int - Windows API
             typedef int (__stdcall *FuncType)(int, int, int, int, int, int, int, int);
             auto func = reinterpret_cast<FuncType>(func_ptr);
-            int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
-                             getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
-                             getAsInt(arg7), getAsInt(arg8));
+            int result = func(i1, i2, i3, i4, i5, i6, i7, i8);
             return BasicValue(static_cast<double>(result));
         }
         
@@ -2145,37 +2156,65 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             throw std::runtime_error("Function not found: " + function_name);
         }
         
-        auto getAsInt = [](const BasicValue& val) -> int {
-            if (std::holds_alternative<double>(val)) {
-                return static_cast<int>(std::get<double>(val));
-            } else if (std::holds_alternative<int>(val)) {
-                return std::get<int>(val);
-            }
-            return 0;
-        };
+        // Generic parameter conversion for 9-parameter functions - OPTIMIZED
+        void* p1 = FFITypeConverter::getAsPointer(arg1);
+        std::string s1 = FFITypeConverter::getAsString(arg1);
+        int i1 = FFITypeConverter::getAsInt(arg1);
+        double d1 = FFITypeConverter::getAsDouble(arg1);
         
-        auto getAsPointer = [](const BasicValue& val) -> void* {
-            if (std::holds_alternative<void*>(val)) {
-                return std::get<void*>(val);
-            }
-            return nullptr;
-        };
+        void* p2 = FFITypeConverter::getAsPointer(arg2);
+        std::string s2 = FFITypeConverter::getAsString(arg2);
+        int i2 = FFITypeConverter::getAsInt(arg2);
+        double d2 = FFITypeConverter::getAsDouble(arg2);
+        
+        void* p3 = FFITypeConverter::getAsPointer(arg3);
+        std::string s3 = FFITypeConverter::getAsString(arg3);
+        int i3 = FFITypeConverter::getAsInt(arg3);
+        double d3 = FFITypeConverter::getAsDouble(arg3);
+        
+        void* p4 = FFITypeConverter::getAsPointer(arg4);
+        std::string s4 = FFITypeConverter::getAsString(arg4);
+        int i4 = FFITypeConverter::getAsInt(arg4);
+        double d4 = FFITypeConverter::getAsDouble(arg4);
+        
+        void* p5 = FFITypeConverter::getAsPointer(arg5);
+        std::string s5 = FFITypeConverter::getAsString(arg5);
+        int i5 = FFITypeConverter::getAsInt(arg5);
+        double d5 = FFITypeConverter::getAsDouble(arg5);
+        
+        void* p6 = FFITypeConverter::getAsPointer(arg6);
+        std::string s6 = FFITypeConverter::getAsString(arg6);
+        int i6 = FFITypeConverter::getAsInt(arg6);
+        double d6 = FFITypeConverter::getAsDouble(arg6);
+        
+        void* p7 = FFITypeConverter::getAsPointer(arg7);
+        std::string s7 = FFITypeConverter::getAsString(arg7);
+        int i7 = FFITypeConverter::getAsInt(arg7);
+        double d7 = FFITypeConverter::getAsDouble(arg7);
+        
+        void* p8 = FFITypeConverter::getAsPointer(arg8);
+        std::string s8 = FFITypeConverter::getAsString(arg8);
+        int i8 = FFITypeConverter::getAsInt(arg8);
+        double d8 = FFITypeConverter::getAsDouble(arg8);
+        
+        void* p9 = FFITypeConverter::getAsPointer(arg9);
+        std::string s9 = FFITypeConverter::getAsString(arg9);
+        int i9 = FFITypeConverter::getAsInt(arg9);
+        double d9 = FFITypeConverter::getAsDouble(arg9);
+        
+        // Try different 9-parameter patterns in order of likelihood
         
         // Pattern for SDL2_gfx ellipse functions: (pointer, int, int, int, int, int, int, int, int) -> int  
         if (std::holds_alternative<void*>(arg1)) {
             typedef int (__cdecl *FuncSDL2GFX)(void*, int, int, int, int, int, int, int, int);
             auto func = reinterpret_cast<FuncSDL2GFX>(func_ptr);
-            int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), 
-                             getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
-                             getAsInt(arg7), getAsInt(arg8), getAsInt(arg9));
+            int result = func(p1, i2, i3, i4, i5, i6, i7, i8, i9);
             return BasicValue(static_cast<double>(result));
         } else {
             // Generic pattern: (int, int, int, int, int, int, int, int, int) -> int
             typedef int (__stdcall *FuncType)(int, int, int, int, int, int, int, int, int);
             auto func = reinterpret_cast<FuncType>(func_ptr);
-            int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
-                             getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
-                             getAsInt(arg7), getAsInt(arg8), getAsInt(arg9));
+            int result = func(i1, i2, i3, i4, i5, i6, i7, i8, i9);
             return BasicValue(static_cast<double>(result));
         }
         
@@ -2205,29 +2244,63 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             throw std::runtime_error("Function not found: " + function_name);
         }
         
-        auto getAsInt = [](const BasicValue& val) -> int {
-            if (std::holds_alternative<double>(val)) {
-                return static_cast<int>(std::get<double>(val));
-            } else if (std::holds_alternative<int>(val)) {
-                return std::get<int>(val);
-            }
-            return 0;
-        };
+        // Generic parameter conversion for 10-parameter functions - OPTIMIZED
+        void* p1 = FFITypeConverter::getAsPointer(arg1);
+        std::string s1 = FFITypeConverter::getAsString(arg1);
+        int i1 = FFITypeConverter::getAsInt(arg1);
+        double d1 = FFITypeConverter::getAsDouble(arg1);
         
-        auto getAsPointer = [](const BasicValue& val) -> void* {
-            if (std::holds_alternative<void*>(val)) {
-                return std::get<void*>(val);
-            }
-            return nullptr;
-        };
+        void* p2 = FFITypeConverter::getAsPointer(arg2);
+        std::string s2 = FFITypeConverter::getAsString(arg2);
+        int i2 = FFITypeConverter::getAsInt(arg2);
+        double d2 = FFITypeConverter::getAsDouble(arg2);
+        
+        void* p3 = FFITypeConverter::getAsPointer(arg3);
+        std::string s3 = FFITypeConverter::getAsString(arg3);
+        int i3 = FFITypeConverter::getAsInt(arg3);
+        double d3 = FFITypeConverter::getAsDouble(arg3);
+        
+        void* p4 = FFITypeConverter::getAsPointer(arg4);
+        std::string s4 = FFITypeConverter::getAsString(arg4);
+        int i4 = FFITypeConverter::getAsInt(arg4);
+        double d4 = FFITypeConverter::getAsDouble(arg4);
+        
+        void* p5 = FFITypeConverter::getAsPointer(arg5);
+        std::string s5 = FFITypeConverter::getAsString(arg5);
+        int i5 = FFITypeConverter::getAsInt(arg5);
+        double d5 = FFITypeConverter::getAsDouble(arg5);
+        
+        void* p6 = FFITypeConverter::getAsPointer(arg6);
+        std::string s6 = FFITypeConverter::getAsString(arg6);
+        int i6 = FFITypeConverter::getAsInt(arg6);
+        double d6 = FFITypeConverter::getAsDouble(arg6);
+        
+        void* p7 = FFITypeConverter::getAsPointer(arg7);
+        std::string s7 = FFITypeConverter::getAsString(arg7);
+        int i7 = FFITypeConverter::getAsInt(arg7);
+        double d7 = FFITypeConverter::getAsDouble(arg7);
+        
+        void* p8 = FFITypeConverter::getAsPointer(arg8);
+        std::string s8 = FFITypeConverter::getAsString(arg8);
+        int i8 = FFITypeConverter::getAsInt(arg8);
+        double d8 = FFITypeConverter::getAsDouble(arg8);
+        
+        void* p9 = FFITypeConverter::getAsPointer(arg9);
+        std::string s9 = FFITypeConverter::getAsString(arg9);
+        int i9 = FFITypeConverter::getAsInt(arg9);
+        double d9 = FFITypeConverter::getAsDouble(arg9);
+        
+        void* p10 = FFITypeConverter::getAsPointer(arg10);
+        std::string s10 = FFITypeConverter::getAsString(arg10);
+        int i10 = FFITypeConverter::getAsInt(arg10);
+        double d10 = FFITypeConverter::getAsDouble(arg10);
+        
+        // Try different 10-parameter patterns in order of likelihood
         
         // Generic pattern: (int, int, int, int, int, int, int, int, int, int) -> int
         typedef int (__stdcall *FuncType)(int, int, int, int, int, int, int, int, int, int);
         auto func = reinterpret_cast<FuncType>(func_ptr);
-        int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
-                         getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
-                         getAsInt(arg7), getAsInt(arg8), getAsInt(arg9), 
-                         getAsInt(arg10));
+        int result = func(i1, i2, i3, i4, i5, i6, i7, i8, i9, i10);
         return BasicValue(static_cast<double>(result));
         
     } catch (const std::exception& e) {
@@ -2256,39 +2329,75 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             throw std::runtime_error("Function not found: " + function_name);
         }
         
-        auto getAsInt = [](const BasicValue& val) -> int {
-            if (std::holds_alternative<double>(val)) {
-                return static_cast<int>(std::get<double>(val));
-            } else if (std::holds_alternative<int>(val)) {
-                return std::get<int>(val);
-            }
-            return 0;
-        };
+        // Generic parameter conversion for 11-parameter functions - OPTIMIZED
+        void* p1 = FFITypeConverter::getAsPointer(arg1);
+        std::string s1 = FFITypeConverter::getAsString(arg1);
+        int i1 = FFITypeConverter::getAsInt(arg1);
+        double d1 = FFITypeConverter::getAsDouble(arg1);
         
-        auto getAsPointer = [](const BasicValue& val) -> void* {
-            if (std::holds_alternative<void*>(val)) {
-                return std::get<void*>(val);
-            }
-            return nullptr;
-        };
+        void* p2 = FFITypeConverter::getAsPointer(arg2);
+        std::string s2 = FFITypeConverter::getAsString(arg2);
+        int i2 = FFITypeConverter::getAsInt(arg2);
+        double d2 = FFITypeConverter::getAsDouble(arg2);
+        
+        void* p3 = FFITypeConverter::getAsPointer(arg3);
+        std::string s3 = FFITypeConverter::getAsString(arg3);
+        int i3 = FFITypeConverter::getAsInt(arg3);
+        double d3 = FFITypeConverter::getAsDouble(arg3);
+        
+        void* p4 = FFITypeConverter::getAsPointer(arg4);
+        std::string s4 = FFITypeConverter::getAsString(arg4);
+        int i4 = FFITypeConverter::getAsInt(arg4);
+        double d4 = FFITypeConverter::getAsDouble(arg4);
+        
+        void* p5 = FFITypeConverter::getAsPointer(arg5);
+        std::string s5 = FFITypeConverter::getAsString(arg5);
+        int i5 = FFITypeConverter::getAsInt(arg5);
+        double d5 = FFITypeConverter::getAsDouble(arg5);
+        
+        void* p6 = FFITypeConverter::getAsPointer(arg6);
+        std::string s6 = FFITypeConverter::getAsString(arg6);
+        int i6 = FFITypeConverter::getAsInt(arg6);
+        double d6 = FFITypeConverter::getAsDouble(arg6);
+        
+        void* p7 = FFITypeConverter::getAsPointer(arg7);
+        std::string s7 = FFITypeConverter::getAsString(arg7);
+        int i7 = FFITypeConverter::getAsInt(arg7);
+        double d7 = FFITypeConverter::getAsDouble(arg7);
+        
+        void* p8 = FFITypeConverter::getAsPointer(arg8);
+        std::string s8 = FFITypeConverter::getAsString(arg8);
+        int i8 = FFITypeConverter::getAsInt(arg8);
+        double d8 = FFITypeConverter::getAsDouble(arg8);
+        
+        void* p9 = FFITypeConverter::getAsPointer(arg9);
+        std::string s9 = FFITypeConverter::getAsString(arg9);
+        int i9 = FFITypeConverter::getAsInt(arg9);
+        double d9 = FFITypeConverter::getAsDouble(arg9);
+        
+        void* p10 = FFITypeConverter::getAsPointer(arg10);
+        std::string s10 = FFITypeConverter::getAsString(arg10);
+        int i10 = FFITypeConverter::getAsInt(arg10);
+        double d10 = FFITypeConverter::getAsDouble(arg10);
+        
+        void* p11 = FFITypeConverter::getAsPointer(arg11);
+        std::string s11 = FFITypeConverter::getAsString(arg11);
+        int i11 = FFITypeConverter::getAsInt(arg11);
+        double d11 = FFITypeConverter::getAsDouble(arg11);
+        
+        // Try different 11-parameter patterns in order of likelihood
         
         // Pattern for filledTrigonRGBA: (pointer, int, int, int, int, int, int, int, int, int, int) -> int
         if (std::holds_alternative<void*>(arg1)) {
             typedef int (__cdecl *FuncSDL2GFX)(void*, int, int, int, int, int, int, int, int, int, int);
             auto func = reinterpret_cast<FuncSDL2GFX>(func_ptr);
-            int result = func(getAsPointer(arg1), getAsInt(arg2), getAsInt(arg3), 
-                             getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
-                             getAsInt(arg7), getAsInt(arg8), getAsInt(arg9), 
-                             getAsInt(arg10), getAsInt(arg11));
+            int result = func(p1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11);
             return BasicValue(static_cast<double>(result));
         } else {
             // Generic pattern: (int, int, int, int, int, int, int, int, int, int, int) -> int
             typedef int (__stdcall *FuncType)(int, int, int, int, int, int, int, int, int, int, int);
             auto func = reinterpret_cast<FuncType>(func_ptr);
-            int result = func(getAsInt(arg1), getAsInt(arg2), getAsInt(arg3), 
-                             getAsInt(arg4), getAsInt(arg5), getAsInt(arg6), 
-                             getAsInt(arg7), getAsInt(arg8), getAsInt(arg9), 
-                             getAsInt(arg10), getAsInt(arg11));
+            int result = func(i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11);
             return BasicValue(static_cast<double>(result));
         }
         
@@ -3139,3 +3248,60 @@ BasicValue func_not_null(const BasicValue& value) {
 }
 
 } // namespace basic_runtime
+
+// ===== FFI TYPE CONVERTER IMPLEMENTATION =====
+
+int basic_runtime::FFITypeConverter::getAsInt(const BasicValue& value) {
+    if (std::holds_alternative<int>(value)) {
+        return std::get<int>(value);
+    } else if (std::holds_alternative<double>(value)) {
+        return static_cast<int>(std::get<double>(value));
+    } else if (std::holds_alternative<bool>(value)) {
+        return std::get<bool>(value) ? 1 : 0;
+    } else if (std::holds_alternative<void*>(value)) {
+        return reinterpret_cast<intptr_t>(std::get<void*>(value));
+    }
+    return 0;
+}
+
+double basic_runtime::FFITypeConverter::getAsDouble(const BasicValue& value) {
+    if (std::holds_alternative<double>(value)) {
+        return std::get<double>(value);
+    } else if (std::holds_alternative<int>(value)) {
+        return static_cast<double>(std::get<int>(value));
+    } else if (std::holds_alternative<bool>(value)) {
+        return std::get<bool>(value) ? 1.0 : 0.0;
+    } else if (std::holds_alternative<void*>(value)) {
+        return static_cast<double>(reinterpret_cast<intptr_t>(std::get<void*>(value)));
+    }
+    return 0.0;
+}
+
+std::string basic_runtime::FFITypeConverter::getAsString(const BasicValue& value) {
+    if (std::holds_alternative<std::string>(value)) {
+        return std::get<std::string>(value);
+    } else if (std::holds_alternative<int>(value)) {
+        return std::to_string(std::get<int>(value));
+    } else if (std::holds_alternative<double>(value)) {
+        return std::to_string(std::get<double>(value));
+    } else if (std::holds_alternative<bool>(value)) {
+        return std::get<bool>(value) ? "true" : "false";
+    } else if (std::holds_alternative<void*>(value)) {
+        std::ostringstream oss;
+        oss << std::get<void*>(value);
+        return oss.str();
+    }
+    return "";
+}
+
+void* basic_runtime::FFITypeConverter::getAsPointer(const BasicValue& value) {
+    if (std::holds_alternative<void*>(value)) {
+        return std::get<void*>(value);
+    } else if (std::holds_alternative<std::string>(value)) {
+        const std::string& str = std::get<std::string>(value);
+        return const_cast<char*>(str.c_str());
+    } else if (std::holds_alternative<int>(value)) {
+        return reinterpret_cast<void*>(static_cast<intptr_t>(std::get<int>(value)));
+    }
+    return nullptr;
+}
