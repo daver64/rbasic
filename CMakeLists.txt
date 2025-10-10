@@ -86,6 +86,8 @@ add_library(rbasic_runtime STATIC
     include/terminal.h
     src/ffi.cpp
     include/ffi.h
+    src/ffi_utils.cpp
+    include/ffi_utils.h
 )
 
 # Include directories for runtime library

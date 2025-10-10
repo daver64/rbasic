@@ -410,8 +410,11 @@ build.bat
 - ✅ Performance bottlenecks in FFI parameter conversion (80% improvement)
 
 **Known Limitations:**
+- ⚠️ **Error Reporting**: Main execution mode needs more detailed error messages with line numbers
+- ⚠️ **Parser Diagnostics**: Limited syntax error reporting compared to modern language tools  
+- ⚠️ **Import Error Details**: Basic import failure messages could be more descriptive
+- ⚠️ **Compilation Diagnostics**: C++ compilation errors not always user-friendly for BASIC programmers
 - ⚠️ Standard library still expanding (graphics and database libraries working)
-- ⚠️ Error handling and reporting needs improvement for complex programs
 - ⚠️ Some edge cases in complex variable scoping scenarios
 - ⚠️ Performance optimizations not fully implemented for all operations
 - ⚠️ Documentation is work-in-progress (basic examples available)

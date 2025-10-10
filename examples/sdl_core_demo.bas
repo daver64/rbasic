@@ -7,7 +7,7 @@ print("SDL2 Core Functions Demo - Clean Version");
 print("Features: points, lines, window management, timing");
 
 // Initialize SDL
-if (sdl_init("SDL2 Core Demo", 800, 600) == 0) {
+if (sdl_init("SDL2 Core Demo", 800, 600) != 1) {
     print("Failed to initialize SDL");
     return;
 }
@@ -22,13 +22,19 @@ var total_runtime = 0;  // Pre-declare to avoid scoping issues
 var average_fps = 0;  // Pre-declare to avoid scoping issues
 
 print("Demo running - ESC to quit");
+print("sdl_is_running() = " + str(sdl_is_running()));
+
+print("Demo running - ESC to quit");
 
 while (sdl_is_running()) {
-    print("Loop iteration starting...");
+    print("=== ENTERING LOOP ITERATION ===");
+    print("Loop start: sdl_is_running() = " + str(sdl_is_running()));
     current_time = sdl_get_ticks();
-    print("current_time updated: " + str(current_time));
     elapsed_ms = current_time - start_time;
-    print("elapsed_ms updated: " + str(elapsed_ms));
+    
+    // === FRAME COUNTING ===
+    frame_count = frame_count + 1;
+    print("Frame " + str(frame_count) + " - elapsed: " + str(elapsed_ms) + "ms");
     frame_count = frame_count + 1;
     
     // Clear screen
@@ -159,9 +165,17 @@ while (sdl_is_running()) {
     
     // Present and control frame rate
     sdl_present();
+    print("About to process events, sdl_running = " + str(sdl_running));
     sdl_process_events();
+    print("After processing events, sdl_running = " + str(sdl_running));
+    continue_loop = sdl_is_running();  // Update loop condition
     sdl_delay(33);  // ~30 FPS
+    print("=== END OF LOOP ITERATION ===");
+    print("About to check while condition: continue_loop = " + str(continue_loop));
 }
+
+print("=== EXITED WHILE LOOP ===");
+print("After while loop: sdl_is_running() = " + str(sdl_is_running()));
 
 // Final report
 final_time = sdl_get_ticks();

@@ -111,7 +111,8 @@ std::unique_ptr<Expression> Parser::assignment() {
             expr.release(); // Release the variable expression since we're not using it
             return std::make_unique<AssignExpr>(variable, std::move(value), std::move(indices));
         } else {
-            throw SyntaxError("Invalid assignment target");
+            Token current = peek();
+            throw SyntaxError("Invalid assignment target", current.line);
         }
     }
     
@@ -214,7 +215,8 @@ std::unique_ptr<Expression> Parser::call() {
                 expr.release(); // Release ownership
                 expr = std::make_unique<CallExpr>(name, std::move(args));
             } else {
-                throw SyntaxError("Invalid function call");
+                Token current = peek();
+                throw SyntaxError("Invalid function call", current.line);
             }
         } else if (match({TokenType::LEFT_BRACE})) {
             // Handle struct literal: StructName { value1, value2, ... }
@@ -233,7 +235,8 @@ std::unique_ptr<Expression> Parser::call() {
                 expr.release(); // Release ownership
                 expr = std::make_unique<StructLiteralExpr>(name, std::move(values));
             } else {
-                throw SyntaxError("Invalid struct literal");
+                Token current = peek();
+                throw SyntaxError("Invalid struct literal", current.line);
             }
         } else if (match({TokenType::LEFT_BRACKET})) {
             std::vector<std::unique_ptr<Expression>> indices;
@@ -293,7 +296,8 @@ std::unique_ptr<Expression> Parser::primary() {
         return expr;
     }
     
-    throw SyntaxError("Expected expression");
+    Token current = peek();
+    throw SyntaxError("Expected expression", current.line);
 }
 
 std::vector<std::unique_ptr<Expression>> Parser::arguments() {
@@ -516,7 +520,8 @@ std::unique_ptr<Statement> Parser::structDeclaration() {
             // End of struct body
             break;
         } else {
-            throw std::runtime_error("Expected ',' or '}' after field name");
+            Token current = peek();
+            throw SyntaxError("Expected ',' or '}' after field name", current.line);
         }
     }
     
