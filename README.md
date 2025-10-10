@@ -14,7 +14,7 @@
 - **Graphics Programming**: Complete SDL2 integration with hardware-accelerated rendering
 - **Cross-Platform**: Windows (MinGW64/MSVC), Linux (GCC), macOS (Clang) with identical behavior
 
-## Recent Improvements (January 2025)
+## Recent Improvements (October 2025)
 
 ### Enhanced FFI System
 - **Extended Parameter Support**: Functions with up to 11 parameters for complex graphics operations (SDL2_gfx)
@@ -404,8 +404,8 @@ build.bat
 - ✅ Interactive REPL for development with multi-line support
 
 **Recently Fixed Issues:**
-- ✅ Variable scoping in for loops and functions (January 2025)
-- ✅ Compiler linker errors with FFI functions (January 2025)
+- ✅ Variable scoping in for loops and functions (October 2025)
+- ✅ Compiler linker errors with FFI functions (October 2025)
 - ✅ Cross-mode FFI consistency between interpreter and compiled modes
 - ✅ Performance bottlenecks in FFI parameter conversion (80% improvement)
 
