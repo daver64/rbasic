@@ -53,6 +53,9 @@ set(SOURCES
     src/repl.cpp
     src/math_utils.cpp
     src/ffi_utils.cpp
+    src/memory_manager.cpp
+    src/unified_value.cpp
+    src/safe_ffi.cpp
 )
 
 # Header files
@@ -73,6 +76,9 @@ set(HEADERS
     include/ffi.h
     include/math_utils.h
     include/ffi_utils.h
+    include/memory_manager.h
+    include/unified_value.h
+    include/safe_ffi.h
 )
 
 # Create main executable
