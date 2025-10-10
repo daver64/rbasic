@@ -4,8 +4,20 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <filesystem>
 
 namespace rbasic {
+
+// Helper function to remove quotes from filename
+std::string removeQuotes(const std::string& str) {
+    std::string result = str;
+    if (result.size() >= 2 && 
+        ((result.front() == '"' && result.back() == '"') ||
+         (result.front() == '\'' && result.back() == '\''))) {
+        result = result.substr(1, result.size() - 2);
+    }
+    return result;
+}
 
 REPL::REPL() : inMultilineMode(false), lineNumber(1) {
 }
@@ -214,6 +226,7 @@ void REPL::handleMetaCommand(const std::string& command) {
         std::string filename;
         iss >> filename;
         if (!filename.empty()) {
+            filename = removeQuotes(filename);
             loadFile(filename);
         } else {
             Terminal::println("Usage: :load <filename>", Color::YELLOW);
@@ -222,6 +235,7 @@ void REPL::handleMetaCommand(const std::string& command) {
         std::string filename;
         iss >> filename;
         if (!filename.empty()) {
+            filename = removeQuotes(filename);
             saveSession(filename);
         } else {
             Terminal::println("Usage: :save <filename>", Color::YELLOW);
@@ -248,9 +262,30 @@ void REPL::clearSession() {
 }
 
 void REPL::loadFile(const std::string& filename) {
-    std::ifstream file(filename);
+    // Try to resolve the file path
+    std::string resolvedPath = filename;
+    
+    // If not an absolute path, try different search locations
+    if (!std::filesystem::path(filename).is_absolute()) {
+        // Try current working directory first
+        if (std::filesystem::exists(filename)) {
+            resolvedPath = filename;
+        }
+        // Try relative to examples directory
+        else {
+            std::filesystem::path examplesPath = std::filesystem::current_path() / "examples" / filename;
+            if (std::filesystem::exists(examplesPath)) {
+                resolvedPath = examplesPath.string();
+            }
+        }
+    }
+    
+    std::ifstream file(resolvedPath);
     if (!file.is_open()) {
         Terminal::println("Error: Could not open file '" + filename + "'", Color::RED);
+        if (resolvedPath != filename) {
+            Terminal::println("  Tried: " + resolvedPath, Color::YELLOW);
+        }
         return;
     }
     
@@ -265,7 +300,7 @@ void REPL::loadFile(const std::string& filename) {
         auto program = parser.parse();
         
         interpreter.interpret(*program);
-        Terminal::println("Loaded and executed: " + filename, Color::GREEN);
+        Terminal::println("Loaded and executed: " + resolvedPath, Color::GREEN);
         
     } catch (const std::exception& e) {
         Terminal::println("Error loading '" + filename + "': " + e.what(), Color::RED);

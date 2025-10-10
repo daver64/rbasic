@@ -229,9 +229,14 @@ function sdl_present() {
 function sdl_process_events() as integer {
     var events_processed = 0;
     
-    while (SDL_PollEvent(sdl_event_buffer) == 1) {
+    // Create a local event buffer to avoid global variable issues
+    var local_event_buffer = create_sdl_event();
+    
+    while (SDL_PollEvent(local_event_buffer) == 1) {
         events_processed = events_processed + 1;
-        var event_type = deref_int(sdl_event_buffer);
+        
+        // Use the safer get_event_type function
+        var event_type = get_event_type(local_event_buffer);
         
         // Handle quit event (window close button)
         if (event_type == get_constant("SDL_QUIT")) {
@@ -241,7 +246,7 @@ function sdl_process_events() as integer {
         
         // Handle key press events
         if (event_type == get_constant("SDL_KEYDOWN")) {
-            var key_code = get_key_code(sdl_event_buffer);
+            var key_code = get_key_code(local_event_buffer);
             
             // Check for escape key
             if (key_code == get_constant("SDL_SCANCODE_ESCAPE")) {
