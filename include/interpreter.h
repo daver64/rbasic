@@ -78,6 +78,7 @@ public:
     void visit(VariableExpr& node) override;
     void visit(BinaryExpr& node) override;
     void visit(AssignExpr& node) override;
+    void visit(ComponentAssignExpr& node) override;
     void visit(UnaryExpr& node) override;
     void visit(CallExpr& node) override;
     void visit(StructLiteralExpr& node) override;

@@ -456,7 +456,14 @@ BasicValue create_quat(float w = 1.0f, float x = 0.0f, float y = 0.0f, float z =
 
 // GLM component access
 BasicValue get_vec_component(const BasicValue& vec, const std::string& component);
-BasicValue set_vec_component(const BasicValue& vec, const std::string& component, float value);
+BasicValue set_vec_component(const BasicValue& vec, const std::string& component, const BasicValue& value);
+
+// GLM math functions
+BasicValue vec_length(const BasicValue& vec);
+BasicValue vec_normalize(const BasicValue& vec);
+BasicValue vec_dot(const BasicValue& left, const BasicValue& right);
+BasicValue vec_cross(const BasicValue& left, const BasicValue& right);
+BasicValue vec_distance(const BasicValue& left, const BasicValue& right);
 
 // Type conversion
 int to_int(const BasicValue& value);

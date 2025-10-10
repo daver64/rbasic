@@ -35,6 +35,10 @@ void AssignExpr::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
 }
 
+void ComponentAssignExpr::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
 void UnaryExpr::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
 }

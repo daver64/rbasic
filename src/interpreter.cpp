@@ -354,6 +354,72 @@ void Interpreter::visit(AssignExpr& node) {
     lastValue = value;
 }
 
+void Interpreter::visit(ComponentAssignExpr& node) {
+    ValueType newValue = evaluate(*node.value);
+    
+    // Get the variable name first, before evaluating the object
+    if (auto varExpr = dynamic_cast<VariableExpr*>(node.object.get())) {
+        std::string varName = varExpr->name;
+        ValueType objectValue = getVariable(varName);  // Get directly from variables map
+        
+        // Convert the new value to float for GLM components
+        float floatValue = 0.0f;
+        if (std::holds_alternative<double>(newValue)) {
+            floatValue = static_cast<float>(std::get<double>(newValue));
+        } else if (std::holds_alternative<int>(newValue)) {
+            floatValue = static_cast<float>(std::get<int>(newValue));
+        } else {
+            throw RuntimeError("Cannot assign non-numeric value to vector component");
+        }
+        
+        // Update the component based on vector type
+        if (std::holds_alternative<Vec2Value>(objectValue)) {
+            Vec2Value vec = std::get<Vec2Value>(objectValue);
+            if (node.component == "x") {
+                vec.data.x = floatValue;
+            } else if (node.component == "y") {
+                vec.data.y = floatValue;
+            } else {
+                throw RuntimeError("Invalid component '" + node.component + "' for vec2");
+            }
+            setVariable(varName, vec);
+            lastValue = static_cast<double>(floatValue);
+        } else if (std::holds_alternative<Vec3Value>(objectValue)) {
+            Vec3Value vec = std::get<Vec3Value>(objectValue);
+            if (node.component == "x") {
+                vec.data.x = floatValue;
+            } else if (node.component == "y") {
+                vec.data.y = floatValue;
+            } else if (node.component == "z") {
+                vec.data.z = floatValue;
+            } else {
+                throw RuntimeError("Invalid component '" + node.component + "' for vec3");
+            }
+            setVariable(varName, vec);
+            lastValue = static_cast<double>(floatValue);
+        } else if (std::holds_alternative<Vec4Value>(objectValue)) {
+            Vec4Value vec = std::get<Vec4Value>(objectValue);
+            if (node.component == "x") {
+                vec.data.x = floatValue;
+            } else if (node.component == "y") {
+                vec.data.y = floatValue;
+            } else if (node.component == "z") {
+                vec.data.z = floatValue;
+            } else if (node.component == "w") {
+                vec.data.w = floatValue;
+            } else {
+                throw RuntimeError("Invalid component '" + node.component + "' for vec4");
+            }
+            setVariable(varName, vec);
+            lastValue = static_cast<double>(floatValue);
+        } else {
+            throw RuntimeError("Component assignment not supported for this type");
+        }
+    } else {
+        throw RuntimeError("Can only assign to components of variables");
+    }
+}
+
 void Interpreter::visit(UnaryExpr& node) {
     ValueType operand = evaluate(*node.operand);
     
@@ -573,6 +639,107 @@ bool Interpreter::handleMathFunctions(CallExpr& node) {
         std::srand(static_cast<unsigned>(std::time(nullptr)));
         lastValue = 0; // randomise doesn't return a value
         return true;
+    }
+    
+    // GLM vector functions
+    if (node.name == "length" && node.arguments.size() == 1) {
+        ValueType arg = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<Vec2Value>(arg)) {
+            Vec2Value vec = std::get<Vec2Value>(arg);
+            lastValue = static_cast<double>(glm::length(vec.data));
+            return true;
+        } else if (std::holds_alternative<Vec3Value>(arg)) {
+            Vec3Value vec = std::get<Vec3Value>(arg);
+            lastValue = static_cast<double>(glm::length(vec.data));
+            return true;
+        } else if (std::holds_alternative<Vec4Value>(arg)) {
+            Vec4Value vec = std::get<Vec4Value>(arg);
+            lastValue = static_cast<double>(glm::length(vec.data));
+            return true;
+        } else {
+            throw RuntimeError("length() requires a vector argument");
+        }
+    }
+    
+    if (node.name == "normalize" && node.arguments.size() == 1) {
+        ValueType arg = evaluate(*node.arguments[0]);
+        if (std::holds_alternative<Vec2Value>(arg)) {
+            Vec2Value vec = std::get<Vec2Value>(arg);
+            lastValue = Vec2Value(glm::normalize(vec.data));
+            return true;
+        } else if (std::holds_alternative<Vec3Value>(arg)) {
+            Vec3Value vec = std::get<Vec3Value>(arg);
+            lastValue = Vec3Value(glm::normalize(vec.data));
+            return true;
+        } else if (std::holds_alternative<Vec4Value>(arg)) {
+            Vec4Value vec = std::get<Vec4Value>(arg);
+            lastValue = Vec4Value(glm::normalize(vec.data));
+            return true;
+        } else {
+            throw RuntimeError("normalize() requires a vector argument");
+        }
+    }
+    
+    if (node.name == "dot" && node.arguments.size() == 2) {
+        ValueType left = evaluate(*node.arguments[0]);
+        ValueType right = evaluate(*node.arguments[1]);
+        
+        if (std::holds_alternative<Vec2Value>(left) && std::holds_alternative<Vec2Value>(right)) {
+            Vec2Value leftVec = std::get<Vec2Value>(left);
+            Vec2Value rightVec = std::get<Vec2Value>(right);
+            lastValue = static_cast<double>(glm::dot(leftVec.data, rightVec.data));
+            return true;
+        } else if (std::holds_alternative<Vec3Value>(left) && std::holds_alternative<Vec3Value>(right)) {
+            Vec3Value leftVec = std::get<Vec3Value>(left);
+            Vec3Value rightVec = std::get<Vec3Value>(right);
+            lastValue = static_cast<double>(glm::dot(leftVec.data, rightVec.data));
+            return true;
+        } else if (std::holds_alternative<Vec4Value>(left) && std::holds_alternative<Vec4Value>(right)) {
+            Vec4Value leftVec = std::get<Vec4Value>(left);
+            Vec4Value rightVec = std::get<Vec4Value>(right);
+            lastValue = static_cast<double>(glm::dot(leftVec.data, rightVec.data));
+            return true;
+        } else {
+            throw RuntimeError("dot() requires two vectors of the same type");
+        }
+    }
+    
+    if (node.name == "cross" && node.arguments.size() == 2) {
+        ValueType left = evaluate(*node.arguments[0]);
+        ValueType right = evaluate(*node.arguments[1]);
+        
+        if (std::holds_alternative<Vec3Value>(left) && std::holds_alternative<Vec3Value>(right)) {
+            Vec3Value leftVec = std::get<Vec3Value>(left);
+            Vec3Value rightVec = std::get<Vec3Value>(right);
+            lastValue = Vec3Value(glm::cross(leftVec.data, rightVec.data));
+            return true;
+        } else {
+            throw RuntimeError("cross() requires two vec3 arguments");
+        }
+    }
+    
+    if (node.name == "distance" && node.arguments.size() == 2) {
+        ValueType left = evaluate(*node.arguments[0]);
+        ValueType right = evaluate(*node.arguments[1]);
+        
+        if (std::holds_alternative<Vec2Value>(left) && std::holds_alternative<Vec2Value>(right)) {
+            Vec2Value leftVec = std::get<Vec2Value>(left);
+            Vec2Value rightVec = std::get<Vec2Value>(right);
+            lastValue = static_cast<double>(glm::distance(leftVec.data, rightVec.data));
+            return true;
+        } else if (std::holds_alternative<Vec3Value>(left) && std::holds_alternative<Vec3Value>(right)) {
+            Vec3Value leftVec = std::get<Vec3Value>(left);
+            Vec3Value rightVec = std::get<Vec3Value>(right);
+            lastValue = static_cast<double>(glm::distance(leftVec.data, rightVec.data));
+            return true;
+        } else if (std::holds_alternative<Vec4Value>(left) && std::holds_alternative<Vec4Value>(right)) {
+            Vec4Value leftVec = std::get<Vec4Value>(left);
+            Vec4Value rightVec = std::get<Vec4Value>(right);
+            lastValue = static_cast<double>(glm::distance(leftVec.data, rightVec.data));
+            return true;
+        } else {
+            throw RuntimeError("distance() requires two vectors of the same type");
+        }
     }
     
     return false; // Function not handled by this dispatcher

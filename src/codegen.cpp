@@ -219,6 +219,18 @@ void CodeGenerator::visit(AssignExpr& node) {
     }
 }
 
+void CodeGenerator::visit(ComponentAssignExpr& node) {
+    // Component assignment: vector.x = value
+    // First get the variable name
+    if (auto varExpr = dynamic_cast<VariableExpr*>(node.object.get())) {
+        write("(variables[\"" + varExpr->name + "\"] = set_vec_component(variables[\"" + varExpr->name + "\"], \"" + node.component + "\", ");
+        node.value->accept(*this);
+        write("))");
+    } else {
+        throw std::runtime_error("Component assignment only supported for variables");
+    }
+}
+
 void CodeGenerator::visit(UnaryExpr& node) {
     if (node.operator_ == "-") {
         write("subtract(BasicValue(0), ");
@@ -309,6 +321,16 @@ void CodeGenerator::visit(CallExpr& node) {
             node.arguments[0]->accept(*this);
             write(")");
             return;
+        } else if (node.name == "length") {
+            write("vec_length(");
+            node.arguments[0]->accept(*this);
+            write(")");
+            return;
+        } else if (node.name == "normalize") {
+            write("vec_normalize(");
+            node.arguments[0]->accept(*this);
+            write(")");
+            return;
         }
     }
     
@@ -330,6 +352,27 @@ void CodeGenerator::visit(CallExpr& node) {
             return;
         } else if (node.name == "mod" || node.name == "%") {
             write("mod_val(");
+            node.arguments[0]->accept(*this);
+            write(", ");
+            node.arguments[1]->accept(*this);
+            write(")");
+            return;
+        } else if (node.name == "dot") {
+            write("vec_dot(");
+            node.arguments[0]->accept(*this);
+            write(", ");
+            node.arguments[1]->accept(*this);
+            write(")");
+            return;
+        } else if (node.name == "cross") {
+            write("vec_cross(");
+            node.arguments[0]->accept(*this);
+            write(", ");
+            node.arguments[1]->accept(*this);
+            write(")");
+            return;
+        } else if (node.name == "distance") {
+            write("vec_distance(");
             node.arguments[0]->accept(*this);
             write(", ");
             node.arguments[1]->accept(*this);

@@ -16,6 +16,14 @@
 
 ## Recent Improvements (October 2025)
 
+### Complete GLM Vector Mathematics Integration
+- **Native GLM Types**: Built-in `vec2`, `vec3`, `vec4`, `mat3`, `mat4`, `quat` primitives with SIMD optimization
+- **Component Access**: Full read/write access with `.x`, `.y`, `.z`, `.w` component syntax
+- **Vector Operations**: Native support for addition (`+`), subtraction (`-`), scalar multiplication (`*`)
+- **GLM Functions**: `length()`, `normalize()`, `dot()`, `cross()` functions with mathematical accuracy
+- **Dual-Mode Support**: Identical GLM behavior in interpreter and compiled modes with native performance
+- **Graphics Programming**: Professional-grade vector math for 3D graphics, game development, and scientific computing
+
 ### Enhanced FFI System
 - **Extended Parameter Support**: Functions with up to 11 parameters for complex graphics operations (SDL2_gfx)
 - **Performance Optimization**: 80% code reduction with FFITypeConverter pre-conversion strategy
@@ -184,6 +192,7 @@ cmake .. && cmake --build .
 - **Modern Comments**: `//` line comments and `/* */` block comments
 - **Variable Scoping**: Variables declared with `var` in blocks are properly scoped to those blocks
 - **Arrays**: `dim array(size)` declaration with `array[index]` access (0-indexed like C/C++)
+- **GLM Vector Math**: Native `vec2`, `vec3`, `vec4` types with component access and mathematical operations
 - **Multidimensional Arrays**: `dim matrix(rows, cols)` with `matrix[i,j]` syntax for 2D/3D arrays
 - **Typed Arrays**: High-performance `byte_array()`, `int_array()`, `double_array()` functions
 - **File I/O**: Complete text and binary file operations with `read_text_file()`, `write_binary_file()`, etc.
@@ -196,12 +205,22 @@ print("Hello", "World");        // Multi-argument print
 var name = input();             // User input
 ```
 
-#### Mathematics
+#### Mathematics and GLM Vector Operations
 ```basic
 print(sqrt(16));               // Square root: 4
 print(pow(2, 8));              // Power: 256
 print(sin(pi() / 2));          // Trigonometry: 1
 print(rnd());                  // Random 0.0-1.0
+
+// GLM Vector Mathematics
+var position = vec3(10.0, 20.0, 30.0);
+position.x = 5.0;              // Component assignment
+var velocity = vec3(1.0, 2.0, 3.0);
+var result = position + velocity * 2.0;  // Vector operations
+print("Length: " + length(result));      // Vector length
+var normalized = normalize(result);       // Unit vector
+var dotProduct = dot(position, velocity); // Dot product
+var crossProduct = cross(position, velocity); // Cross product (3D only)
 ```
 
 #### String Manipulation
@@ -348,6 +367,14 @@ dim numbers(10);
 for (var i = 0; i < 10; i = i + 1) {
     numbers[i] = i * i;
 }
+
+// GLM Vector Mathematics
+var position = vec3(10.0, 20.0, 30.0);
+position.x = 5.0;                          // Component assignment
+var velocity = normalize(vec3(1, 2, 3));   // Unit vector
+var newPos = position + velocity * 2.0;    // Vector arithmetic
+var distance = length(newPos);             // Vector magnitude
+print("New position: (" + newPos.x + ", " + newPos.y + ", " + newPos.z + ")");
 ```
 
 ### Import System
@@ -395,6 +422,7 @@ build.bat
 
 **Current Alpha Features:**
 - ✅ Advanced C-style BASIC language implementation with proper scoping
+- ✅ Complete GLM vector mathematics integration with native performance and component access
 - ✅ Dual execution modes (interpreter and compiled) with identical behavior
 - ✅ Comprehensive FFI system with 1-11 parameter support for graphics programming
 - ✅ Complete SDL2 integration with filled shapes and hardware acceleration
@@ -454,6 +482,8 @@ rbasic/
 
 ### Language Features
 - **`examples/functions.bas`** - Function definitions, parameters, return values, and scoping
+- **`examples/glm_vector_math.bas`** - Comprehensive GLM vector mathematics with all operations and practical examples
+- **`examples/glm_test.bas`** - Complete GLM test suite demonstrating all vector math features
 - **`examples/arrays.bas`** - Array operations, multidimensional data, and typed arrays  
 - **`examples/fibonacci.bas`** - Recursive functions and mathematical computations
 - **`examples/hello.bas`** - Basic program structure and output formatting

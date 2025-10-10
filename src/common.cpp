@@ -43,6 +43,23 @@ bool isTruthy(const ValueType& value) {
 }
 
 ValueType addValues(const ValueType& left, const ValueType& right) {
+    // GLM vector addition
+    if (std::holds_alternative<Vec2Value>(left) && std::holds_alternative<Vec2Value>(right)) {
+        Vec2Value leftVec = std::get<Vec2Value>(left);
+        Vec2Value rightVec = std::get<Vec2Value>(right);
+        return Vec2Value(leftVec.data + rightVec.data);
+    }
+    if (std::holds_alternative<Vec3Value>(left) && std::holds_alternative<Vec3Value>(right)) {
+        Vec3Value leftVec = std::get<Vec3Value>(left);
+        Vec3Value rightVec = std::get<Vec3Value>(right);
+        return Vec3Value(leftVec.data + rightVec.data);
+    }
+    if (std::holds_alternative<Vec4Value>(left) && std::holds_alternative<Vec4Value>(right)) {
+        Vec4Value leftVec = std::get<Vec4Value>(left);
+        Vec4Value rightVec = std::get<Vec4Value>(right);
+        return Vec4Value(leftVec.data + rightVec.data);
+    }
+    
     // String concatenation
     if (std::holds_alternative<std::string>(left) || std::holds_alternative<std::string>(right)) {
         return valueToString(left) + valueToString(right);
@@ -65,6 +82,23 @@ ValueType addValues(const ValueType& left, const ValueType& right) {
 }
 
 ValueType subtractValues(const ValueType& left, const ValueType& right) {
+    // GLM vector subtraction
+    if (std::holds_alternative<Vec2Value>(left) && std::holds_alternative<Vec2Value>(right)) {
+        Vec2Value leftVec = std::get<Vec2Value>(left);
+        Vec2Value rightVec = std::get<Vec2Value>(right);
+        return Vec2Value(leftVec.data - rightVec.data);
+    }
+    if (std::holds_alternative<Vec3Value>(left) && std::holds_alternative<Vec3Value>(right)) {
+        Vec3Value leftVec = std::get<Vec3Value>(left);
+        Vec3Value rightVec = std::get<Vec3Value>(right);
+        return Vec3Value(leftVec.data - rightVec.data);
+    }
+    if (std::holds_alternative<Vec4Value>(left) && std::holds_alternative<Vec4Value>(right)) {
+        Vec4Value leftVec = std::get<Vec4Value>(left);
+        Vec4Value rightVec = std::get<Vec4Value>(right);
+        return Vec4Value(leftVec.data - rightVec.data);
+    }
+    
     bool hasDouble = std::holds_alternative<double>(left) || std::holds_alternative<double>(right);
     
     if (hasDouble) {
@@ -81,6 +115,55 @@ ValueType subtractValues(const ValueType& left, const ValueType& right) {
 }
 
 ValueType multiplyValues(const ValueType& left, const ValueType& right) {
+    // GLM vector-scalar multiplication
+    if (std::holds_alternative<Vec2Value>(left) && (std::holds_alternative<double>(right) || std::holds_alternative<int>(right))) {
+        Vec2Value vec = std::get<Vec2Value>(left);
+        float scalar = std::holds_alternative<double>(right) ? static_cast<float>(std::get<double>(right)) : static_cast<float>(std::get<int>(right));
+        return Vec2Value(vec.data * scalar);
+    }
+    if ((std::holds_alternative<double>(left) || std::holds_alternative<int>(left)) && std::holds_alternative<Vec2Value>(right)) {
+        float scalar = std::holds_alternative<double>(left) ? static_cast<float>(std::get<double>(left)) : static_cast<float>(std::get<int>(left));
+        Vec2Value vec = std::get<Vec2Value>(right);
+        return Vec2Value(scalar * vec.data);
+    }
+    if (std::holds_alternative<Vec3Value>(left) && (std::holds_alternative<double>(right) || std::holds_alternative<int>(right))) {
+        Vec3Value vec = std::get<Vec3Value>(left);
+        float scalar = std::holds_alternative<double>(right) ? static_cast<float>(std::get<double>(right)) : static_cast<float>(std::get<int>(right));
+        return Vec3Value(vec.data * scalar);
+    }
+    if ((std::holds_alternative<double>(left) || std::holds_alternative<int>(left)) && std::holds_alternative<Vec3Value>(right)) {
+        float scalar = std::holds_alternative<double>(left) ? static_cast<float>(std::get<double>(left)) : static_cast<float>(std::get<int>(left));
+        Vec3Value vec = std::get<Vec3Value>(right);
+        return Vec3Value(scalar * vec.data);
+    }
+    if (std::holds_alternative<Vec4Value>(left) && (std::holds_alternative<double>(right) || std::holds_alternative<int>(right))) {
+        Vec4Value vec = std::get<Vec4Value>(left);
+        float scalar = std::holds_alternative<double>(right) ? static_cast<float>(std::get<double>(right)) : static_cast<float>(std::get<int>(right));
+        return Vec4Value(vec.data * scalar);
+    }
+    if ((std::holds_alternative<double>(left) || std::holds_alternative<int>(left)) && std::holds_alternative<Vec4Value>(right)) {
+        float scalar = std::holds_alternative<double>(left) ? static_cast<float>(std::get<double>(left)) : static_cast<float>(std::get<int>(left));
+        Vec4Value vec = std::get<Vec4Value>(right);
+        return Vec4Value(scalar * vec.data);
+    }
+    
+    // GLM vector component-wise multiplication
+    if (std::holds_alternative<Vec2Value>(left) && std::holds_alternative<Vec2Value>(right)) {
+        Vec2Value leftVec = std::get<Vec2Value>(left);
+        Vec2Value rightVec = std::get<Vec2Value>(right);
+        return Vec2Value(leftVec.data * rightVec.data);
+    }
+    if (std::holds_alternative<Vec3Value>(left) && std::holds_alternative<Vec3Value>(right)) {
+        Vec3Value leftVec = std::get<Vec3Value>(left);
+        Vec3Value rightVec = std::get<Vec3Value>(right);
+        return Vec3Value(leftVec.data * rightVec.data);
+    }
+    if (std::holds_alternative<Vec4Value>(left) && std::holds_alternative<Vec4Value>(right)) {
+        Vec4Value leftVec = std::get<Vec4Value>(left);
+        Vec4Value rightVec = std::get<Vec4Value>(right);
+        return Vec4Value(leftVec.data * rightVec.data);
+    }
+    
     bool hasDouble = std::holds_alternative<double>(left) || std::holds_alternative<double>(right);
     
     if (hasDouble) {
@@ -97,6 +180,32 @@ ValueType multiplyValues(const ValueType& left, const ValueType& right) {
 }
 
 ValueType divideValues(const ValueType& left, const ValueType& right) {
+    // GLM vector-scalar division
+    if (std::holds_alternative<Vec2Value>(left) && (std::holds_alternative<double>(right) || std::holds_alternative<int>(right))) {
+        Vec2Value vec = std::get<Vec2Value>(left);
+        float scalar = std::holds_alternative<double>(right) ? static_cast<float>(std::get<double>(right)) : static_cast<float>(std::get<int>(right));
+        if (scalar == 0.0f) {
+            throw RuntimeError("Division by zero");
+        }
+        return Vec2Value(vec.data / scalar);
+    }
+    if (std::holds_alternative<Vec3Value>(left) && (std::holds_alternative<double>(right) || std::holds_alternative<int>(right))) {
+        Vec3Value vec = std::get<Vec3Value>(left);
+        float scalar = std::holds_alternative<double>(right) ? static_cast<float>(std::get<double>(right)) : static_cast<float>(std::get<int>(right));
+        if (scalar == 0.0f) {
+            throw RuntimeError("Division by zero");
+        }
+        return Vec3Value(vec.data / scalar);
+    }
+    if (std::holds_alternative<Vec4Value>(left) && (std::holds_alternative<double>(right) || std::holds_alternative<int>(right))) {
+        Vec4Value vec = std::get<Vec4Value>(left);
+        float scalar = std::holds_alternative<double>(right) ? static_cast<float>(std::get<double>(right)) : static_cast<float>(std::get<int>(right));
+        if (scalar == 0.0f) {
+            throw RuntimeError("Division by zero");
+        }
+        return Vec4Value(vec.data / scalar);
+    }
+    
     double leftVal = std::holds_alternative<double>(left) ? std::get<double>(left) : 
                     std::holds_alternative<int>(left) ? static_cast<double>(std::get<int>(left)) : 0.0;
     double rightVal = std::holds_alternative<double>(right) ? std::get<double>(right) : 

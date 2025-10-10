@@ -96,8 +96,16 @@ std::unique_ptr<Expression> Parser::assignment() {
     auto expr = logical_or();
     
     if (match({TokenType::ASSIGN})) {
+        // Check if this is a component assignment (e.g., position.x = 5.0)
+        if (auto componentExpr = dynamic_cast<GLMComponentAccessExpr*>(expr.get())) {
+            auto object = std::move(componentExpr->object);
+            std::string component = componentExpr->component;
+            auto value = assignment(); // Right associative
+            expr.release(); // Release the component expression
+            return std::make_unique<ComponentAssignExpr>(std::move(object), component, std::move(value));
+        }
         // This should be a variable expression
-        if (auto varExpr = dynamic_cast<VariableExpr*>(expr.get())) {
+        else if (auto varExpr = dynamic_cast<VariableExpr*>(expr.get())) {
             std::string variable = varExpr->name;
             std::vector<std::unique_ptr<Expression>> indices;
             

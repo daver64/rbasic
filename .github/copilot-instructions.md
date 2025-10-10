@@ -54,6 +54,7 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 - Modern comments: `//` line comments and `/* */` block comments
 - Assignment expressions: `var y = (x = x + 1) * 2`
 - Structured data: Arrays with `dim array(size)` and `array[index]` access
+- GLM vector math: Native `vec2`, `vec3`, `vec4` types with component access and mathematical operations
 - Interactive development: Full REPL with session management
 - Modular programming: Complete import system with `import "file.bas"` syntax
 - External integration: Comprehensive FFI system for C libraries
@@ -124,13 +125,21 @@ The FFI system provides comprehensive C library integration:
 
 ## Recent Improvements (2025)
 
-### Variable Scoping Fix (January 2025)
+### Complete GLM Vector Mathematics Integration (October 2025)
+- **Native GLM Types**: Built-in `vec2`, `vec3`, `vec4`, `mat3`, `mat4`, `quat` primitives with SIMD optimization
+- **Component Access**: Full read/write access with `.x`, `.y`, `.z`, `.w` component syntax using ComponentAssignExpr AST node
+- **Vector Operations**: Native support for addition (`+`), subtraction (`-`), scalar multiplication (`*`) with GLM backing
+- **GLM Functions**: `length()`, `normalize()`, `dot()`, `cross()` functions with mathematical accuracy
+- **Dual-Mode Support**: Identical GLM behavior in interpreter and compiled modes with native performance
+- **Architecture**: Extended BasicValue variant with GLM wrapper types, runtime library GLM integration, proper AST nodes
+
+### Variable Scoping Fix (October 2025)
 - **For Loop Scoping**: Fixed critical bug where for loop variables couldn't access parent scope
 - **Function Compatibility**: Resolved scoping issues in functions with typed parameters  
 - **Cross-Mode Consistency**: Identical scoping behavior in interpreter and compiled modes
 - **Root Cause**: Modified `ModernForStmt::visit()` to use variable backup/restore instead of isolated scopes
 
-### Extended FFI Support (January 2025)
+### Extended FFI Support (October 2025)
 - **Parameter Expansion**: Extended FFI from 8 to 11 parameters for SDL2_gfx integration
 - **Runtime Compatibility**: Updated both interpreter and runtime library for consistent behavior
 - **Graphics Enhancement**: Enabled proper filled triangle rendering with `filledTrigonRGBA`

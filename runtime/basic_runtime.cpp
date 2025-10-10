@@ -530,6 +530,24 @@ bool to_bool(const BasicValue& value) {
 }
 
 BasicValue add(const BasicValue& left, const BasicValue& right) {
+    // GLM vector addition
+    if (std::holds_alternative<BasicVec2>(left) && std::holds_alternative<BasicVec2>(right)) {
+        BasicVec2 leftVec = std::get<BasicVec2>(left);
+        BasicVec2 rightVec = std::get<BasicVec2>(right);
+        return BasicValue(BasicVec2(leftVec.data + rightVec.data));
+    }
+    if (std::holds_alternative<BasicVec3>(left) && std::holds_alternative<BasicVec3>(right)) {
+        BasicVec3 leftVec = std::get<BasicVec3>(left);
+        BasicVec3 rightVec = std::get<BasicVec3>(right);
+        return BasicValue(BasicVec3(leftVec.data + rightVec.data));
+    }
+    if (std::holds_alternative<BasicVec4>(left) && std::holds_alternative<BasicVec4>(right)) {
+        BasicVec4 leftVec = std::get<BasicVec4>(left);
+        BasicVec4 rightVec = std::get<BasicVec4>(right);
+        return BasicValue(BasicVec4(leftVec.data + rightVec.data));
+    }
+    
+    // Original string and numeric addition
     if (std::holds_alternative<std::string>(left) || std::holds_alternative<std::string>(right)) {
         return to_string(left) + to_string(right);
     } else if (std::holds_alternative<double>(left) || std::holds_alternative<double>(right)) {
@@ -540,6 +558,24 @@ BasicValue add(const BasicValue& left, const BasicValue& right) {
 }
 
 BasicValue subtract(const BasicValue& left, const BasicValue& right) {
+    // GLM vector subtraction
+    if (std::holds_alternative<BasicVec2>(left) && std::holds_alternative<BasicVec2>(right)) {
+        BasicVec2 leftVec = std::get<BasicVec2>(left);
+        BasicVec2 rightVec = std::get<BasicVec2>(right);
+        return BasicValue(BasicVec2(leftVec.data - rightVec.data));
+    }
+    if (std::holds_alternative<BasicVec3>(left) && std::holds_alternative<BasicVec3>(right)) {
+        BasicVec3 leftVec = std::get<BasicVec3>(left);
+        BasicVec3 rightVec = std::get<BasicVec3>(right);
+        return BasicValue(BasicVec3(leftVec.data - rightVec.data));
+    }
+    if (std::holds_alternative<BasicVec4>(left) && std::holds_alternative<BasicVec4>(right)) {
+        BasicVec4 leftVec = std::get<BasicVec4>(left);
+        BasicVec4 rightVec = std::get<BasicVec4>(right);
+        return BasicValue(BasicVec4(leftVec.data - rightVec.data));
+    }
+    
+    // Original numeric subtraction
     if (std::holds_alternative<double>(left) || std::holds_alternative<double>(right)) {
         return to_double(left) - to_double(right);
     } else {
@@ -548,6 +584,56 @@ BasicValue subtract(const BasicValue& left, const BasicValue& right) {
 }
 
 BasicValue multiply(const BasicValue& left, const BasicValue& right) {
+    // GLM vector-scalar multiplication
+    if (std::holds_alternative<BasicVec2>(left) && (std::holds_alternative<double>(right) || std::holds_alternative<int>(right))) {
+        BasicVec2 vec = std::get<BasicVec2>(left);
+        float scalar = static_cast<float>(to_double(right));
+        return BasicValue(BasicVec2(vec.data * scalar));
+    }
+    if ((std::holds_alternative<double>(left) || std::holds_alternative<int>(left)) && std::holds_alternative<BasicVec2>(right)) {
+        float scalar = static_cast<float>(to_double(left));
+        BasicVec2 vec = std::get<BasicVec2>(right);
+        return BasicValue(BasicVec2(scalar * vec.data));
+    }
+    if (std::holds_alternative<BasicVec3>(left) && (std::holds_alternative<double>(right) || std::holds_alternative<int>(right))) {
+        BasicVec3 vec = std::get<BasicVec3>(left);
+        float scalar = static_cast<float>(to_double(right));
+        return BasicValue(BasicVec3(vec.data * scalar));
+    }
+    if ((std::holds_alternative<double>(left) || std::holds_alternative<int>(left)) && std::holds_alternative<BasicVec3>(right)) {
+        float scalar = static_cast<float>(to_double(left));
+        BasicVec3 vec = std::get<BasicVec3>(right);
+        return BasicValue(BasicVec3(scalar * vec.data));
+    }
+    if (std::holds_alternative<BasicVec4>(left) && (std::holds_alternative<double>(right) || std::holds_alternative<int>(right))) {
+        BasicVec4 vec = std::get<BasicVec4>(left);
+        float scalar = static_cast<float>(to_double(right));
+        return BasicValue(BasicVec4(vec.data * scalar));
+    }
+    if ((std::holds_alternative<double>(left) || std::holds_alternative<int>(left)) && std::holds_alternative<BasicVec4>(right)) {
+        float scalar = static_cast<float>(to_double(left));
+        BasicVec4 vec = std::get<BasicVec4>(right);
+        return BasicValue(BasicVec4(scalar * vec.data));
+    }
+    
+    // GLM vector-vector multiplication (component-wise)
+    if (std::holds_alternative<BasicVec2>(left) && std::holds_alternative<BasicVec2>(right)) {
+        BasicVec2 leftVec = std::get<BasicVec2>(left);
+        BasicVec2 rightVec = std::get<BasicVec2>(right);
+        return BasicValue(BasicVec2(leftVec.data * rightVec.data));
+    }
+    if (std::holds_alternative<BasicVec3>(left) && std::holds_alternative<BasicVec3>(right)) {
+        BasicVec3 leftVec = std::get<BasicVec3>(left);
+        BasicVec3 rightVec = std::get<BasicVec3>(right);
+        return BasicValue(BasicVec3(leftVec.data * rightVec.data));
+    }
+    if (std::holds_alternative<BasicVec4>(left) && std::holds_alternative<BasicVec4>(right)) {
+        BasicVec4 leftVec = std::get<BasicVec4>(left);
+        BasicVec4 rightVec = std::get<BasicVec4>(right);
+        return BasicValue(BasicVec4(leftVec.data * rightVec.data));
+    }
+    
+    // Original numeric multiplication
     if (std::holds_alternative<double>(left) || std::holds_alternative<double>(right)) {
         return to_double(left) * to_double(right);
     } else {
@@ -3284,10 +3370,132 @@ BasicValue get_vec_component(const BasicValue& vec, const std::string& component
     }
 }
 
-BasicValue set_vec_component(const BasicValue& vec, const std::string& component, float value) {
-    // This would modify the vector component - for now we'll just return the original
-    // In a full implementation, vectors would need to be mutable
-    return vec;
+BasicValue set_vec_component(const BasicValue& vec, const std::string& component, const BasicValue& value) {
+    // Convert value to float
+    float floatValue = 0.0f;
+    if (std::holds_alternative<double>(value)) {
+        floatValue = static_cast<float>(std::get<double>(value));
+    } else if (std::holds_alternative<int>(value)) {
+        floatValue = static_cast<float>(std::get<int>(value));
+    } else {
+        throw std::runtime_error("Cannot assign non-numeric value to vector component");
+    }
+    
+    if (std::holds_alternative<BasicVec2>(vec)) {
+        BasicVec2 result = std::get<BasicVec2>(vec);
+        if (component == "x") {
+            result.data.x = floatValue;
+        } else if (component == "y") {
+            result.data.y = floatValue;
+        } else {
+            throw std::runtime_error("Invalid component '" + component + "' for vec2");
+        }
+        return BasicValue(result);
+    } else if (std::holds_alternative<BasicVec3>(vec)) {
+        BasicVec3 result = std::get<BasicVec3>(vec);
+        if (component == "x") {
+            result.data.x = floatValue;
+        } else if (component == "y") {
+            result.data.y = floatValue;
+        } else if (component == "z") {
+            result.data.z = floatValue;
+        } else {
+            throw std::runtime_error("Invalid component '" + component + "' for vec3");
+        }
+        return BasicValue(result);
+    } else if (std::holds_alternative<BasicVec4>(vec)) {
+        BasicVec4 result = std::get<BasicVec4>(vec);
+        if (component == "x") {
+            result.data.x = floatValue;
+        } else if (component == "y") {
+            result.data.y = floatValue;
+        } else if (component == "z") {
+            result.data.z = floatValue;
+        } else if (component == "w") {
+            result.data.w = floatValue;
+        } else {
+            throw std::runtime_error("Invalid component '" + component + "' for vec4");
+        }
+        return BasicValue(result);
+    } else {
+        throw std::runtime_error("Component assignment not supported for this type");
+    }
+}
+
+BasicValue vec_length(const BasicValue& vec) {
+    if (std::holds_alternative<BasicVec2>(vec)) {
+        const BasicVec2& v = std::get<BasicVec2>(vec);
+        return BasicValue(static_cast<double>(glm::length(v.data)));
+    } else if (std::holds_alternative<BasicVec3>(vec)) {
+        const BasicVec3& v = std::get<BasicVec3>(vec);
+        return BasicValue(static_cast<double>(glm::length(v.data)));
+    } else if (std::holds_alternative<BasicVec4>(vec)) {
+        const BasicVec4& v = std::get<BasicVec4>(vec);
+        return BasicValue(static_cast<double>(glm::length(v.data)));
+    } else {
+        throw std::runtime_error("length() requires a vector argument");
+    }
+}
+
+BasicValue vec_normalize(const BasicValue& vec) {
+    if (std::holds_alternative<BasicVec2>(vec)) {
+        const BasicVec2& v = std::get<BasicVec2>(vec);
+        return BasicValue(BasicVec2(glm::normalize(v.data)));
+    } else if (std::holds_alternative<BasicVec3>(vec)) {
+        const BasicVec3& v = std::get<BasicVec3>(vec);
+        return BasicValue(BasicVec3(glm::normalize(v.data)));
+    } else if (std::holds_alternative<BasicVec4>(vec)) {
+        const BasicVec4& v = std::get<BasicVec4>(vec);
+        return BasicValue(BasicVec4(glm::normalize(v.data)));
+    } else {
+        throw std::runtime_error("normalize() requires a vector argument");
+    }
+}
+
+BasicValue vec_dot(const BasicValue& left, const BasicValue& right) {
+    if (std::holds_alternative<BasicVec2>(left) && std::holds_alternative<BasicVec2>(right)) {
+        const BasicVec2& l = std::get<BasicVec2>(left);
+        const BasicVec2& r = std::get<BasicVec2>(right);
+        return BasicValue(static_cast<double>(glm::dot(l.data, r.data)));
+    } else if (std::holds_alternative<BasicVec3>(left) && std::holds_alternative<BasicVec3>(right)) {
+        const BasicVec3& l = std::get<BasicVec3>(left);
+        const BasicVec3& r = std::get<BasicVec3>(right);
+        return BasicValue(static_cast<double>(glm::dot(l.data, r.data)));
+    } else if (std::holds_alternative<BasicVec4>(left) && std::holds_alternative<BasicVec4>(right)) {
+        const BasicVec4& l = std::get<BasicVec4>(left);
+        const BasicVec4& r = std::get<BasicVec4>(right);
+        return BasicValue(static_cast<double>(glm::dot(l.data, r.data)));
+    } else {
+        throw std::runtime_error("dot() requires two vectors of the same type");
+    }
+}
+
+BasicValue vec_cross(const BasicValue& left, const BasicValue& right) {
+    if (std::holds_alternative<BasicVec3>(left) && std::holds_alternative<BasicVec3>(right)) {
+        const BasicVec3& l = std::get<BasicVec3>(left);
+        const BasicVec3& r = std::get<BasicVec3>(right);
+        return BasicValue(BasicVec3(glm::cross(l.data, r.data)));
+    } else {
+        throw std::runtime_error("cross() requires two vec3 arguments");
+    }
+}
+
+BasicValue vec_distance(const BasicValue& left, const BasicValue& right) {
+    if (std::holds_alternative<BasicVec2>(left) && std::holds_alternative<BasicVec2>(right)) {
+        const BasicVec2& l = std::get<BasicVec2>(left);
+        const BasicVec2& r = std::get<BasicVec2>(right);
+        return BasicValue(static_cast<double>(glm::distance(l.data, r.data)));
+    } else if (std::holds_alternative<BasicVec3>(left) && std::holds_alternative<BasicVec3>(right)) {
+        const BasicVec3& l = std::get<BasicVec3>(left);
+        const BasicVec3& r = std::get<BasicVec3>(right);
+        return BasicValue(static_cast<double>(glm::distance(l.data, r.data)));
+    } else if (std::holds_alternative<BasicVec4>(left) && std::holds_alternative<BasicVec4>(right)) {
+        const BasicVec4& l = std::get<BasicVec4>(left);
+        const BasicVec4& r = std::get<BasicVec4>(right);
+        return BasicValue(static_cast<double>(glm::distance(l.data, r.data)));
+    } else {
+        throw std::runtime_error("distance() requires two vectors of the same type");
+    }
 }
 
 // ===== WRAPPER FUNCTIONS FOR CODE GENERATOR =====

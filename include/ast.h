@@ -75,6 +75,17 @@ public:
     void accept(ASTVisitor& visitor) override;
 };
 
+class ComponentAssignExpr : public Expression {
+public:
+    std::unique_ptr<Expression> object;
+    std::string component;
+    std::unique_ptr<Expression> value;
+    
+    ComponentAssignExpr(std::unique_ptr<Expression> obj, std::string comp, std::unique_ptr<Expression> val)
+        : object(std::move(obj)), component(std::move(comp)), value(std::move(val)) {}
+    void accept(ASTVisitor& visitor) override;
+};
+
 class UnaryExpr : public Expression {
 public:
     std::string operator_;
@@ -312,6 +323,7 @@ public:
     virtual void visit(VariableExpr& node) = 0;
     virtual void visit(BinaryExpr& node) = 0;
     virtual void visit(AssignExpr& node) = 0;
+    virtual void visit(ComponentAssignExpr& node) = 0;
     virtual void visit(UnaryExpr& node) = 0;
     virtual void visit(CallExpr& node) = 0;
     virtual void visit(StructLiteralExpr& node) = 0;
