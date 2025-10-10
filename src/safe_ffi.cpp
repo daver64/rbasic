@@ -23,19 +23,15 @@ SafeFFIManager& SafeFFIManager::instance() {
     return instance;
 }
 
-SafeFFIManager::~SafeFFIManager() {
-    cleanup();
-}
-
 std::shared_ptr<SafeLibrary> SafeFFIManager::load_library(const std::string& name) {
     std::lock_guard<std::mutex> lock(mutex_);
     
-    auto it = loaded_libraries_.find(name);
-    if (it != loaded_libraries_.end()) {
+    auto it = libraries_.find(name);
+    if (it != libraries_.end()) {
         if (auto lib = it->second) {
             return lib;
         }
-        loaded_libraries_.erase(it);
+        libraries_.erase(it);
     }
     
 #ifdef _WIN32
@@ -51,15 +47,15 @@ std::shared_ptr<SafeLibrary> SafeFFIManager::load_library(const std::string& nam
     }
     
     auto lib = std::make_shared<SafeLibrary>(name, handle);
-    loaded_libraries_[name] = lib;
+    libraries_[name] = lib;
     return lib;
 }
 
 bool SafeFFIManager::unload_library(const std::string& name) {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto it = loaded_libraries_.find(name);
-    if (it != loaded_libraries_.end()) {
-        loaded_libraries_.erase(it);
+    auto it = libraries_.find(name);
+    if (it != libraries_.end()) {
+        libraries_.erase(it);
         return true;
     }
     return false;
@@ -67,8 +63,8 @@ bool SafeFFIManager::unload_library(const std::string& name) {
 
 std::shared_ptr<SafeLibrary> SafeFFIManager::get_library(const std::string& name) {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto it = loaded_libraries_.find(name);
-    if (it != loaded_libraries_.end()) {
+    auto it = libraries_.find(name);
+    if (it != libraries_.end()) {
         return it->second;
     }
     return nullptr;
@@ -76,8 +72,6 @@ std::shared_ptr<SafeLibrary> SafeFFIManager::get_library(const std::string& name
 
 std::shared_ptr<MemoryManager::SafeBuffer> SafeFFIManager::allocate_buffer(size_t size) {
     auto buffer = MemoryManager::instance().create_safe_buffer(size);
-    std::lock_guard<std::mutex> lock(mutex_);
-    allocated_buffers_.push_back(buffer);
     return buffer;
 }
 
@@ -155,24 +149,17 @@ bool SafeFFIManager::not_null_safe(const UnifiedValue& ptr) {
 
 void SafeFFIManager::cleanup() {
     std::lock_guard<std::mutex> lock(mutex_);
-    loaded_libraries_.clear();
-    allocated_buffers_.clear();
+    libraries_.clear();
 }
 
 size_t SafeFFIManager::get_loaded_library_count() const {
     std::lock_guard<std::mutex> lock(mutex_);
-    return loaded_libraries_.size();
+    return libraries_.size();
 }
 
 size_t SafeFFIManager::get_total_allocated_memory() const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    size_t total = 0;
-    for (const auto& buffer : allocated_buffers_) {
-        if (auto buf = buffer) {
-            total += buf->size();
-        }
-    }
-    return total;
+    // Delegate to MemoryManager for total memory tracking
+    return MemoryManager::instance().get_total_memory_usage();
 }
 
 void SafeFFIManager::validate_pointer(const UnifiedValue& ptr) const {
@@ -232,6 +219,13 @@ void* SafeLibrary::get_function_address(const std::string& function_name) const 
         throw SafeFFIError("Library not loaded: " + name_);
     }
     
+    // Phase 3: Check function cache first
+    auto& manager = SafeFFIManager::instance();
+    void* cached_func = manager.get_cached_function(name_, function_name);
+    if (cached_func) {
+        return cached_func;
+    }
+    
 #ifdef _WIN32
     void* func = GetProcAddress(handle_, function_name.c_str());
 #else
@@ -245,12 +239,21 @@ void* SafeLibrary::get_function_address(const std::string& function_name) const 
         throw SafeFFIError(oss.str());
     }
     
+    // Cache the function pointer for future use
+    manager.cache_function(name_, function_name, func);
+    
     return func;
 }
 
 UnifiedValue SafeLibrary::call_function(const std::string& function_name, 
                                        const std::vector<UnifiedValue>& args,
                                        const std::string& return_type) {
+    auto start_time = std::chrono::high_resolution_clock::now();
+    
+    // Trace the call if enabled
+    auto& manager = SafeFFIManager::get_instance();
+    manager.trace_call(function_name, args);
+    
     void* func_ptr = get_function_address(function_name);
     if (!validate_function_signature(function_name, args)) {
         throw SafeFFIError("Invalid function signature for: " + function_name);
@@ -271,10 +274,15 @@ UnifiedValue SafeLibrary::call_function(const std::string& function_name,
         }
     }
     
-    return call.execute();
+    auto result = call.execute();
+    
+    // Profile the call performance
+    manager.profile_call_end(function_name, start_time);
+    
+    return result;
 }
 
-bool SafeLibrary::validate_function_signature(const std::string& function_name, 
+bool SafeLibrary::validate_function_signature(const std::string& /* function_name */, 
                                              const std::vector<UnifiedValue>& args) const {
     // Basic validation - in a real implementation, this would check against known signatures
     if (args.size() > 11) {  // Maximum supported parameters
@@ -415,6 +423,196 @@ UnifiedValue get_safe_rect_field(const UnifiedValue& rect, const std::string& fi
     if (field == "h") return make_int(sdl_rect->h);
     
     throw SafeFFIError("Unknown rect field: " + field);
+}
+
+// Phase 3: Performance optimization implementations
+
+void* SafeFFIManager::get_cached_function(const std::string& library_name, const std::string& function_name) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    std::string cache_key = library_name + "::" + function_name;
+    auto it = function_cache_.find(cache_key);
+    
+    if (it != function_cache_.end()) {
+        cache_hits_.fetch_add(1, std::memory_order_relaxed);
+        return it->second;
+    }
+    
+    cache_misses_.fetch_add(1, std::memory_order_relaxed);
+    return nullptr;
+}
+
+void SafeFFIManager::cache_function(const std::string& library_name, const std::string& function_name, void* func_ptr) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    std::string cache_key = library_name + "::" + function_name;
+    function_cache_[cache_key] = func_ptr;
+}
+
+void SafeFFIManager::clear_function_cache() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    function_cache_.clear();
+}
+
+double SafeFFIManager::get_cache_hit_ratio() const {
+    size_t hits = cache_hits_.load(std::memory_order_relaxed);
+    size_t misses = cache_misses_.load(std::memory_order_relaxed);
+    size_t total = hits + misses;
+    
+    return total > 0 ? static_cast<double>(hits) / total : 0.0;
+}
+
+void SafeFFIManager::reset_performance_stats() {
+    cache_hits_.store(0, std::memory_order_relaxed);
+    cache_misses_.store(0, std::memory_order_relaxed);
+    pool_allocations_.store(0, std::memory_order_relaxed);
+    pool_hits_.store(0, std::memory_order_relaxed);
+}
+
+// Common buffer sizes for pooling (SDL events, strings, etc.)
+const std::vector<size_t> SafeFFIManager::COMMON_BUFFER_SIZES = {
+    32, 64, 128, 256, 512, 1024, 2048, 4096
+};
+
+std::shared_ptr<MemoryManager::SafeBuffer> SafeFFIManager::allocate_pooled_buffer(size_t size) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    pool_allocations_++;
+    
+    // Find the smallest pool size that can accommodate the request
+    size_t pool_size = 0;
+    for (size_t candidate : COMMON_BUFFER_SIZES) {
+        if (candidate >= size) {
+            pool_size = candidate;
+            break;
+        }
+    }
+    
+    // If size is too large, allocate directly without pooling
+    if (pool_size == 0) {
+        return MemoryManager::instance().create_safe_buffer(size);
+    }
+    
+    // Check if we have a buffer in the pool
+    auto& pool = memory_pools_[pool_size];
+    if (!pool.empty()) {
+        auto buffer = pool.back();
+        pool.pop_back();
+        pool_hits_++;
+        
+        // Reset the buffer for reuse (clear content)
+        std::memset(buffer->data(), 0, buffer->size());
+        return buffer;
+    }
+    
+    // No pooled buffer available, allocate new one
+    return MemoryManager::instance().create_safe_buffer(pool_size);
+}
+
+void SafeFFIManager::warm_memory_pools() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    // Pre-allocate a few buffers of each common size
+    for (size_t size : COMMON_BUFFER_SIZES) {
+        auto& pool = memory_pools_[size];
+        const size_t WARM_COUNT = 4; // Pre-allocate 4 buffers per size
+        
+        for (size_t i = 0; i < WARM_COUNT; ++i) {
+            pool.push_back(MemoryManager::instance().create_safe_buffer(size));
+        }
+    }
+}
+
+void SafeFFIManager::clear_memory_pools() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    memory_pools_.clear();
+    pool_allocations_.store(0, std::memory_order_relaxed);
+    pool_hits_.store(0, std::memory_order_relaxed);
+}
+
+size_t SafeFFIManager::get_pool_efficiency() const {
+    size_t total_allocations = pool_allocations_.load();
+    if (total_allocations == 0) return 100; // No allocations yet
+    
+    size_t hits = pool_hits_.load();
+    return (hits * 100) / total_allocations;
+}
+
+// Call tracing and profiling implementation
+std::vector<std::string> SafeFFIManager::get_call_trace() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return call_trace_;
+}
+
+void SafeFFIManager::clear_call_trace() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    call_trace_.clear();
+}
+
+void SafeFFIManager::trace_call(const std::string& function_name, const std::vector<UnifiedValue>& args) const {
+    if (!call_tracing_enabled_) return;
+    
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    std::string trace_entry = "FFI Call: " + function_name + "(";
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (i > 0) trace_entry += ", ";
+        
+        // Convert UnifiedValue to string representation
+        if (std::holds_alternative<int>(args[i])) {
+            trace_entry += std::to_string(std::get<int>(args[i]));
+        } else if (std::holds_alternative<std::string>(args[i])) {
+            trace_entry += "\"" + std::get<std::string>(args[i]) + "\"";
+        } else if (std::holds_alternative<void*>(args[i])) {
+            trace_entry += "ptr:" + std::to_string(reinterpret_cast<uintptr_t>(std::get<void*>(args[i])));
+        } else {
+            trace_entry += "<unknown>";
+        }
+    }
+    trace_entry += ")";
+    
+    call_trace_.push_back(trace_entry);
+    
+    // Limit trace size to prevent memory bloat
+    if (call_trace_.size() > 1000) {
+        call_trace_.erase(call_trace_.begin());
+    }
+}
+
+void SafeFFIManager::profile_call_start(const std::string& /* function_name */) const {
+    // This would typically store the start time, but we'll handle timing in the call_function methods
+}
+
+void SafeFFIManager::profile_call_end(const std::string& function_name, std::chrono::high_resolution_clock::time_point start_time) const {
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    double duration_ms = duration.count() / 1000.0;
+    
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto& profile = call_profiles_[function_name];
+    profile.call_count++;
+    profile.total_time_ms += duration_ms;
+}
+
+std::vector<SafeFFIManager::CallProfile> SafeFFIManager::get_call_profiles() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::vector<CallProfile> profiles;
+    
+    for (const auto& [name, entry] : call_profiles_) {
+        CallProfile profile;
+        profile.function_name = name;
+        profile.call_count = entry.call_count;
+        profile.total_time_ms = entry.total_time_ms;
+        profile.avg_time_ms = entry.call_count > 0 ? entry.total_time_ms / entry.call_count : 0.0;
+        profiles.push_back(profile);
+    }
+    
+    return profiles;
+}
+
+void SafeFFIManager::reset_call_profiles() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    call_profiles_.clear();
 }
 
 } // namespace ffi

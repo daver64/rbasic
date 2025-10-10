@@ -7,6 +7,9 @@
 #include <unordered_map>
 #include <memory>
 #include <functional>
+#include <atomic>
+#include <mutex>
+#include <chrono>
 
 #ifdef _WIN32
     #include <windows.h>
@@ -26,6 +29,15 @@ class SafeFunctionCall;
 // Enhanced FFI manager with memory safety
 class SafeFFIManager {
 public:
+    // Singleton access
+    static SafeFFIManager& get_instance() {
+        static SafeFFIManager instance;
+        return instance;
+    }
+    
+    // No copy semantics for singleton
+    SafeFFIManager(const SafeFFIManager&) = delete;
+    SafeFFIManager& operator=(const SafeFFIManager&) = delete;
     static SafeFFIManager& instance();
     
     // Library management with RAII
@@ -54,6 +66,50 @@ public:
     // Cleanup
     void cleanup();
     
+    // Phase 3: Performance optimizations
+    // Function pointer caching for repeated FFI calls
+    void* get_cached_function(const std::string& library_name, const std::string& function_name);
+    void cache_function(const std::string& library_name, const std::string& function_name, void* func_ptr);
+    void clear_function_cache();
+    
+    // Performance statistics
+    size_t get_cache_hit_count() const { return cache_hits_; }
+    size_t get_cache_miss_count() const { return cache_misses_; }
+    double get_cache_hit_ratio() const;
+    void reset_performance_stats();
+    
+    // Memory pool optimization for common buffer sizes
+    std::shared_ptr<MemoryManager::SafeBuffer> allocate_pooled_buffer(size_t size);
+    void warm_memory_pools();
+    void clear_memory_pools();
+    size_t get_pool_efficiency() const;
+    
+    // Advanced type checking and call tracing
+    void enable_call_tracing(bool enable = true) { call_tracing_enabled_ = enable; }
+    bool is_call_tracing_enabled() const { return call_tracing_enabled_; }
+    std::vector<std::string> get_call_trace() const;
+    void clear_call_trace();
+    
+    // Template-based type checking for compile-time safety
+    template<typename R, typename... Args>
+    bool validate_function_signature(const std::string& library_name, const std::string& function_name);
+    
+    // Profile function call performance
+    struct CallProfile {
+        std::string function_name;
+        size_t call_count;
+        double total_time_ms;
+        double avg_time_ms;
+    };
+    
+    std::vector<CallProfile> get_call_profiles() const;
+    void reset_call_profiles();
+    
+    // Helper methods for call tracing and profiling (made public for SafeLibrary access)
+    void trace_call(const std::string& function_name, const std::vector<UnifiedValue>& args) const;
+    void profile_call_start(const std::string& function_name) const;
+    void profile_call_end(const std::string& function_name, std::chrono::high_resolution_clock::time_point start_time) const;
+    
     // Statistics
     size_t get_loaded_library_count() const;
     size_t get_total_allocated_memory() const;
@@ -64,12 +120,46 @@ public:
     
 private:
     SafeFFIManager() = default;
-    ~SafeFFIManager();
     
-    std::unordered_map<std::string, std::shared_ptr<SafeLibrary>> loaded_libraries_;
-    std::vector<std::shared_ptr<MemoryManager::SafeBuffer>> allocated_buffers_;
     mutable std::mutex mutex_;
+    std::unordered_map<std::string, std::shared_ptr<SafeLibrary>> libraries_;
+    
+    // Phase 3: Function pointer cache for performance
+    std::unordered_map<std::string, void*> function_cache_;
+    mutable std::atomic<size_t> cache_hits_{0};
+    mutable std::atomic<size_t> cache_misses_{0};
+    
+    // Memory pools for common buffer sizes
+    std::unordered_map<size_t, std::vector<std::shared_ptr<MemoryManager::SafeBuffer>>> memory_pools_;
+    std::atomic<size_t> pool_allocations_{0};
+    std::atomic<size_t> pool_hits_{0};
+    static const std::vector<size_t> COMMON_BUFFER_SIZES;
+    
+    // Call tracing and profiling
+    bool call_tracing_enabled_{false};
+    mutable std::vector<std::string> call_trace_;
+    
+    // Performance profiling for function calls
+    struct ProfileEntry {
+        size_t call_count{0};
+        double total_time_ms{0.0};
+    };
+    mutable std::unordered_map<std::string, ProfileEntry> call_profiles_;
 };
+
+// Template implementation for compile-time type checking
+template<typename R, typename... Args>
+bool SafeFFIManager::validate_function_signature(const std::string& library_name, const std::string& function_name) {
+    // This is a compile-time type safety check that can be extended
+    // For now, we verify the function exists and can be called
+    auto library = get_library(library_name);
+    if (!library) {
+        return false;
+    }
+    
+    void* func_ptr = library->get_function_address(function_name);
+    return func_ptr != nullptr;
+}
 
 // RAII library wrapper with automatic cleanup
 class SafeLibrary {
