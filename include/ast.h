@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "lexer.h"  // For TokenType
 #include <memory>
 #include <vector>
 
@@ -101,6 +102,28 @@ public:
     
     StructLiteralExpr(std::string name, std::vector<std::unique_ptr<Expression>> vals)
         : structName(std::move(name)), values(std::move(vals)) {}
+    void accept(ASTVisitor& visitor) override;
+};
+
+class GLMConstructorExpr : public Expression {
+public:
+    TokenType glmType;  // VEC2, VEC3, VEC4, MAT3, MAT4, QUAT
+    std::vector<std::unique_ptr<Expression>> arguments;
+    
+    GLMConstructorExpr(TokenType type, std::vector<std::unique_ptr<Expression>> args, 
+                      const SourcePosition& pos = SourcePosition())
+        : Expression(pos), glmType(type), arguments(std::move(args)) {}
+    void accept(ASTVisitor& visitor) override;
+};
+
+class GLMComponentAccessExpr : public Expression {
+public:
+    std::unique_ptr<Expression> object;
+    std::string component;  // "x", "y", "z", "w"
+    
+    GLMComponentAccessExpr(std::unique_ptr<Expression> obj, std::string comp,
+                          const SourcePosition& pos = SourcePosition())
+        : Expression(pos), object(std::move(obj)), component(std::move(comp)) {}
     void accept(ASTVisitor& visitor) override;
 };
 
@@ -292,6 +315,8 @@ public:
     virtual void visit(UnaryExpr& node) = 0;
     virtual void visit(CallExpr& node) = 0;
     virtual void visit(StructLiteralExpr& node) = 0;
+    virtual void visit(GLMConstructorExpr& node) = 0;
+    virtual void visit(GLMComponentAccessExpr& node) = 0;
     
     virtual void visit(ExpressionStmt& node) = 0;
     virtual void visit(VarStmt& node) = 0;

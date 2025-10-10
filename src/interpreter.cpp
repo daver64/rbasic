@@ -2327,6 +2327,173 @@ void Interpreter::visit(StructLiteralExpr& node) {
     lastValue = structValue;
 }
 
+void Interpreter::visit(GLMConstructorExpr& node) {
+    switch (node.glmType) {
+        case TokenType::VEC2: {
+            if (node.arguments.size() != 2) {
+                throw RuntimeError("vec2 constructor expects 2 arguments, got " + std::to_string(node.arguments.size()));
+            }
+            ValueType x_val = evaluate(*node.arguments[0]);
+            ValueType y_val = evaluate(*node.arguments[1]);
+            
+            float x = std::holds_alternative<double>(x_val) ? static_cast<float>(std::get<double>(x_val)) :
+                     std::holds_alternative<int>(x_val) ? static_cast<float>(std::get<int>(x_val)) : 0.0f;
+            float y = std::holds_alternative<double>(y_val) ? static_cast<float>(std::get<double>(y_val)) :
+                     std::holds_alternative<int>(y_val) ? static_cast<float>(std::get<int>(y_val)) : 0.0f;
+            
+            lastValue = Vec2Value(x, y);
+            break;
+        }
+        case TokenType::VEC3: {
+            if (node.arguments.size() != 3) {
+                throw RuntimeError("vec3 constructor expects 3 arguments, got " + std::to_string(node.arguments.size()));
+            }
+            ValueType x_val = evaluate(*node.arguments[0]);
+            ValueType y_val = evaluate(*node.arguments[1]);
+            ValueType z_val = evaluate(*node.arguments[2]);
+            
+            float x = std::holds_alternative<double>(x_val) ? static_cast<float>(std::get<double>(x_val)) :
+                     std::holds_alternative<int>(x_val) ? static_cast<float>(std::get<int>(x_val)) : 0.0f;
+            float y = std::holds_alternative<double>(y_val) ? static_cast<float>(std::get<double>(y_val)) :
+                     std::holds_alternative<int>(y_val) ? static_cast<float>(std::get<int>(y_val)) : 0.0f;
+            float z = std::holds_alternative<double>(z_val) ? static_cast<float>(std::get<double>(z_val)) :
+                     std::holds_alternative<int>(z_val) ? static_cast<float>(std::get<int>(z_val)) : 0.0f;
+            
+            lastValue = Vec3Value(x, y, z);
+            break;
+        }
+        case TokenType::VEC4: {
+            if (node.arguments.size() != 4) {
+                throw RuntimeError("vec4 constructor expects 4 arguments, got " + std::to_string(node.arguments.size()));
+            }
+            ValueType x_val = evaluate(*node.arguments[0]);
+            ValueType y_val = evaluate(*node.arguments[1]);
+            ValueType z_val = evaluate(*node.arguments[2]);
+            ValueType w_val = evaluate(*node.arguments[3]);
+            
+            float x = std::holds_alternative<double>(x_val) ? static_cast<float>(std::get<double>(x_val)) :
+                     std::holds_alternative<int>(x_val) ? static_cast<float>(std::get<int>(x_val)) : 0.0f;
+            float y = std::holds_alternative<double>(y_val) ? static_cast<float>(std::get<double>(y_val)) :
+                     std::holds_alternative<int>(y_val) ? static_cast<float>(std::get<int>(y_val)) : 0.0f;
+            float z = std::holds_alternative<double>(z_val) ? static_cast<float>(std::get<double>(z_val)) :
+                     std::holds_alternative<int>(z_val) ? static_cast<float>(std::get<int>(z_val)) : 0.0f;
+            float w = std::holds_alternative<double>(w_val) ? static_cast<float>(std::get<double>(w_val)) :
+                     std::holds_alternative<int>(w_val) ? static_cast<float>(std::get<int>(w_val)) : 0.0f;
+            
+            lastValue = Vec4Value(x, y, z, w);
+            break;
+        }
+        case TokenType::MAT3: {
+            if (node.arguments.size() == 0) {
+                lastValue = Mat3Value(); // Identity matrix
+            } else if (node.arguments.size() == 9) {
+                std::vector<float> elements;
+                for (int i = 0; i < 9; i++) {
+                    ValueType val = evaluate(*node.arguments[i]);
+                    float f = std::holds_alternative<double>(val) ? static_cast<float>(std::get<double>(val)) :
+                             std::holds_alternative<int>(val) ? static_cast<float>(std::get<int>(val)) : 0.0f;
+                    elements.push_back(f);
+                }
+                glm::mat3 mat(elements[0], elements[1], elements[2], 
+                             elements[3], elements[4], elements[5],
+                             elements[6], elements[7], elements[8]);
+                lastValue = Mat3Value(mat);
+            } else {
+                throw RuntimeError("mat3 constructor expects 0 or 9 arguments, got " + std::to_string(node.arguments.size()));
+            }
+            break;
+        }
+        case TokenType::MAT4: {
+            if (node.arguments.size() == 0) {
+                lastValue = Mat4Value(); // Identity matrix
+            } else if (node.arguments.size() == 16) {
+                std::vector<float> elements;
+                for (int i = 0; i < 16; i++) {
+                    ValueType val = evaluate(*node.arguments[i]);
+                    float f = std::holds_alternative<double>(val) ? static_cast<float>(std::get<double>(val)) :
+                             std::holds_alternative<int>(val) ? static_cast<float>(std::get<int>(val)) : 0.0f;
+                    elements.push_back(f);
+                }
+                glm::mat4 mat(elements[0], elements[1], elements[2], elements[3],
+                             elements[4], elements[5], elements[6], elements[7],
+                             elements[8], elements[9], elements[10], elements[11],
+                             elements[12], elements[13], elements[14], elements[15]);
+                lastValue = Mat4Value(mat);
+            } else {
+                throw RuntimeError("mat4 constructor expects 0 or 16 arguments, got " + std::to_string(node.arguments.size()));
+            }
+            break;
+        }
+        case TokenType::QUAT: {
+            if (node.arguments.size() == 0) {
+                lastValue = QuatValue(); // Identity quaternion
+            } else if (node.arguments.size() == 4) {
+                ValueType w_val = evaluate(*node.arguments[0]);
+                ValueType x_val = evaluate(*node.arguments[1]);
+                ValueType y_val = evaluate(*node.arguments[2]);
+                ValueType z_val = evaluate(*node.arguments[3]);
+                
+                float w = std::holds_alternative<double>(w_val) ? static_cast<float>(std::get<double>(w_val)) :
+                         std::holds_alternative<int>(w_val) ? static_cast<float>(std::get<int>(w_val)) : 1.0f;
+                float x = std::holds_alternative<double>(x_val) ? static_cast<float>(std::get<double>(x_val)) :
+                         std::holds_alternative<int>(x_val) ? static_cast<float>(std::get<int>(x_val)) : 0.0f;
+                float y = std::holds_alternative<double>(y_val) ? static_cast<float>(std::get<double>(y_val)) :
+                         std::holds_alternative<int>(y_val) ? static_cast<float>(std::get<int>(y_val)) : 0.0f;
+                float z = std::holds_alternative<double>(z_val) ? static_cast<float>(std::get<double>(z_val)) :
+                         std::holds_alternative<int>(z_val) ? static_cast<float>(std::get<int>(z_val)) : 0.0f;
+                
+                lastValue = QuatValue(w, x, y, z);
+            } else {
+                throw RuntimeError("quat constructor expects 0 or 4 arguments, got " + std::to_string(node.arguments.size()));
+            }
+            break;
+        }
+        default:
+            throw RuntimeError("Unknown GLM type in constructor");
+    }
+}
+
+void Interpreter::visit(GLMComponentAccessExpr& node) {
+    ValueType objectValue = evaluate(*node.object);
+    
+    if (std::holds_alternative<Vec2Value>(objectValue)) {
+        const Vec2Value& vec = std::get<Vec2Value>(objectValue);
+        if (node.component == "x") {
+            lastValue = static_cast<double>(vec.data.x);
+        } else if (node.component == "y") {
+            lastValue = static_cast<double>(vec.data.y);
+        } else {
+            throw RuntimeError("Invalid component '" + node.component + "' for vec2");
+        }
+    } else if (std::holds_alternative<Vec3Value>(objectValue)) {
+        const Vec3Value& vec = std::get<Vec3Value>(objectValue);
+        if (node.component == "x") {
+            lastValue = static_cast<double>(vec.data.x);
+        } else if (node.component == "y") {
+            lastValue = static_cast<double>(vec.data.y);
+        } else if (node.component == "z") {
+            lastValue = static_cast<double>(vec.data.z);
+        } else {
+            throw RuntimeError("Invalid component '" + node.component + "' for vec3");
+        }
+    } else if (std::holds_alternative<Vec4Value>(objectValue)) {
+        const Vec4Value& vec = std::get<Vec4Value>(objectValue);
+        if (node.component == "x") {
+            lastValue = static_cast<double>(vec.data.x);
+        } else if (node.component == "y") {
+            lastValue = static_cast<double>(vec.data.y);
+        } else if (node.component == "z") {
+            lastValue = static_cast<double>(vec.data.z);
+        } else if (node.component == "w") {
+            lastValue = static_cast<double>(vec.data.w);
+        } else {
+            throw RuntimeError("Invalid component '" + node.component + "' for vec4");
+        }
+    } else {
+        throw RuntimeError("Component access not supported for this type");
+    }
+}
+
 void Interpreter::visit(ExpressionStmt& node) {
     evaluate(*node.expression);
 }

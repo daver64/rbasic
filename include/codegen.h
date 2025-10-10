@@ -37,6 +37,8 @@ public:
     void visit(UnaryExpr& node) override;
     void visit(CallExpr& node) override;
     void visit(StructLiteralExpr& node) override;
+    void visit(GLMConstructorExpr& node) override;
+    void visit(GLMComponentAccessExpr& node) override;
     
     void visit(ExpressionStmt& node) override;
     void visit(VarStmt& node) override;

@@ -43,6 +43,14 @@ enum class TokenType {
     MOD,
     NULL_LITERAL,
     
+    // GLM Types
+    VEC2,
+    VEC3,
+    VEC4,
+    MAT3,
+    MAT4,
+    QUAT,
+    
     // Operators
     PLUS,
     MINUS,

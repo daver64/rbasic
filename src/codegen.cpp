@@ -689,6 +689,51 @@ void CodeGenerator::visit(StructLiteralExpr& node) {
     write("return BasicValue(" + tempVar + "); })()");
 }
 
+void CodeGenerator::visit(GLMConstructorExpr& node) {
+    // Generate runtime helper function calls instead of direct GLM calls
+    switch (node.glmType) {
+        case TokenType::VEC2:
+            write("create_vec2(");
+            break;
+        case TokenType::VEC3:
+            write("create_vec3(");
+            break;
+        case TokenType::VEC4:
+            write("create_vec4(");
+            break;
+        case TokenType::MAT3:
+            write("create_mat3(");
+            break;
+        case TokenType::MAT4:
+            write("create_mat4(");
+            break;
+        case TokenType::QUAT:
+            write("create_quat(");
+            break;
+        default:
+            write("/* unknown GLM type */(");
+            break;
+    }
+    
+    // Generate arguments
+    for (size_t i = 0; i < node.arguments.size(); ++i) {
+        if (i > 0) write(", ");
+        // Convert arguments to float for GLM functions
+        write("static_cast<float>(to_double(");
+        node.arguments[i]->accept(*this);
+        write("))");
+    }
+    
+    write(")");
+}
+
+void CodeGenerator::visit(GLMComponentAccessExpr& node) {
+    // Generate runtime component access call
+    write("get_vec_component(");
+    node.object->accept(*this);
+    write(", \"" + node.component + "\")");
+}
+
 void CodeGenerator::visit(ExpressionStmt& node) {
     indent();
     node.expression->accept(*this);

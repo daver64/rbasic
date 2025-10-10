@@ -9,6 +9,11 @@
 #include <stdexcept>
 #include <cstdint>
 
+// GLM includes for vector and matrix types
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 namespace rbasic {
 
 // Forward declarations for complex types
@@ -171,8 +176,49 @@ struct StructValue {
     StructValue(const std::string& type) : typeName(type) {}
 };
 
+// GLM value types for built-in vector and matrix support
+struct Vec2Value {
+    glm::vec2 data;
+    Vec2Value() : data(0.0f) {}
+    Vec2Value(float x, float y) : data(x, y) {}
+    Vec2Value(const glm::vec2& v) : data(v) {}
+};
+
+struct Vec3Value {
+    glm::vec3 data;
+    Vec3Value() : data(0.0f) {}
+    Vec3Value(float x, float y, float z) : data(x, y, z) {}
+    Vec3Value(const glm::vec3& v) : data(v) {}
+};
+
+struct Vec4Value {
+    glm::vec4 data;
+    Vec4Value() : data(0.0f) {}
+    Vec4Value(float x, float y, float z, float w) : data(x, y, z, w) {}
+    Vec4Value(const glm::vec4& v) : data(v) {}
+};
+
+struct Mat3Value {
+    glm::mat3 data;
+    Mat3Value() : data(1.0f) {}  // Identity matrix
+    Mat3Value(const glm::mat3& m) : data(m) {}
+};
+
+struct Mat4Value {
+    glm::mat4 data;
+    Mat4Value() : data(1.0f) {}  // Identity matrix
+    Mat4Value(const glm::mat4& m) : data(m) {}
+};
+
+struct QuatValue {
+    glm::quat data;
+    QuatValue() : data(1.0f, 0.0f, 0.0f, 0.0f) {}  // Identity quaternion
+    QuatValue(float w, float x, float y, float z) : data(w, x, y, z) {}
+    QuatValue(const glm::quat& q) : data(q) {}
+};
+
 // Common types
-using ValueType = std::variant<int, double, std::string, bool, void*, ArrayValue, StructValue, PointerValue, ByteArrayValue, IntArrayValue, DoubleArrayValue>;
+using ValueType = std::variant<int, double, std::string, bool, void*, ArrayValue, StructValue, PointerValue, ByteArrayValue, IntArrayValue, DoubleArrayValue, Vec2Value, Vec3Value, Vec4Value, Mat3Value, Mat4Value, QuatValue>;
 
 // Type system
 enum class BasicType {
@@ -182,6 +228,12 @@ enum class BasicType {
     BOOLEAN,
     ARRAY,
     STRUCT,
+    VEC2,
+    VEC3,
+    VEC4,
+    MAT3,
+    MAT4,
+    QUAT,
     UNKNOWN
 };
 

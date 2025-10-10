@@ -72,7 +72,7 @@ bool compileToExecutable(const std::string& cppFile, const std::string& outputFi
             // Use bundled MinGW64 compiler
             std::string mingwCompiler = mingwPath.string();
             builder.compiler(mingwCompiler)
-                   .compileFlags({"-std=c++17", "-O2", "-static-libgcc", "-static-libstdc++", "-mconsole", "-fopenmp"})
+                   .compileFlags({"-std=c++17", "-O2", "-static-libgcc", "-static-libstdc++", "-mconsole", "-fopenmp", "-I", "include"})
                    .input(cppFile)
                    .output(outputFile + ".exe")
                    .library("runtime\\librbasic_runtime.a")
@@ -82,7 +82,7 @@ bool compileToExecutable(const std::string& cppFile, const std::string& outputFi
         } else {
             // Fallback to Microsoft Visual C++ compiler
             builder.compiler("cl")
-                   .compileFlags({"/EHsc", "/std:c++17", "/openmp"})
+                   .compileFlags({"/EHsc", "/std:c++17", "/openmp", "/I", "include"})
                    .input(cppFile)
                    .output(outputFile)
                    .library("runtime\\Release\\rbasic_runtime.lib")
@@ -93,7 +93,7 @@ bool compileToExecutable(const std::string& cppFile, const std::string& outputFi
 #else
         // Linux/Unix: Use g++ compiler
         builder.compiler("g++")
-               .compileFlags({"-std=c++17", "-O2", "-fopenmp"})
+               .compileFlags({"-std=c++17", "-O2", "-fopenmp", "-I", "include"})
                .input(cppFile)
                .output(outputFile)
                .library("runtime/librbasic_runtime.a")

@@ -88,4 +88,12 @@ void DimStmt::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
 }
 
+void GLMConstructorExpr::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+void GLMComponentAccessExpr::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
 } // namespace rbasic

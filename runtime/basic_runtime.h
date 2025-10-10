@@ -13,6 +13,11 @@
 #include <fstream>  // For file operations
 #include <filesystem>  // For filesystem operations
 
+// GLM includes for vector and matrix types
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 // Forward declarations
 struct BasicStruct;
 struct BasicArray;
@@ -21,8 +26,49 @@ struct BasicIntArray;
 struct BasicDoubleArray;
 struct BasicPointer;
 
+// GLM value wrappers for runtime
+struct BasicVec2 {
+    glm::vec2 data;
+    BasicVec2() : data(0.0f) {}
+    BasicVec2(float x, float y) : data(x, y) {}
+    BasicVec2(const glm::vec2& v) : data(v) {}
+};
+
+struct BasicVec3 {
+    glm::vec3 data;
+    BasicVec3() : data(0.0f) {}
+    BasicVec3(float x, float y, float z) : data(x, y, z) {}
+    BasicVec3(const glm::vec3& v) : data(v) {}
+};
+
+struct BasicVec4 {
+    glm::vec4 data;
+    BasicVec4() : data(0.0f) {}
+    BasicVec4(float x, float y, float z, float w) : data(x, y, z, w) {}
+    BasicVec4(const glm::vec4& v) : data(v) {}
+};
+
+struct BasicMat3 {
+    glm::mat3 data;
+    BasicMat3() : data(1.0f) {}  // Identity matrix
+    BasicMat3(const glm::mat3& m) : data(m) {}
+};
+
+struct BasicMat4 {
+    glm::mat4 data;
+    BasicMat4() : data(1.0f) {}  // Identity matrix
+    BasicMat4(const glm::mat4& m) : data(m) {}
+};
+
+struct BasicQuat {
+    glm::quat data;
+    BasicQuat() : data(1.0f, 0.0f, 0.0f, 0.0f) {}  // Identity quaternion
+    BasicQuat(float w, float x, float y, float z) : data(w, x, y, z) {}
+    BasicQuat(const glm::quat& q) : data(q) {}
+};
+
 // Value type for compiled BASIC programs
-using BasicValue = std::variant<int, double, std::string, bool, void*, BasicStruct, BasicArray, BasicByteArray, BasicIntArray, BasicDoubleArray>;
+using BasicValue = std::variant<int, double, std::string, bool, void*, BasicStruct, BasicArray, BasicByteArray, BasicIntArray, BasicDoubleArray, BasicVec2, BasicVec3, BasicVec4, BasicMat3, BasicMat4, BasicQuat>;
 
 // Pointer wrapper for FFI
 struct BasicPointer {
@@ -399,6 +445,18 @@ BasicValue get_rect_field(const BasicValue& rect, const std::string& field); // 
 // SDL resource management
 BasicValue free_sdl_resource(const BasicValue& ptr);    // Free a specific SDL resource
 void sdl_cleanup_all();                                  // Clean up all allocated SDL resources
+
+// GLM helper functions
+BasicValue create_vec2(float x, float y);
+BasicValue create_vec3(float x, float y, float z);
+BasicValue create_vec4(float x, float y, float z, float w);
+BasicValue create_mat3(float m00, float m01, float m02, float m10, float m11, float m12, float m20, float m21, float m22);
+BasicValue create_mat4(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33);
+BasicValue create_quat(float w = 1.0f, float x = 0.0f, float y = 0.0f, float z = 0.0f);
+
+// GLM component access
+BasicValue get_vec_component(const BasicValue& vec, const std::string& component);
+BasicValue set_vec_component(const BasicValue& vec, const std::string& component, float value);
 
 // Type conversion
 int to_int(const BasicValue& value);

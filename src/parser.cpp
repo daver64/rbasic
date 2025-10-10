@@ -213,7 +213,22 @@ std::unique_ptr<Expression> Parser::call() {
             if (auto var = dynamic_cast<VariableExpr*>(expr.get())) {
                 std::string name = var->name;
                 expr.release(); // Release ownership
-                expr = std::make_unique<CallExpr>(name, std::move(args));
+                
+                // Check if this is a GLM constructor call
+                if (name == "vec2" || name == "vec3" || name == "vec4" || 
+                    name == "mat3" || name == "mat4" || name == "quat") {
+                    TokenType glmType = TokenType::IDENTIFIER; // Default fallback
+                    if (name == "vec2") glmType = TokenType::VEC2;
+                    else if (name == "vec3") glmType = TokenType::VEC3;
+                    else if (name == "vec4") glmType = TokenType::VEC4;
+                    else if (name == "mat3") glmType = TokenType::MAT3;
+                    else if (name == "mat4") glmType = TokenType::MAT4;
+                    else if (name == "quat") glmType = TokenType::QUAT;
+                    
+                    expr = std::make_unique<GLMConstructorExpr>(glmType, std::move(args));
+                } else {
+                    expr = std::make_unique<CallExpr>(name, std::move(args));
+                }
             } else {
                 Token current = peek();
                 throw SyntaxError("Invalid function call", current.line);
@@ -257,7 +272,11 @@ std::unique_ptr<Expression> Parser::call() {
         } else if (match({TokenType::DOT})) {
             auto member = consume(TokenType::IDENTIFIER, "Expected member name after '.'");
             
-            if (auto var = dynamic_cast<VariableExpr*>(expr.get())) {
+            // Check if this is GLM component access (x, y, z, w)
+            if (member.value == "x" || member.value == "y" || member.value == "z" || member.value == "w") {
+                expr = std::make_unique<GLMComponentAccessExpr>(std::move(expr), member.value);
+            } else if (auto var = dynamic_cast<VariableExpr*>(expr.get())) {
+                // Regular struct member access
                 var->member = member.value;
             }
         } else {
@@ -288,6 +307,16 @@ std::unique_ptr<Expression> Parser::primary() {
     
     if (match({TokenType::IDENTIFIER})) {
         return std::make_unique<VariableExpr>(previous().value);
+    }
+    
+    // GLM constructor expressions
+    if (match({TokenType::VEC2, TokenType::VEC3, TokenType::VEC4, 
+               TokenType::MAT3, TokenType::MAT4, TokenType::QUAT})) {
+        TokenType glmType = previous().type;
+        consume(TokenType::LEFT_PAREN, "Expected '(' after GLM type");
+        auto args = arguments();
+        consume(TokenType::RIGHT_PAREN, "Expected ')' after GLM constructor arguments");
+        return std::make_unique<GLMConstructorExpr>(glmType, std::move(args));
     }
     
     if (match({TokenType::LEFT_PAREN})) {

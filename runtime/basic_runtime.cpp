@@ -3232,6 +3232,64 @@ void sdl_cleanup_all() {
     cleanup_sdl_resources();
 }
 
+// ===== GLM HELPER FUNCTIONS =====
+
+BasicValue create_vec2(float x, float y) {
+    return BasicValue(BasicVec2(x, y));
+}
+
+BasicValue create_vec3(float x, float y, float z) {
+    return BasicValue(BasicVec3(x, y, z));
+}
+
+BasicValue create_vec4(float x, float y, float z, float w) {
+    return BasicValue(BasicVec4(x, y, z, w));
+}
+
+BasicValue create_mat3(float m00, float m01, float m02, float m10, float m11, float m12, float m20, float m21, float m22) {
+    glm::mat3 mat(m00, m01, m02, m10, m11, m12, m20, m21, m22);
+    return BasicValue(BasicMat3(mat));
+}
+
+BasicValue create_mat4(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33) {
+    glm::mat4 mat(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
+    return BasicValue(BasicMat4(mat));
+}
+
+BasicValue create_quat(float w, float x, float y, float z) {
+    return BasicValue(BasicQuat(w, x, y, z));
+}
+
+BasicValue get_vec_component(const BasicValue& vec, const std::string& component) {
+    if (std::holds_alternative<BasicVec2>(vec)) {
+        const auto& v = std::get<BasicVec2>(vec);
+        if (component == "x") return BasicValue(static_cast<double>(v.data.x));
+        if (component == "y") return BasicValue(static_cast<double>(v.data.y));
+        throw std::runtime_error("Invalid component '" + component + "' for vec2");
+    } else if (std::holds_alternative<BasicVec3>(vec)) {
+        const auto& v = std::get<BasicVec3>(vec);
+        if (component == "x") return BasicValue(static_cast<double>(v.data.x));
+        if (component == "y") return BasicValue(static_cast<double>(v.data.y));
+        if (component == "z") return BasicValue(static_cast<double>(v.data.z));
+        throw std::runtime_error("Invalid component '" + component + "' for vec3");
+    } else if (std::holds_alternative<BasicVec4>(vec)) {
+        const auto& v = std::get<BasicVec4>(vec);
+        if (component == "x") return BasicValue(static_cast<double>(v.data.x));
+        if (component == "y") return BasicValue(static_cast<double>(v.data.y));
+        if (component == "z") return BasicValue(static_cast<double>(v.data.z));
+        if (component == "w") return BasicValue(static_cast<double>(v.data.w));
+        throw std::runtime_error("Invalid component '" + component + "' for vec4");
+    } else {
+        throw std::runtime_error("get_vec_component requires a vector type");
+    }
+}
+
+BasicValue set_vec_component(const BasicValue& vec, const std::string& component, float value) {
+    // This would modify the vector component - for now we'll just return the original
+    // In a full implementation, vectors would need to be mutable
+    return vec;
+}
+
 // ===== WRAPPER FUNCTIONS FOR CODE GENERATOR =====
 
 BasicValue func_get_constant(const BasicValue& name) {
