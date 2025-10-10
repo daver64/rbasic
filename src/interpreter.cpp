@@ -8,6 +8,8 @@
 #include "math_utils.h"
 #include "../runtime/basic_runtime.h"
 #include "../include/ffi.h"
+#include "../include/safe_ffi.h"
+#include "../include/unified_value.h"
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
@@ -33,6 +35,37 @@
 #endif
 
 namespace rbasic {
+
+// Helper functions for converting between BasicValue and UnifiedValue
+UnifiedValue basicValueToUnifiedValue(const BasicValue& bv) {
+    if (std::holds_alternative<int>(bv)) {
+        return make_int(std::get<int>(bv));
+    } else if (std::holds_alternative<double>(bv)) {
+        return make_double(std::get<double>(bv));
+    } else if (std::holds_alternative<std::string>(bv)) {
+        return make_string(std::get<std::string>(bv));
+    } else if (std::holds_alternative<bool>(bv)) {
+        return make_int(std::get<bool>(bv) ? 1 : 0);
+    } else if (std::holds_alternative<void*>(bv)) {
+        return make_pointer(std::get<void*>(bv), "void");
+    }
+    return make_int(0); // fallback
+}
+
+BasicValue unifiedValueToBasicValue(const UnifiedValue& uv) {
+    if (holds_type<int>(uv)) {
+        return get_value<int>(uv);
+    } else if (holds_type<double>(uv)) {
+        return get_value<double>(uv);
+    } else if (holds_type<std::string>(uv)) {
+        return get_value<std::string>(uv);
+    } else if (holds_type<bool>(uv)) {
+        return get_value<bool>(uv);
+    } else if (holds_type<void*>(uv)) {
+        return get_value<void*>(uv);
+    }
+    return 0; // fallback
+}
 
 Interpreter::Interpreter(std::unique_ptr<IOHandler> io) : hasReturned(false) {
     // Initialize boolean constants
@@ -1237,34 +1270,76 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
         return true;
     }
     
-    // Buffer allocation functions
+    // Buffer allocation functions - Updated for Safe FFI
     if (node.name == "alloc_int_buffer" && node.arguments.size() == 0) {
-        // Runtime returns BasicValue, we need to convert to ValueType
-        void* ptr = std::get<void*>(basic_runtime::alloc_int_buffer());
-        lastValue = ptr;
+        try {
+            auto& safe_ffi_manager = rbasic::ffi::SafeFFIManager::instance();
+            auto int_buffer = safe_ffi_manager.allocate_int_buffer();
+            if (int_buffer) {
+                lastValue = static_cast<void*>(int_buffer.get());
+            } else {
+                lastValue = static_cast<void*>(nullptr);
+            }
+        } catch (const rbasic::ffi::SafeFFIError& e) {
+            throw RuntimeError("Safe int buffer allocation failed: " + std::string(e.what()));
+        }
         return true;
     }
     
     if (node.name == "alloc_pointer_buffer" && node.arguments.size() == 0) {
-        void* ptr = std::get<void*>(basic_runtime::alloc_pointer_buffer());
-        lastValue = ptr;
+        try {
+            auto& safe_ffi_manager = rbasic::ffi::SafeFFIManager::instance();
+            auto ptr_buffer = safe_ffi_manager.allocate_pointer_buffer();
+            if (ptr_buffer) {
+                lastValue = static_cast<void*>(ptr_buffer.get());
+            } else {
+                lastValue = static_cast<void*>(nullptr);
+            }
+        } catch (const rbasic::ffi::SafeFFIError& e) {
+            throw RuntimeError("Safe pointer buffer allocation failed: " + std::string(e.what()));
+        }
         return true;
     }
     
     if (node.name == "alloc_buffer" && node.arguments.size() == 1) {
         ValueType sizeVal = evaluate(*node.arguments[0]);
         int size = std::get<int>(sizeVal);
-        void* ptr = std::get<void*>(basic_runtime::alloc_buffer(size));
-        lastValue = ptr;
+        
+        // Use Safe FFI Manager for buffer allocation
+        try {
+            auto& safe_ffi_manager = rbasic::ffi::SafeFFIManager::instance();
+            auto buffer = safe_ffi_manager.allocate_buffer(size);
+            if (buffer) {
+                // Return pointer to the safe buffer data
+                lastValue = static_cast<void*>(buffer->data());
+            } else {
+                lastValue = static_cast<void*>(nullptr);
+            }
+        } catch (const rbasic::ffi::SafeFFIError& e) {
+            throw RuntimeError("Safe buffer allocation failed: " + std::string(e.what()));
+        }
         return true;
     }
     
     if (node.name == "deref_int" && node.arguments.size() == 1) {
         ValueType ptrVal = evaluate(*node.arguments[0]);
         if (std::holds_alternative<void*>(ptrVal)) {
-            BasicValue bv = std::get<void*>(ptrVal);
-            BasicValue result = basic_runtime::deref_int(bv);
-            lastValue = std::get<double>(result);
+            void* ptr = std::get<void*>(ptrVal);
+            
+            // Use Safe FFI Manager for safe dereference
+            try {
+                auto& safe_ffi_manager = rbasic::ffi::SafeFFIManager::instance();
+                UnifiedValue ptr_uv = make_pointer(ptr, "void");
+                UnifiedValue result = safe_ffi_manager.deref_int_safe(ptr_uv);
+                
+                if (holds_type<int>(result)) {
+                    lastValue = static_cast<double>(get_value<int>(result));
+                } else {
+                    lastValue = 0.0;
+                }
+            } catch (const rbasic::ffi::SafeFFIError& e) {
+                throw RuntimeError("Safe int dereference failed: " + std::string(e.what()));
+            }
         }
         return true;
     }
@@ -1272,9 +1347,22 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
     if (node.name == "deref_pointer" && node.arguments.size() == 1) {
         ValueType ptrVal = evaluate(*node.arguments[0]);
         if (std::holds_alternative<void*>(ptrVal)) {
-            BasicValue bv = std::get<void*>(ptrVal);
-            BasicValue result = basic_runtime::deref_pointer(bv);
-            lastValue = std::get<void*>(result);
+            void* ptr = std::get<void*>(ptrVal);
+            
+            // Use Safe FFI Manager for safe pointer dereference
+            try {
+                auto& safe_ffi_manager = rbasic::ffi::SafeFFIManager::instance();
+                UnifiedValue ptr_uv = make_pointer(ptr, "void");
+                UnifiedValue result = safe_ffi_manager.deref_pointer_safe(ptr_uv);
+                
+                if (holds_type<void*>(result)) {
+                    lastValue = get_value<void*>(result);
+                } else {
+                    lastValue = static_cast<void*>(nullptr);
+                }
+            } catch (const rbasic::ffi::SafeFFIError& e) {
+                throw RuntimeError("Safe pointer dereference failed: " + std::string(e.what()));
+            }
         }
         return true;
     }
@@ -1282,14 +1370,27 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
     if (node.name == "deref_string" && node.arguments.size() == 1) {
         ValueType ptrVal = evaluate(*node.arguments[0]);
         if (std::holds_alternative<void*>(ptrVal)) {
-            BasicValue bv = std::get<void*>(ptrVal);
-            BasicValue result = basic_runtime::deref_string(bv);
-            lastValue = std::get<std::string>(result);
+            void* ptr = std::get<void*>(ptrVal);
+            
+            // Use Safe FFI Manager for safe string dereference  
+            try {
+                auto& safe_ffi_manager = rbasic::ffi::SafeFFIManager::instance();
+                UnifiedValue ptr_uv = make_pointer(ptr, "void");
+                UnifiedValue result = safe_ffi_manager.deref_string_safe(ptr_uv);
+                
+                if (holds_type<std::string>(result)) {
+                    lastValue = get_value<std::string>(result);
+                } else {
+                    lastValue = std::string("");
+                }
+            } catch (const rbasic::ffi::SafeFFIError& e) {
+                throw RuntimeError("Safe string dereference failed: " + std::string(e.what()));
+            }
         }
         return true;
     }
     
-    // SDL struct helper functions
+    // SDL struct helper functions - Updated for Safe FFI
     if (node.name == "create_sdl_rect" && node.arguments.size() == 4) {
         ValueType xVal = evaluate(*node.arguments[0]);
         ValueType yVal = evaluate(*node.arguments[1]);
@@ -1301,14 +1402,32 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
         int w = std::get<int>(wVal);
         int h = std::get<int>(hVal);
         
-        BasicValue result = basic_runtime::create_sdl_rect(x, y, w, h);
-        lastValue = std::get<void*>(result);
+        // Use Safe FFI's create_safe_sdl_rect function
+        try {
+            UnifiedValue result = rbasic::ffi::create_safe_sdl_rect(x, y, w, h);
+            if (holds_type<void*>(result)) {
+                lastValue = get_value<void*>(result);
+            } else {
+                lastValue = static_cast<void*>(nullptr);
+            }
+        } catch (const rbasic::ffi::SafeFFIError& e) {
+            throw RuntimeError("Safe SDL rect creation failed: " + std::string(e.what()));
+        }
         return true;
     }
     
     if (node.name == "create_sdl_event" && node.arguments.size() == 0) {
-        BasicValue result = basic_runtime::create_sdl_event();
-        lastValue = std::get<void*>(result);
+        // Use Safe FFI's create_safe_sdl_event function
+        try {
+            UnifiedValue result = rbasic::ffi::create_safe_sdl_event();
+            if (holds_type<void*>(result)) {
+                lastValue = get_value<void*>(result);
+            } else {
+                lastValue = static_cast<void*>(nullptr);
+            }
+        } catch (const rbasic::ffi::SafeFFIError& e) {
+            throw RuntimeError("Safe SDL event creation failed: " + std::string(e.what()));
+        }
         return true;
     }
     
@@ -1326,10 +1445,23 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
         ValueType ptrVal = evaluate(*node.arguments[0]);
         ValueType offsetVal = evaluate(*node.arguments[1]);
         if (std::holds_alternative<void*>(ptrVal) && std::holds_alternative<double>(offsetVal)) {
-            BasicValue bv = std::get<void*>(ptrVal);
-            BasicValue offset = std::get<double>(offsetVal);
-            BasicValue result = basic_runtime::deref_int_offset(bv, offset);
-            lastValue = std::get<double>(result);
+            void* ptr = std::get<void*>(ptrVal);
+            size_t offset = static_cast<size_t>(std::get<double>(offsetVal));
+            
+            // Use Safe FFI Manager for bounds-checked offset dereference
+            try {
+                auto& safe_ffi_manager = rbasic::ffi::SafeFFIManager::instance();
+                UnifiedValue ptr_uv = make_pointer(ptr, "void");
+                UnifiedValue result = safe_ffi_manager.deref_int_safe(ptr_uv, offset);
+                
+                if (holds_type<int>(result)) {
+                    lastValue = static_cast<double>(get_value<int>(result));
+                } else {
+                    lastValue = 0.0;
+                }
+            } catch (const rbasic::ffi::SafeFFIError& e) {
+                throw RuntimeError("Safe int offset dereference failed: " + std::string(e.what()));
+            }
         }
         return true;
     }
@@ -1402,65 +1534,65 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
     if (node.name == "is_null" && node.arguments.size() == 1) {
         ValueType val = evaluate(*node.arguments[0]);
         
-        // Convert ValueType to BasicValue for runtime function
-        BasicValue bv;
         if (std::holds_alternative<void*>(val)) {
-            bv = std::get<void*>(val);
-        } else if (std::holds_alternative<double>(val)) {
-            bv = std::get<double>(val);
-        } else if (std::holds_alternative<int>(val)) {
-            bv = std::get<int>(val);
-        } else if (std::holds_alternative<bool>(val)) {
-            bv = std::get<bool>(val);
-        } else if (std::holds_alternative<std::string>(val)) {
-            bv = std::get<std::string>(val);
+            void* ptr = std::get<void*>(val);
+            
+            // Use Safe FFI Manager for null checking
+            try {
+                auto& safe_ffi_manager = rbasic::ffi::SafeFFIManager::instance();
+                UnifiedValue ptr_uv = make_pointer(ptr, "void");
+                bool result = safe_ffi_manager.is_null_safe(ptr_uv);
+                lastValue = result;
+            } catch (const rbasic::ffi::SafeFFIError& e) {
+                throw RuntimeError("Safe null check failed: " + std::string(e.what()));
+            }
+        } else {
+            lastValue = false; // Non-pointer values are not null
         }
-        
-        BasicValue result = basic_runtime::is_null(bv);
-        lastValue = std::get<bool>(result);
         return true;
     }
     
     if (node.name == "not_null" && node.arguments.size() == 1) {
         ValueType val = evaluate(*node.arguments[0]);
         
-        // Convert ValueType to BasicValue for runtime function
-        BasicValue bv;
         if (std::holds_alternative<void*>(val)) {
-            bv = std::get<void*>(val);
-        } else if (std::holds_alternative<double>(val)) {
-            bv = std::get<double>(val);
-        } else if (std::holds_alternative<int>(val)) {
-            bv = std::get<int>(val);
-        } else if (std::holds_alternative<bool>(val)) {
-            bv = std::get<bool>(val);
-        } else if (std::holds_alternative<std::string>(val)) {
-            bv = std::get<std::string>(val);
+            void* ptr = std::get<void*>(val);
+            
+            // Use Safe FFI Manager for not-null checking
+            try {
+                auto& safe_ffi_manager = rbasic::ffi::SafeFFIManager::instance();
+                UnifiedValue ptr_uv = make_pointer(ptr, "void");
+                bool result = safe_ffi_manager.not_null_safe(ptr_uv);
+                lastValue = result;
+            } catch (const rbasic::ffi::SafeFFIError& e) {
+                throw RuntimeError("Safe not-null check failed: " + std::string(e.what()));
+            }
+        } else {
+            lastValue = true; // Non-pointer values are considered not-null
         }
-        
-        BasicValue result = basic_runtime::not_null(bv);
-        lastValue = std::get<bool>(result);
         return true;
     }
     
     return false; // Function not handled by this dispatcher
 }
 
-// FFI Functions Handler - Simplified for Phase 1
+// FFI Functions Handler - Updated for Phase 2 Safe FFI
 bool Interpreter::handleFFIFunctions(CallExpr& node) {
     if (node.name == "load_library" && node.arguments.size() == 1) {
         ValueType libNameVal = evaluate(*node.arguments[0]);
         if (std::holds_alternative<std::string>(libNameVal)) {
             std::string libName = std::get<std::string>(libNameVal);
-            // For Phase 1, just verify the library exists and return a simple success indicator
+            // Use Safe FFI Manager
             try {
-                auto& ffi_manager = rbasic::ffi::FFIManager::instance();
-                auto library = ffi_manager.load_library(libName);
+                auto& safe_ffi_manager = rbasic::ffi::SafeFFIManager::instance();
+                auto library = safe_ffi_manager.load_library(libName);
                 if (library && library->is_valid()) {
                     lastValue = std::string("library_handle:" + libName);
                 } else {
                     lastValue = std::string("error:Failed to load " + libName);
                 }
+            } catch (const rbasic::ffi::SafeFFIError& e) {
+                lastValue = std::string("error:SafeFFI exception: " + std::string(e.what()));
             } catch (...) {
                 lastValue = std::string("error:Exception loading " + libName);
             }
@@ -1477,9 +1609,11 @@ bool Interpreter::handleFFIFunctions(CallExpr& node) {
             if (handle.length() >= 15 && handle.substr(0, 15) == "library_handle:") {
                 std::string libName = handle.substr(15); // Remove "library_handle:" prefix
                 try {
-                    auto& ffi_manager = rbasic::ffi::FFIManager::instance();
-                    bool success = ffi_manager.unload_library(libName);
+                    auto& safe_ffi_manager = rbasic::ffi::SafeFFIManager::instance();
+                    bool success = safe_ffi_manager.unload_library(libName);
                     lastValue = success ? 1.0 : 0.0; // Return double for consistency
+                } catch (const rbasic::ffi::SafeFFIError& e) {
+                    lastValue = 0.0;
                 } catch (...) {
                     lastValue = 0.0;
                 }
@@ -1499,11 +1633,11 @@ bool Interpreter::handleFFIFunctions(CallExpr& node) {
         const auto& ffiFunc = *ffiIt->second;
         
         try {
-            // Load library if not already loaded
-            auto& ffi_manager = rbasic::ffi::FFIManager::instance();
-            auto library = ffi_manager.get_library(ffiFunc.library);
+            // Load library if not already loaded using Safe FFI
+            auto& safe_ffi_manager = rbasic::ffi::SafeFFIManager::instance();
+            auto library = safe_ffi_manager.get_library(ffiFunc.library);
             if (!library) {
-                library = ffi_manager.load_library(ffiFunc.library);
+                library = safe_ffi_manager.load_library(ffiFunc.library);
             }
             
             if (!library || !library->is_valid()) {
@@ -1523,6 +1657,8 @@ bool Interpreter::handleFFIFunctions(CallExpr& node) {
             
             // Fallback error
             throw RuntimeError("Failed to call FFI function: " + ffiFunc.name);
+        } catch (const rbasic::ffi::SafeFFIError& e) {
+            throw RuntimeError("Safe FFI call failed: " + std::string(e.what()));
         } catch (const std::exception& e) {
             throw RuntimeError("FFI call failed: " + std::string(e.what()));
         }

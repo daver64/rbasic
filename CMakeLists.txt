@@ -94,6 +94,12 @@ add_library(rbasic_runtime STATIC
     include/ffi.h
     src/ffi_utils.cpp
     include/ffi_utils.h
+    src/memory_manager.cpp
+    include/memory_manager.h
+    src/unified_value.cpp
+    include/unified_value.h
+    src/safe_ffi.cpp
+    include/safe_ffi.h
 )
 
 # Include directories for runtime library
@@ -143,6 +149,9 @@ add_executable(rbasic_tests
     src/repl.cpp
     src/math_utils.cpp
     src/ffi_utils.cpp
+    src/memory_manager.cpp
+    src/unified_value.cpp
+    src/safe_ffi.cpp
 )
 
 target_include_directories(rbasic_tests PRIVATE include)
