@@ -48,6 +48,27 @@ ffi integer SDL_GetPerformanceFrequency() from "SDL2.dll";
 // Event handling
 ffi integer SDL_PollEvent(event as pointer) from "SDL2.dll";
 
+// Texture functions
+ffi pointer SDL_CreateTexture(renderer as pointer, format as integer, access as integer, w as integer, h as integer) from "SDL2.dll";
+ffi integer SDL_DestroyTexture(texture as pointer) from "SDL2.dll";
+ffi integer SDL_QueryTexture(texture as pointer, format as pointer, access as pointer, w as pointer, h as pointer) from "SDL2.dll";
+ffi integer SDL_RenderCopy(renderer as pointer, texture as pointer, src as pointer, dest as pointer) from "SDL2.dll";
+ffi integer SDL_SetTextureBlendMode(texture as pointer, blend_mode as integer) from "SDL2.dll";
+ffi integer SDL_SetTextureAlphaMod(texture as pointer, alpha as integer) from "SDL2.dll";
+ffi integer SDL_SetTextureColorMod(texture as pointer, r as integer, g as integer, b as integer) from "SDL2.dll";
+
+// Texture constants
+var SDL_PIXELFORMAT_RGBA8888 = 373694468;
+var SDL_TEXTUREACCESS_STATIC = 0;
+var SDL_TEXTUREACCESS_STREAMING = 1;
+var SDL_TEXTUREACCESS_TARGET = 2;
+
+// Blend modes
+var SDL_BLENDMODE_NONE = 0;
+var SDL_BLENDMODE_BLEND = 1;
+var SDL_BLENDMODE_ADD = 2;
+var SDL_BLENDMODE_MOD = 4;
+
 // Timing
 ffi integer SDL_Delay(ms as integer) from "SDL2.dll";
 

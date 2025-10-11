@@ -52,11 +52,12 @@ Token Parser::consume(TokenType type, const std::string& message) {
 Token Parser::consumeIdentifierOrKeyword(const std::string& message) {
     Token current_token = peek();
     
-    // Allow identifiers and keywords that can serve as parameter names
+    // Allow identifiers and keywords that can serve as parameter names or types
     if (current_token.type == TokenType::IDENTIFIER ||
         current_token.type == TokenType::TYPE ||
         current_token.type == TokenType::VAR ||
-        current_token.type == TokenType::FUNCTION) {
+        current_token.type == TokenType::FUNCTION ||
+        current_token.type == TokenType::POINTER) {
         return advance();
     }
     
@@ -514,7 +515,7 @@ std::unique_ptr<Statement> Parser::functionDeclaration() {
             parameters.push_back(param.value);
             
             if (match({TokenType::AS})) {
-                auto type = consume(TokenType::IDENTIFIER, "Expected parameter type");
+                auto type = consumeIdentifierOrKeyword("Expected parameter type");
                 paramTypes.push_back(type.value);
             } else {
                 paramTypes.push_back("variant");
@@ -526,7 +527,7 @@ std::unique_ptr<Statement> Parser::functionDeclaration() {
     
     std::string returnType = "variant";
     if (match({TokenType::AS})) {
-        auto type = consume(TokenType::IDENTIFIER, "Expected return type");
+        auto type = consumeIdentifierOrKeyword("Expected return type");
         returnType = type.value;
     }
     
@@ -581,7 +582,7 @@ std::unique_ptr<Statement> Parser::dimStatement() {
     
     std::string type = "variant";
     if (match({TokenType::AS})) {
-        auto typeToken = consume(TokenType::IDENTIFIER, "Expected type name");
+        auto typeToken = consumeIdentifierOrKeyword("Expected type name");
         type = typeToken.value;
     }
     
@@ -713,7 +714,7 @@ std::unique_ptr<Statement> Parser::ffiStatement() {
         advance(); // consume 'pointer' keyword
         returnType = "pointer";
     } else {
-        Token returnTypeToken = consume(TokenType::IDENTIFIER, "Expected return type after 'ffi'");
+        Token returnTypeToken = consumeIdentifierOrKeyword("Expected return type after 'ffi'");
         returnType = returnTypeToken.value;
     }
     
@@ -747,7 +748,7 @@ std::unique_ptr<Statement> Parser::ffiStatement() {
                 advance(); // consume 'pointer' keyword
                 typeStr = "pointer";
             } else {
-                Token paramType = consume(TokenType::IDENTIFIER, "Expected parameter type after 'as'");
+                Token paramType = consumeIdentifierOrKeyword("Expected parameter type after 'as'");
                 typeStr = paramType.value;
             }
             
