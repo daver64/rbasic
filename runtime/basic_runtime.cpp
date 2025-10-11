@@ -1184,8 +1184,8 @@ void terminal_cleanup() {
     rbasic::Terminal::cleanup();
 }
 
-bool terminal_supports_color() {
-    return rbasic::Terminal::supportsColor();
+bool terminal_supports_colour() {
+    return rbasic::Terminal::supportsColour();
 }
 
 void terminal_clear() {
@@ -1208,23 +1208,23 @@ BasicValue terminal_get_cursor_col() {
     return col;
 }
 
-void terminal_set_color(int foreground, int background) {
-    rbasic::Terminal::setColor(static_cast<rbasic::Color>(foreground), 
-                               static_cast<rbasic::Color>(background));
+void terminal_set_colour(int foreground, int background) {
+    rbasic::Terminal::setColour(static_cast<rbasic::Colour>(foreground), 
+                               static_cast<rbasic::Colour>(background));
 }
 
-void terminal_reset_color() {
-    rbasic::Terminal::resetColor();
+void terminal_reset_colour() {
+    rbasic::Terminal::resetColour();
 }
 
 void terminal_print(const std::string& text, int foreground, int background) {
-    rbasic::Terminal::print(text, static_cast<rbasic::Color>(foreground), 
-                            static_cast<rbasic::Color>(background));
+    rbasic::Terminal::print(text, static_cast<rbasic::Colour>(foreground), 
+                            static_cast<rbasic::Colour>(background));
 }
 
 void terminal_println(const std::string& text, int foreground, int background) {
-    rbasic::Terminal::println(text, static_cast<rbasic::Color>(foreground), 
-                              static_cast<rbasic::Color>(background));
+    rbasic::Terminal::println(text, static_cast<rbasic::Colour>(foreground), 
+                              static_cast<rbasic::Colour>(background));
 }
 
 BasicValue terminal_get_rows() {
@@ -1247,8 +1247,8 @@ BasicValue terminal_getch() {
     return rbasic::Terminal::getch();
 }
 
-BasicValue terminal_getline(const std::string& prompt, int promptColor) {
-    return rbasic::Terminal::getline(prompt, static_cast<rbasic::Color>(promptColor));
+BasicValue terminal_getline(const std::string& prompt, int promptColour) {
+    return rbasic::Terminal::getline(prompt, static_cast<rbasic::Colour>(promptColour));
 }
 
 void terminal_show_cursor(bool visible) {
@@ -1269,8 +1269,8 @@ BasicValue func_terminal_cleanup() {
     return 0;
 }
 
-BasicValue func_terminal_supports_color() {
-    return terminal_supports_color();
+BasicValue func_terminal_supports_colour() {
+    return terminal_supports_colour();
 }
 
 BasicValue func_terminal_clear() {
@@ -1291,13 +1291,13 @@ BasicValue func_terminal_get_cursor_col() {
     return terminal_get_cursor_col();
 }
 
-BasicValue func_terminal_set_color(const BasicValue& foreground, const BasicValue& background) {
-    terminal_set_color(to_int(foreground), to_int(background));
+BasicValue func_terminal_set_colour(const BasicValue& foreground, const BasicValue& background) {
+    terminal_set_colour(to_int(foreground), to_int(background));
     return 0;
 }
 
-BasicValue func_terminal_reset_color() {
-    terminal_reset_color();
+BasicValue func_terminal_reset_colour() {
+    terminal_reset_colour();
     return 0;
 }
 
@@ -1360,8 +1360,8 @@ BasicValue func_terminal_getline(const BasicValue& prompt) {
     return terminal_getline(to_string(prompt), -1);
 }
 
-BasicValue func_terminal_getline(const BasicValue& prompt, const BasicValue& promptColor) {
-    return terminal_getline(to_string(prompt), to_int(promptColor));
+BasicValue func_terminal_getline(const BasicValue& prompt, const BasicValue& promptColour) {
+    return terminal_getline(to_string(prompt), to_int(promptColour));
 }
 
 BasicValue func_terminal_show_cursor(const BasicValue& visible) {
@@ -1949,7 +1949,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         
         // Try different 5-parameter patterns in order of likelihood
         
-        // Pattern: (pointer, int, int, int, int) -> int (SDL2 SetRenderDrawColor)
+        // Pattern: (pointer, int, int, int, int) -> int (SDL2 SetRenderDrawColour)
         if (std::holds_alternative<void*>(arg1) && 
             (std::holds_alternative<double>(arg2) || std::holds_alternative<int>(arg2)) &&
             (std::holds_alternative<double>(arg3) || std::holds_alternative<int>(arg3)) &&
@@ -3275,18 +3275,18 @@ BasicValue get_constant(const std::string& name) {
     if (name == "STD_OUTPUT_HANDLE") return BasicValue(static_cast<double>(-11));
     if (name == "STD_ERROR_HANDLE") return BasicValue(static_cast<double>(-12));
     
-    // Common color constants for convenience
-    if (name == "COLOR_BLACK") return BasicValue(static_cast<double>(0x000000));
-    if (name == "COLOR_WHITE") return BasicValue(static_cast<double>(0xFFFFFF));
-    if (name == "COLOR_RED") return BasicValue(static_cast<double>(0xFF0000));
-    if (name == "COLOR_GREEN") return BasicValue(static_cast<double>(0x00FF00));
-    if (name == "COLOR_BLUE") return BasicValue(static_cast<double>(0x0000FF));
-    if (name == "COLOR_YELLOW") return BasicValue(static_cast<double>(0xFFFF00));
-    if (name == "COLOR_MAGENTA") return BasicValue(static_cast<double>(0xFF00FF));
-    if (name == "COLOR_CYAN") return BasicValue(static_cast<double>(0x00FFFF));
-    if (name == "COLOR_GRAY") return BasicValue(static_cast<double>(0x808080));
-    if (name == "COLOR_DARKGRAY") return BasicValue(static_cast<double>(0x404040));
-    if (name == "COLOR_LIGHTGRAY") return BasicValue(static_cast<double>(0xC0C0C0));
+    // Common colour constants for convenience
+    if (name == "COLOUR_BLACK") return BasicValue(static_cast<double>(0x000000));
+    if (name == "COLOUR_WHITE") return BasicValue(static_cast<double>(0xFFFFFF));
+    if (name == "COLOUR_RED") return BasicValue(static_cast<double>(0xFF0000));
+    if (name == "COLOUR_GREEN") return BasicValue(static_cast<double>(0x00FF00));
+    if (name == "COLOUR_BLUE") return BasicValue(static_cast<double>(0x0000FF));
+    if (name == "COLOUR_YELLOW") return BasicValue(static_cast<double>(0xFFFF00));
+    if (name == "COLOUR_MAGENTA") return BasicValue(static_cast<double>(0xFF00FF));
+    if (name == "COLOUR_CYAN") return BasicValue(static_cast<double>(0x00FFFF));
+    if (name == "COLOUR_GRAY") return BasicValue(static_cast<double>(0x808080));
+    if (name == "COLOUR_DARKGRAY") return BasicValue(static_cast<double>(0x404040));
+    if (name == "COLOUR_LIGHTGRAY") return BasicValue(static_cast<double>(0xC0C0C0));
     
     // Math constants
     if (name == "PI") return BasicValue(3.14159265358979323846);

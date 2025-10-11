@@ -26,13 +26,13 @@ function main() {
         sdl_clear_blue();
         
         // Draw yellow filled triangle
-        sdl_set_color(255, 255, 0); // Yellow
+        sdl_set_colour(255, 255, 0); // Yellow
         sdl_fill_triangle(400, 150,  // Top point
                          350, 250,  // Bottom left
                          450, 250); // Bottom right
         
         // Draw red rectangle outline
-        sdl_set_color(255, 0, 0); // Red
+        sdl_set_colour(255, 0, 0); // Red
         sdl_draw_rect(300, 350, 200, 100); // x, y, width, height
         
         // Present the frame

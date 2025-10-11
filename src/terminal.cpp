@@ -19,7 +19,7 @@ namespace rbasic {
 // Terminal state structure for proper encapsulation
 struct TerminalState {
     bool initialized = false;
-    bool colorSupported = false;
+    bool colourSupported = false;
     
 #ifdef _WIN32
     void* hConsole = nullptr;
@@ -61,29 +61,29 @@ bool Terminal::initialize() {
     DWORD consoleMode = 0;
     if (GetConsoleMode(state.hConsole, &consoleMode)) {
         if (SetConsoleMode(state.hConsole, consoleMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)) {
-            state.colorSupported = true;
+            state.colourSupported = true;
         } else {
             // If ANSI escape sequences fail, we can still use Windows Console API
-            state.colorSupported = true;
+            state.colourSupported = true;
         }
     } else {
         // Even if we can't get/set console mode, we can still try Windows Console API
-        state.colorSupported = true;
+        state.colourSupported = true;
     }
     
     // Save original input mode
     GetConsoleMode(state.hStdin, &state.originalConsoleMode);
     
 #else
-    // Linux/macOS: Check for color support via environment
+    // Linux/macOS: Check for colour support via environment
     const char* term = getenv("TERM");
-    if (term && (strstr(term, "color") || strstr(term, "xterm") || strstr(term, "screen"))) {
-        state.colorSupported = true;
+    if (term && (strstr(term, "colour") || strstr(term, "xterm") || strstr(term, "screen"))) {
+        state.colourSupported = true;
     }
     
     // Check if stdout is a terminal
     if (isatty(STDOUT_FILENO)) {
-        state.colorSupported = true;
+        state.colourSupported = true;
     }
     
     // Save original terminal attributes for proper cleanup
@@ -103,7 +103,7 @@ void Terminal::cleanup() {
         return;
     }
     
-    resetColor();
+    resetColour();
     showCursor(true);
     setEcho(true);
     
@@ -126,9 +126,9 @@ void Terminal::cleanup() {
     state.initialized = false;
 }
 
-bool Terminal::supportsColor() {
+bool Terminal::supportsColour() {
     TerminalState& state = getTerminalState();
-    return state.colorSupported;
+    return state.colourSupported;
 }
 
 void Terminal::clear() {
@@ -278,18 +278,18 @@ void Terminal::restoreCursor() {
 #endif
 }
 
-void Terminal::setColor(Color foreground, Color background) {
+void Terminal::setColour(Colour foreground, Colour background) {
     TerminalState& state = getTerminalState();
     
-    if (!state.colorSupported) {
+    if (!state.colourSupported) {
         return;
     }
     
 #ifdef _WIN32
     WORD attributes = 0;
     
-    // Set foreground color
-    if (foreground != Color::DEFAULT) {
+    // Set foreground colour
+    if (foreground != Colour::DEFAULT) {
         int fg = static_cast<int>(foreground);
         if (fg >= 8) {
             attributes |= FOREGROUND_INTENSITY;
@@ -302,8 +302,8 @@ void Terminal::setColor(Color foreground, Color background) {
         attributes |= FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE; // White
     }
     
-    // Set background color
-    if (background != Color::DEFAULT) {
+    // Set background colour
+    if (background != Colour::DEFAULT) {
         int bg = static_cast<int>(background);
         if (bg >= 8) {
             attributes |= BACKGROUND_INTENSITY;
@@ -319,7 +319,7 @@ void Terminal::setColor(Color foreground, Color background) {
     std::ostringstream oss;
     oss << "\033[";
     
-    if (foreground != Color::DEFAULT) {
+    if (foreground != Colour::DEFAULT) {
         int fg = static_cast<int>(foreground);
         if (fg >= 8) {
             oss << "1;"; // Bold/bright
@@ -328,8 +328,8 @@ void Terminal::setColor(Color foreground, Color background) {
         oss << (30 + fg);
     }
     
-    if (background != Color::DEFAULT) {
-        if (foreground != Color::DEFAULT) oss << ";";
+    if (background != Colour::DEFAULT) {
+        if (foreground != Colour::DEFAULT) oss << ";";
         int bg = static_cast<int>(background);
         if (bg >= 8) bg -= 8; // Background doesn't have bright variants in basic ANSI
         oss << (40 + bg);
@@ -340,10 +340,10 @@ void Terminal::setColor(Color foreground, Color background) {
 #endif
 }
 
-void Terminal::resetColor() {
+void Terminal::resetColour() {
     TerminalState& state = getTerminalState();
     
-    if (!state.colorSupported) {
+    if (!state.colourSupported) {
         return;
     }
     
@@ -354,17 +354,17 @@ void Terminal::resetColor() {
 #endif
 }
 
-void Terminal::print(const std::string& text, Color foreground, Color background) {
-    if (foreground != Color::DEFAULT || background != Color::DEFAULT) {
-        setColor(foreground, background);
+void Terminal::print(const std::string& text, Colour foreground, Colour background) {
+    if (foreground != Colour::DEFAULT || background != Colour::DEFAULT) {
+        setColour(foreground, background);
         std::cout << text << std::flush;
-        resetColor();
+        resetColour();
     } else {
         std::cout << text << std::flush;
     }
 }
 
-void Terminal::println(const std::string& text, Color foreground, Color background) {
+void Terminal::println(const std::string& text, Colour foreground, Colour background) {
     print(text + "\n", foreground, background);
 }
 
@@ -430,9 +430,9 @@ int Terminal::getch() {
 #endif
 }
 
-std::string Terminal::getline(const std::string& prompt, Color promptColor) {
+std::string Terminal::getline(const std::string& prompt, Colour promptColour) {
     if (!prompt.empty()) {
-        print(prompt, promptColor);
+        print(prompt, promptColour);
     }
     
     std::string line;

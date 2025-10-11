@@ -20,7 +20,7 @@ This is a C-leaning BASIC language transpiler written in C++. The project suppor
 4. **REPL** - Interactive Read-Eval-Print Loop with multi-line support and meta commands
 5. **Code Generator** - Transpiles AST to optimized C++ source code
 6. **Runtime Library** - Shared function implementations for both execution modes with OpenMP parallelization
-7. **Cross-Platform Terminal** - Color support and cursor management for all platforms
+7. **Cross-Platform Terminal** - Colour support and cursor management for all platforms
 8. **Automatic Parallelization** - OpenMP-based multi-core optimization for large array operations
 9. **Import System** - Complete modular programming with compile-time and runtime import resolution
 10. **Foreign Function Interface (FFI)** - Comprehensive C library integration with extensive API support
@@ -107,7 +107,7 @@ The FFI system provides comprehensive C library integration:
 
 ### SDL2 Integration
 - **Window Management**: Window creation, destruction, and property control
-- **Rendering System**: Hardware-accelerated 2D rendering with color management
+- **Rendering System**: Hardware-accelerated 2D rendering with colour management
 - **Filled Shapes**: Proper solid triangle rendering with SDL2_gfx `filledTrigonRGBA`
 - **Event Handling**: Complete keyboard and mouse event processing
   - **Keyboard Events**: Full scan code support with built-in SDL_SCANCODE_* constants
@@ -165,7 +165,7 @@ The FFI system provides comprehensive C library integration:
 
 ### SDL2 Integration
 - **Window Management**: Window creation, destruction, and property control
-- **Rendering System**: Hardware-accelerated 2D rendering with color management
+- **Rendering System**: Hardware-accelerated 2D rendering with colour management
 - **Event Handling**: Complete keyboard and mouse event processing
   - **Keyboard Events**: Full scan code support with built-in SDL_SCANCODE_* constants
   - **Mouse Events**: Click detection, movement tracking, button state management

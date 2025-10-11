@@ -1,10 +1,10 @@
 // Graphics Module Test - Demonstrates the new graphics system
-// Tests texture loading, coordinate systems, and color management
+// Tests texture loading, coordinate systems, and colour management
 
 import "blib/sdl2.bas";
 import "blib/graphics/core.bas";
 import "blib/graphics/textures.bas";
-import "blib/graphics/colors.bas";
+import "blib/graphics/colours.bas";
 
 print("=== Graphics Module Test ===");
 
@@ -24,10 +24,10 @@ if (graphics_init(sdl_renderer, 800, 600) == 0) {
 // Show module information
 graphics_core_info();
 graphics_textures_info();
-graphics_colors_info();
+graphics_colours_info();
 
 var frame_count = 0;
-var test_phase = 0; // 0 = coordinate system demo, 1 = color demo
+var test_phase = 0; // 0 = coordinate system demo, 1 = colour demo
 
 print("Starting graphics test...");
 print("Press ESCAPE to exit, any other key to switch test phase");
@@ -68,25 +68,25 @@ while (sdl_is_running()) {
         // Note: Text rendering will be added in fonts module
         
     } else if (test_phase == 1) {
-        // Test color system
+        // Test colour system
         
         // Draw rainbow gradient using HSV
         var x = 0;
         while (x < 800) {
             var hue = (x / 800.0) * 360.0;
-            var color = hsv_to_rgb(hue, 1.0, 1.0);
-            set_color_packed(color);
+            var colour = hsv_to_rgb(hue, 1.0, 1.0);
+            set_colour_packed(colour);
             graphics_draw_line(x, 100, x, 200);
             x = x + 2;
         }
         
-        // Draw color mixing demo
+        // Draw colour mixing demo
         var time = sdl_get_ticks() / 1000.0;
         var mix_ratio = (sin(time) + 1.0) / 2.0; // 0.0 to 1.0
-        var mixed_color = mix_colors(COLOR_RED, COLOR_BLUE, mix_ratio);
-        set_color_packed(mixed_color);
+        var mixed_colour = mix_colours(COLOUR_RED, COLOUR_BLUE, mix_ratio);
+        set_colour_packed(mixed_colour);
         
-        // Draw some shapes with mixed color
+        // Draw some shapes with mixed colour
         var y = 250;
         while (y < 350) {
             graphics_draw_line(200, y, 600, y);
@@ -97,8 +97,8 @@ while (sdl_is_running()) {
         var brightness_x = 100;
         var brightness_val = -1.0;
         while (brightness_x < 700) {
-            var bright_color = adjust_brightness(COLOR_GREEN, brightness_val);
-            set_color_packed(bright_color);
+            var bright_colour = adjust_brightness(COLOUR_GREEN, brightness_val);
+            set_colour_packed(bright_colour);
             graphics_draw_line(brightness_x, 400, brightness_x, 500);
             brightness_x = brightness_x + 2;
             brightness_val = brightness_val + (2.0 / 600.0); // -1.0 to 1.0

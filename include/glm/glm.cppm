@@ -2411,7 +2411,7 @@ export namespace glm {
 		using glm::half_pi;
 		using glm::hermite;
 		using glm::highestBitValue;
-		using glm::hsvColor;
+		using glm::hsvColour;
 		using glm::identity;
 		using glm::imulExtended;
 		using glm::infinitePerspective;
@@ -2587,7 +2587,7 @@ export namespace glm {
 		using glm::repeat;
 		using glm::rgb2YCoCg;
 		using glm::rgb2YCoCgR;
-		using glm::rgbColor;
+		using glm::rgbColour;
 		using glm::rightHanded;
 		using glm::roll;
 		using glm::root_five;

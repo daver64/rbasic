@@ -42,21 +42,21 @@ while (sdl_is_running()) {
     
     // === POINT DRAWING DEMO ===
     // Static pixel art pattern
-    sdl_set_color(255, 0, 0);  // Red
+    sdl_set_colour(255, 0, 0);  // Red
     sdl_draw_point(100, 100);
     sdl_draw_point(101, 100);
     sdl_draw_point(102, 100);
     sdl_draw_point(103, 100);
     sdl_draw_point(104, 100);
     
-    sdl_set_color(0, 255, 0);  // Green
+    sdl_set_colour(0, 255, 0);  // Green
     sdl_draw_point(100, 101);
     sdl_draw_point(101, 101);
     sdl_draw_point(102, 101);
     sdl_draw_point(103, 101);
     sdl_draw_point(104, 101);
     
-    sdl_set_color(0, 0, 255);  // Blue
+    sdl_set_colour(0, 0, 255);  // Blue
     sdl_draw_point(100, 102);
     sdl_draw_point(101, 102);
     sdl_draw_point(102, 102);
@@ -67,7 +67,7 @@ while (sdl_is_running()) {
     // Moving point animation
     x_pos = 120 + (elapsed_ms / 20) % 400;
     print("x_pos updated: " + str(x_pos));
-    sdl_set_color(255, 255, 0);  // Yellow
+    sdl_set_colour(255, 255, 0);  // Yellow
     sdl_draw_point(x_pos, 150);
     sdl_draw_point(x_pos + 1, 150);
     sdl_draw_point(x_pos, 151);
@@ -75,7 +75,7 @@ while (sdl_is_running()) {
     
     // === LINE DRAWING DEMO ===
     // Reference grid
-    sdl_set_color(64, 64, 64);  // Dark gray
+    sdl_set_colour(64, 64, 64);  // Dark gray
     var grid_x = 200;
     while (grid_x < 600) {
         sdl_draw_line(grid_x, 200, grid_x, 400);
@@ -92,7 +92,7 @@ while (sdl_is_running()) {
     var cross_x = 400 + 100 * cos(elapsed_ms / 1000.0);
     var cross_y = 300 + 50 * sin(elapsed_ms / 500.0);
     
-    sdl_set_color(255, 255, 255);  // White
+    sdl_set_colour(255, 255, 255);  // White
     sdl_draw_line(cross_x - 20, cross_y, cross_x + 20, cross_y);
     sdl_draw_line(cross_x, cross_y - 20, cross_x, cross_y + 20);
     
@@ -103,7 +103,7 @@ while (sdl_is_running()) {
     var timer_width = 300;
     var timer_progress = (elapsed_ms / 100) % timer_width;
     
-    sdl_set_color(0, 200, 0);  // Bright green
+    sdl_set_colour(0, 200, 0);  // Bright green
     var px = 0;
     while (px <= timer_progress) {
         sdl_draw_point(timer_x + px, timer_y);
@@ -113,7 +113,7 @@ while (sdl_is_running()) {
     }
     
     // Timer border
-    sdl_set_color(255, 255, 255);
+    sdl_set_colour(255, 255, 255);
     sdl_draw_line(timer_x, timer_y - 5, timer_x + timer_width, timer_y - 5);
     sdl_draw_line(timer_x, timer_y + 5, timer_x + timer_width, timer_y + 5);
     sdl_draw_line(timer_x, timer_y - 5, timer_x, timer_y + 5);
@@ -139,13 +139,13 @@ while (sdl_is_running()) {
     }
     
     // Status indicator
-    var status_color = 0;
+    var status_colour = 0;
     if (resize_cycle >= 5 && resize_cycle < 10) {
-        status_color = 255;  // Red for large mode
-        sdl_set_color(255, 0, 0);
+        status_colour = 255;  // Red for large mode
+        sdl_set_colour(255, 0, 0);
     } else {
-        status_color = 255;  // Green for normal mode
-        sdl_set_color(0, 255, 0);
+        status_colour = 255;  // Green for normal mode
+        sdl_set_colour(0, 255, 0);
     }
     
     // Status indicator circle made of points

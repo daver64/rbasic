@@ -13,8 +13,8 @@ velocity.z = 10.0;
 print("Modified velocity: (" + velocity.x + ", " + velocity.y + ", " + velocity.z + ")");
 
 // Test vec4 creation
-var color = vec4(0.8, 0.6, 0.4, 1.0);
-print("Color RGBA: (" + color.x + ", " + color.y + ", " + color.z + ", " + color.w + ")");
+var colour = vec4(0.8, 0.6, 0.4, 1.0);
+print("Colour RGBA: (" + colour.x + ", " + colour.y + ", " + colour.z + ", " + colour.w + ")");
 
 // Test vector addition
 var pos1 = vec3(1.0, 2.0, 3.0);

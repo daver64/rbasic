@@ -1301,7 +1301,7 @@ function sdl_texture_demo() {
             
             // Display texture for 5 seconds
             for (var frame = 0; frame < 300; frame = frame + 1) {
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+                SDL_SetRenderDrawColour(renderer, 0, 0, 0, 255);
                 SDL_RenderClear(renderer);
                 SDL_RenderCopy(renderer, texture, get_constant("NULL"), get_constant("NULL"));
                 SDL_RenderPresent(renderer);

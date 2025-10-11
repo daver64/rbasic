@@ -148,14 +148,14 @@ function sdl_get_renderer() as pointer {
     return sdl_renderer;
 }
 
-// Clear screen to blue color
+// Clear screen to blue colour
 function sdl_clear_blue() {
     SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255); // Blue background
     SDL_RenderClear(sdl_renderer);
 }
 
-// Set drawing color
-function sdl_set_color(r as integer, g as integer, b as integer) {
+// Set drawing colour
+function sdl_set_colour(r as integer, g as integer, b as integer) {
     SDL_SetRenderDrawColor(sdl_renderer, r, g, b, 255);
 }
 
@@ -205,7 +205,7 @@ function sdl_fill_rect(x as integer, y as integer, w as integer, h as integer) {
 function sdl_fill_triangle(x1 as integer, y1 as integer, x2 as integer, y2 as integer, x3 as integer, y3 as integer) {
     // Use SDL2_gfx for proper filled triangle rendering
     // filledTrigonRGBA(renderer, x1, y1, x2, y2, x3, y3, r, g, b, a)
-    // Yellow color: r=255, g=255, b=0, a=255
+    // Yellow colour: r=255, g=255, b=0, a=255
     filledTrigonRGBA(sdl_renderer, x1, y1, x2, y2, x3, y3, 255, 255, 0, 255);
 }
 
@@ -213,7 +213,7 @@ function sdl_fill_triangle(x1 as integer, y1 as integer, x2 as integer, y2 as in
 function sdl_fill_circle(x as integer, y as integer, radius as integer) {
     // Use SDL2_gfx for filled circle rendering
     // filledCircleRGBA(renderer, x, y, rad, r, g, b, a)
-    // Green color: r=0, g=255, b=0, a=255
+    // Green colour: r=0, g=255, b=0, a=255
     filledCircleRGBA(sdl_renderer, x, y, radius, 0, 255, 0, 255);
 }
 
@@ -221,27 +221,27 @@ function sdl_fill_circle(x as integer, y as integer, radius as integer) {
 function sdl_fill_ellipse(x as integer, y as integer, rx as integer, ry as integer) {
     // Use SDL2_gfx for filled ellipse rendering
     // filledEllipseRGBA(renderer, x, y, rx, ry, r, g, b, a)
-    // Purple color: r=128, g=0, b=128, a=255
+    // Purple colour: r=128, g=0, b=128, a=255
     filledEllipseRGBA(sdl_renderer, x, y, rx, ry, 128, 0, 128, 255);
 }
 
-// Draw a colored line using SDL2_gfx
-function sdl_draw_colored_line(x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer) {
-    // Use SDL2_gfx for colored line rendering
+// Draw a coloured line using SDL2_gfx
+function sdl_draw_coloured_line(x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer) {
+    // Use SDL2_gfx for coloured line rendering
     // lineRGBA(renderer, x1, y1, x2, y2, r, g, b, a)
     lineRGBA(sdl_renderer, x1, y1, x2, y2, r, g, b, 255);
 }
 
 // Draw a rectangle outline using SDL2_gfx
-function sdl_draw_colored_rect(x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer) {
-    // Use SDL2_gfx for colored rectangle outline
+function sdl_draw_coloured_rect(x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer) {
+    // Use SDL2_gfx for coloured rectangle outline
     // rectangleRGBA(renderer, x1, y1, x2, y2, r, g, b, a)
     rectangleRGBA(sdl_renderer, x1, y1, x2, y2, r, g, b, 255);
 }
 
 // Draw a filled rectangle using SDL2_gfx
-function sdl_fill_colored_rect(x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer) {
-    // Use SDL2_gfx for filled colored rectangle
+function sdl_fill_coloured_rect(x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer) {
+    // Use SDL2_gfx for filled coloured rectangle
     // boxRGBA(renderer, x1, y1, x2, y2, r, g, b, a)
     boxRGBA(sdl_renderer, x1, y1, x2, y2, r, g, b, 255);
 }
@@ -310,8 +310,8 @@ function sdl_cleanup_resources() {
 
 print("SDL2 Minimal Library loaded");
 print("Functions: sdl_init(), sdl_cleanup(), sdl_clear_blue(), sdl_present(), sdl_process_events()");
-print("Drawing: sdl_set_color(), sdl_draw_point(), sdl_draw_line(), sdl_draw_rect(), sdl_fill_rect(), sdl_fill_triangle(), sdl_fill_circle(), sdl_fill_ellipse()");
-print("Colored: sdl_draw_colored_line(), sdl_draw_colored_rect(), sdl_fill_colored_rect()");
+print("Drawing: sdl_set_colour(), sdl_draw_point(), sdl_draw_line(), sdl_draw_rect(), sdl_fill_rect(), sdl_fill_triangle(), sdl_fill_circle(), sdl_fill_ellipse()");
+print("Coloured: sdl_draw_coloured_line(), sdl_draw_coloured_rect(), sdl_fill_coloured_rect()");
 print("Window: sdl_set_window_title(), sdl_set_window_size()");
 print("Timing: sdl_get_ticks(), sdl_get_performance_time()");
 print("Memory: sdl_free_resource(), sdl_cleanup_resources()");

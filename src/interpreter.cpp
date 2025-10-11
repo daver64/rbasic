@@ -1129,8 +1129,8 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
         return true;
     }
     
-    if (node.name == "terminal_supports_color") {
-        lastValue = Terminal::supportsColor();
+    if (node.name == "terminal_supports_colour") {
+        lastValue = Terminal::supportsColour();
         return true;
     }
     
@@ -1174,19 +1174,19 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
         return true;
     }
     
-    if (node.name == "terminal_set_color") {
+    if (node.name == "terminal_set_colour") {
         if (args.size() >= 2) {
-            Terminal::setColor(static_cast<Color>(TypeUtils::toInt(args[0])), 
-                              static_cast<Color>(TypeUtils::toInt(args[1])));
+            Terminal::setColour(static_cast<Colour>(TypeUtils::toInt(args[0])), 
+                              static_cast<Colour>(TypeUtils::toInt(args[1])));
         } else if (args.size() >= 1) {
-            Terminal::setColor(static_cast<Color>(TypeUtils::toInt(args[0])));
+            Terminal::setColour(static_cast<Colour>(TypeUtils::toInt(args[0])));
         }
         lastValue = 0;
         return true;
     }
     
-    if (node.name == "terminal_reset_color") {
-        Terminal::resetColor();
+    if (node.name == "terminal_reset_colour") {
+        Terminal::resetColour();
         lastValue = 0;
         return true;
     }
@@ -1194,11 +1194,11 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
     if (node.name == "terminal_print") {
         if (args.size() >= 3) {
             Terminal::print(TypeUtils::toString(args[0]), 
-                           static_cast<Color>(TypeUtils::toInt(args[1])), 
-                           static_cast<Color>(TypeUtils::toInt(args[2])));
+                           static_cast<Colour>(TypeUtils::toInt(args[1])), 
+                           static_cast<Colour>(TypeUtils::toInt(args[2])));
         } else if (args.size() >= 2) {
             Terminal::print(TypeUtils::toString(args[0]), 
-                           static_cast<Color>(TypeUtils::toInt(args[1])));
+                           static_cast<Colour>(TypeUtils::toInt(args[1])));
         } else if (args.size() >= 1) {
             Terminal::print(TypeUtils::toString(args[0]));
         }
@@ -1209,11 +1209,11 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
     if (node.name == "terminal_println") {
         if (args.size() >= 3) {
             Terminal::println(TypeUtils::toString(args[0]), 
-                             static_cast<Color>(TypeUtils::toInt(args[1])), 
-                             static_cast<Color>(TypeUtils::toInt(args[2])));
+                             static_cast<Colour>(TypeUtils::toInt(args[1])), 
+                             static_cast<Colour>(TypeUtils::toInt(args[2])));
         } else if (args.size() >= 2) {
             Terminal::println(TypeUtils::toString(args[0]), 
-                             static_cast<Color>(TypeUtils::toInt(args[1])));
+                             static_cast<Colour>(TypeUtils::toInt(args[1])));
         } else if (args.size() >= 1) {
             Terminal::println(TypeUtils::toString(args[0]));
         } else {
@@ -1250,7 +1250,7 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
     if (node.name == "terminal_getline") {
         if (args.size() >= 2) {
             lastValue = Terminal::getline(TypeUtils::toString(args[0]), 
-                                      static_cast<Color>(TypeUtils::toInt(args[1])));
+                                      static_cast<Colour>(TypeUtils::toInt(args[1])));
         } else if (args.size() >= 1) {
             lastValue = Terminal::getline(TypeUtils::toString(args[0]));
         } else {
@@ -2105,7 +2105,7 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
                 }
             }
             
-            // Pattern: (pointer, int, int, int, int) - SDL2 SetRenderDrawColor, RenderDrawLine
+            // Pattern: (pointer, int, int, int, int) - SDL2 SetRenderDrawColour, RenderDrawLine
             else if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) &&
                      (param2Type == "int" || param2Type == "integer") &&
                      (param3Type == "int" || param3Type == "integer") &&

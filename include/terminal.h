@@ -4,8 +4,8 @@
 
 namespace rbasic {
 
-// Terminal color constants
-enum class Color {
+// Terminal colour constants
+enum class Colour {
     BLACK = 0,
     RED = 1,
     GREEN = 2,
@@ -25,17 +25,17 @@ enum class Color {
     DEFAULT = -1
 };
 
-// Terminal interface for cross-platform colored output and input
+// Terminal interface for cross-platform coloured output and input
 class Terminal {
 public:
-    // Initialize terminal (setup colors, etc.)
+    // Initialize terminal (setup colours, etc.)
     static bool initialize();
     
     // Cleanup terminal (restore original state)
     static void cleanup();
     
-    // Check if terminal supports colors
-    static bool supportsColor();
+    // Check if terminal supports colours
+    static bool supportsColour();
     
     // Clear screen
     static void clear();
@@ -50,17 +50,17 @@ public:
     static void saveCursor();
     static void restoreCursor();
     
-    // Set text colors
-    static void setColor(Color foreground, Color background = Color::DEFAULT);
+    // Set text colours
+    static void setColour(Colour foreground, Colour background = Colour::DEFAULT);
     
-    // Reset colors to default
-    static void resetColor();
+    // Reset colours to default
+    static void resetColour();
     
-    // Output colored text
-    static void print(const std::string& text, Color foreground = Color::DEFAULT, Color background = Color::DEFAULT);
+    // Output coloured text
+    static void print(const std::string& text, Colour foreground = Colour::DEFAULT, Colour background = Colour::DEFAULT);
     
     // Print with newline
-    static void println(const std::string& text = "", Color foreground = Color::DEFAULT, Color background = Color::DEFAULT);
+    static void println(const std::string& text = "", Colour foreground = Colour::DEFAULT, Colour background = Colour::DEFAULT);
     
     // Get terminal size
     static void getSize(int& rows, int& cols);
@@ -71,8 +71,8 @@ public:
     // Get a single character (blocking)
     static int getch();
     
-    // Get a string with optional prompt and color
-    static std::string getline(const std::string& prompt = "", Color promptColor = Color::DEFAULT);
+    // Get a string with optional prompt and colour
+    static std::string getline(const std::string& prompt = "", Colour promptColour = Colour::DEFAULT);
     
     // Enable/disable cursor visibility
     static void showCursor(bool visible);

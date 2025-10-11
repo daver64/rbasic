@@ -1,12 +1,12 @@
-/// @ref gtx_color_space
-/// @file glm/gtx/color_space.hpp
+/// @ref gtx_colour_space
+/// @file glm/gtx/colour_space.hpp
 ///
 /// @see core (dependence)
 ///
-/// @defgroup gtx_color_space GLM_GTX_color_space
+/// @defgroup gtx_colour_space GLM_GTX_colour_space
 /// @ingroup gtx
 ///
-/// Include <glm/gtx/color_space.hpp> to use the features of this extension.
+/// Include <glm/gtx/colour_space.hpp> to use the features of this extension.
 ///
 /// Related to RGB to HSV conversions and operations.
 
@@ -16,55 +16,55 @@
 #include "../glm.hpp"
 
 #ifndef GLM_ENABLE_EXPERIMENTAL
-#	error "GLM: GLM_GTX_color_space is an experimental extension and may change in the future. Use #define GLM_ENABLE_EXPERIMENTAL before including it, if you really want to use it."
+#	error "GLM: GLM_GTX_colour_space is an experimental extension and may change in the future. Use #define GLM_ENABLE_EXPERIMENTAL before including it, if you really want to use it."
 #elif GLM_MESSAGES == GLM_ENABLE && !defined(GLM_EXT_INCLUDED)
-#	pragma message("GLM: GLM_GTX_color_space extension included")
+#	pragma message("GLM: GLM_GTX_colour_space extension included")
 #endif
 
 namespace glm
 {
-	/// @addtogroup gtx_color_space
+	/// @addtogroup gtx_colour_space
 	/// @{
 
-	/// Converts a color from HSV color space to its color in RGB color space.
-	/// @see gtx_color_space
+	/// Converts a colour from HSV colour space to its colour in RGB colour space.
+	/// @see gtx_colour_space
 	template<typename T, qualifier Q>
-	GLM_FUNC_DECL vec<3, T, Q> rgbColor(
+	GLM_FUNC_DECL vec<3, T, Q> rgbColour(
 		vec<3, T, Q> const& hsvValue);
 
-	/// Converts a color from RGB color space to its color in HSV color space.
-	/// @see gtx_color_space
+	/// Converts a colour from RGB colour space to its colour in HSV colour space.
+	/// @see gtx_colour_space
 	template<typename T, qualifier Q>
-	GLM_FUNC_DECL vec<3, T, Q> hsvColor(
+	GLM_FUNC_DECL vec<3, T, Q> hsvColour(
 		vec<3, T, Q> const& rgbValue);
 
 	/// Build a saturation matrix.
-	/// @see gtx_color_space
+	/// @see gtx_colour_space
 	template<typename T>
 	GLM_FUNC_DECL mat<4, 4, T, defaultp> saturation(
 		T const s);
 
-	/// Modify the saturation of a color.
-	/// @see gtx_color_space
+	/// Modify the saturation of a colour.
+	/// @see gtx_colour_space
 	template<typename T, qualifier Q>
 	GLM_FUNC_DECL vec<3, T, Q> saturation(
 		T const s,
-		vec<3, T, Q> const& color);
+		vec<3, T, Q> const& colour);
 
-	/// Modify the saturation of a color.
-	/// @see gtx_color_space
+	/// Modify the saturation of a colour.
+	/// @see gtx_colour_space
 	template<typename T, qualifier Q>
 	GLM_FUNC_DECL vec<4, T, Q> saturation(
 		T const s,
-		vec<4, T, Q> const& color);
+		vec<4, T, Q> const& colour);
 
-	/// Compute color luminosity associating ratios (0.33, 0.59, 0.11) to RGB canals.
-	/// @see gtx_color_space
+	/// Compute colour luminosity associating ratios (0.33, 0.59, 0.11) to RGB canals.
+	/// @see gtx_colour_space
 	template<typename T, qualifier Q>
 	GLM_FUNC_DECL T luminosity(
-		vec<3, T, Q> const& color);
+		vec<3, T, Q> const& colour);
 
 	/// @}
 }//namespace glm
 
-#include "color_space.inl"
+#include "colour_space.inl"

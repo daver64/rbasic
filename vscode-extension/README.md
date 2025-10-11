@@ -114,8 +114,8 @@ Add to the builtin-functions patterns:
 }
 ```
 
-### Changing Colors
-The actual colors depend on your VS Code theme. Different themes will style the scopes differently:
+### Changing Colours
+The actual colours depend on your VS Code theme. Different themes will style the scopes differently:
 - `keyword.control` - Usually purple/blue
 - `support.function.builtin` - Usually light blue
 - `string.quoted` - Usually orange/yellow

@@ -9,7 +9,7 @@
 ///
 /// Include <glm/gtx/gradient_paint.hpp> to use the features of this extension.
 ///
-/// Functions that return the color of procedural gradient for specific coordinates.
+/// Functions that return the colour of procedural gradient for specific coordinates.
 
 #pragma once
 
@@ -28,7 +28,7 @@ namespace glm
 	/// @addtogroup gtx_gradient_paint
 	/// @{
 
-	/// Return a color from a radial gradient.
+	/// Return a colour from a radial gradient.
 	/// @see - gtx_gradient_paint
 	template<typename T, qualifier Q>
 	GLM_FUNC_DECL T radialGradient(
@@ -37,7 +37,7 @@ namespace glm
 		vec<2, T, Q> const& Focal,
 		vec<2, T, Q> const& Position);
 
-	/// Return a color from a linear gradient.
+	/// Return a colour from a linear gradient.
 	/// @see - gtx_gradient_paint
 	template<typename T, qualifier Q>
 	GLM_FUNC_DECL T linearGradient(

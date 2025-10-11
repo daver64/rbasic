@@ -23,7 +23,7 @@ while (sdl_is_running()) {
     // Clear to dark blue background
     sdl_clear_blue();
     
-    // Test point drawing - create a pattern of colored points
+    // Test point drawing - create a pattern of coloured points
     var time = sdl_get_ticks();
     var offset = (time / 10) % 360; // Rotating offset
     
@@ -34,17 +34,17 @@ while (sdl_is_running()) {
         var x = 300 + radius * cos(angle * 3.14159 / 180);
         var y = 200 + radius * sin(angle * 3.14159 / 180);
         
-        // Change color based on position
+        // Change colour based on position
         var r = (point_i * 2) % 256;
         var g = (point_i * 3) % 256;  
         var b = (point_i * 5) % 256;
         
-        sdl_set_color(r, g, b);
+        sdl_set_colour(r, g, b);
         sdl_draw_point(x, y);
     }
     
     // Draw some reference lines
-    sdl_set_color(255, 255, 255); // White
+    sdl_set_colour(255, 255, 255); // White
     sdl_draw_line(0, 200, 600, 200); // Horizontal center line
     sdl_draw_line(300, 0, 300, 400); // Vertical center line
     
@@ -54,7 +54,7 @@ while (sdl_is_running()) {
     var seconds = elapsed / 1000;
     
     // Draw a simple "timer bar" using points
-    sdl_set_color(0, 255, 0); // Green
+    sdl_set_colour(0, 255, 0); // Green
     var bar_length = (seconds * 10) % 500; // Bar that grows and resets
     for (var bar_x = 50; bar_x < 50 + bar_length; bar_x = bar_x + 2) {
         sdl_draw_point(bar_x, 50);

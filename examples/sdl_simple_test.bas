@@ -19,7 +19,7 @@ while (sdl_is_running()) {
     sdl_clear_blue();
     
     // Draw a white rectangle in center
-    sdl_set_color(255, 255, 255);
+    sdl_set_colour(255, 255, 255);
     sdl_fill_rect(150, 100, 100, 100);
     
     // Present frame

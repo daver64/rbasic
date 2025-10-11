@@ -643,8 +643,8 @@ void CodeGenerator::visit(CallExpr& node) {
     }
 
     // Terminal functions
-    if (node.name == "terminal_supports_color" && node.arguments.size() == 0) {
-        write("basic_runtime::terminal_supports_color()");
+    if (node.name == "terminal_supports_colour" && node.arguments.size() == 0) {
+        write("basic_runtime::terminal_supports_colour()");
         return;
     }
     
@@ -673,8 +673,8 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
     
-    if (node.name == "terminal_reset_color" && node.arguments.size() == 0) {
-        write("basic_runtime::terminal_reset_color()");
+    if (node.name == "terminal_reset_colour" && node.arguments.size() == 0) {
+        write("basic_runtime::terminal_reset_colour()");
         return;
     }
 

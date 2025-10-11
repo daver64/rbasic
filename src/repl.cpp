@@ -31,7 +31,7 @@ int REPL::run() {
         std::string prompt = getPrompt();
         
         // Use terminal getline for better input handling
-        line = Terminal::getline(prompt, Color::CYAN);
+        line = Terminal::getline(prompt, Colour::CYAN);
         
         // Handle Ctrl+D (empty input on EOF)
         if (std::cin.eof()) {
@@ -57,25 +57,25 @@ int REPL::run() {
 }
 
 void REPL::showWelcome() {
-    Terminal::println("rbasic Interactive REPL v1.0.0", Color::BRIGHT_GREEN);
-    Terminal::println("Type :help for commands, :quit to exit", Color::DEFAULT);
+    Terminal::println("rbasic Interactive REPL v1.0.0", Colour::BRIGHT_GREEN);
+    Terminal::println("Type :help for commands, :quit to exit", Colour::DEFAULT);
     Terminal::println("");
 }
 
 void REPL::showHelp() {
-    Terminal::println("REPL Commands:", Color::BRIGHT_YELLOW);
-    Terminal::println("  :help                 - Show this help", Color::DEFAULT);
-    Terminal::println("  :list                 - List all defined variables and functions", Color::DEFAULT);
-    Terminal::println("  :clear                - Clear all variables and functions", Color::DEFAULT);
-    Terminal::println("  :load <file>          - Load and execute a .bas file", Color::DEFAULT);
-    Terminal::println("  :save <file>          - Save current session to file", Color::DEFAULT);
-    Terminal::println("  :history              - Show command history", Color::DEFAULT);
-    Terminal::println("  :quit or :exit        - Exit REPL", Color::DEFAULT);
+    Terminal::println("REPL Commands:", Colour::BRIGHT_YELLOW);
+    Terminal::println("  :help                 - Show this help", Colour::DEFAULT);
+    Terminal::println("  :list                 - List all defined variables and functions", Colour::DEFAULT);
+    Terminal::println("  :clear                - Clear all variables and functions", Colour::DEFAULT);
+    Terminal::println("  :load <file>          - Load and execute a .bas file", Colour::DEFAULT);
+    Terminal::println("  :save <file>          - Save current session to file", Colour::DEFAULT);
+    Terminal::println("  :history              - Show command history", Colour::DEFAULT);
+    Terminal::println("  :quit or :exit        - Exit REPL", Colour::DEFAULT);
     Terminal::println("");
-    Terminal::println("Code Execution:", Color::BRIGHT_YELLOW);
-    Terminal::println("  - Single line statements execute immediately", Color::DEFAULT);
-    Terminal::println("  - Multi-line blocks (functions, if, for, while) auto-detect completion", Color::DEFAULT);
-    Terminal::println("  - Use empty line to force execution of incomplete multi-line block", Color::DEFAULT);
+    Terminal::println("Code Execution:", Colour::BRIGHT_YELLOW);
+    Terminal::println("  - Single line statements execute immediately", Colour::DEFAULT);
+    Terminal::println("  - Multi-line blocks (functions, if, for, while) auto-detect completion", Colour::DEFAULT);
+    Terminal::println("  - Use empty line to force execution of incomplete multi-line block", Colour::DEFAULT);
     Terminal::println("");
 }
 
@@ -198,11 +198,11 @@ void REPL::executeBuffer() {
         interpreter.interpret(*program);
         
     } catch (const SyntaxError& e) {
-        Terminal::println("Syntax Error: " + std::string(e.what()), Color::RED);
+        Terminal::println("Syntax Error: " + std::string(e.what()), Colour::RED);
     } catch (const RuntimeError& e) {
-        Terminal::println("Runtime Error: " + std::string(e.what()), Color::RED);
+        Terminal::println("Runtime Error: " + std::string(e.what()), Colour::RED);
     } catch (const std::exception& e) {
-        Terminal::println("Error: " + std::string(e.what()), Color::RED);
+        Terminal::println("Error: " + std::string(e.what()), Colour::RED);
     }
 }
 
@@ -229,7 +229,7 @@ void REPL::handleMetaCommand(const std::string& command) {
             filename = removeQuotes(filename);
             loadFile(filename);
         } else {
-            Terminal::println("Usage: :load <filename>", Color::YELLOW);
+            Terminal::println("Usage: :load <filename>", Colour::YELLOW);
         }
     } else if (cmd == ":save") {
         std::string filename;
@@ -238,18 +238,18 @@ void REPL::handleMetaCommand(const std::string& command) {
             filename = removeQuotes(filename);
             saveSession(filename);
         } else {
-            Terminal::println("Usage: :save <filename>", Color::YELLOW);
+            Terminal::println("Usage: :save <filename>", Colour::YELLOW);
         }
     } else {
-        Terminal::println("Unknown command: " + cmd, Color::RED);
-        Terminal::println("Type :help for available commands", Color::DEFAULT);
+        Terminal::println("Unknown command: " + cmd, Colour::RED);
+        Terminal::println("Type :help for available commands", Colour::DEFAULT);
     }
 }
 
 void REPL::listVariables() {
-    Terminal::println("Current Session State:", Color::BRIGHT_YELLOW);
-    Terminal::println("(Note: Variable inspection not yet implemented)", Color::YELLOW);
-    Terminal::println("Use the interpreter's built-in variable system", Color::DEFAULT);
+    Terminal::println("Current Session State:", Colour::BRIGHT_YELLOW);
+    Terminal::println("(Note: Variable inspection not yet implemented)", Colour::YELLOW);
+    Terminal::println("Use the interpreter's built-in variable system", Colour::DEFAULT);
     Terminal::println("");
 }
 
@@ -258,7 +258,7 @@ void REPL::clearSession() {
     interpreter = Interpreter();
     currentMultilineBuffer.clear();
     inMultilineMode = false;
-    Terminal::println("Session cleared - all variables and functions removed", Color::GREEN);
+    Terminal::println("Session cleared - all variables and functions removed", Colour::GREEN);
 }
 
 void REPL::loadFile(const std::string& filename) {
@@ -282,9 +282,9 @@ void REPL::loadFile(const std::string& filename) {
     
     std::ifstream file(resolvedPath);
     if (!file.is_open()) {
-        Terminal::println("Error: Could not open file '" + filename + "'", Color::RED);
+        Terminal::println("Error: Could not open file '" + filename + "'", Colour::RED);
         if (resolvedPath != filename) {
-            Terminal::println("  Tried: " + resolvedPath, Color::YELLOW);
+            Terminal::println("  Tried: " + resolvedPath, Colour::YELLOW);
         }
         return;
     }
@@ -300,17 +300,17 @@ void REPL::loadFile(const std::string& filename) {
         auto program = parser.parse();
         
         interpreter.interpret(*program);
-        Terminal::println("Loaded and executed: " + resolvedPath, Color::GREEN);
+        Terminal::println("Loaded and executed: " + resolvedPath, Colour::GREEN);
         
     } catch (const std::exception& e) {
-        Terminal::println("Error loading '" + filename + "': " + e.what(), Color::RED);
+        Terminal::println("Error loading '" + filename + "': " + e.what(), Colour::RED);
     }
 }
 
 void REPL::saveSession(const std::string& filename) {
     std::ofstream file(filename);
     if (!file.is_open()) {
-        Terminal::println("Error: Could not create file '" + filename + "'", Color::RED);
+        Terminal::println("Error: Could not create file '" + filename + "'", Colour::RED);
         return;
     }
     
@@ -321,16 +321,16 @@ void REPL::saveSession(const std::string& filename) {
     }
     
     file.close();
-    Terminal::println("Session saved to: " + filename, Color::GREEN);
+    Terminal::println("Session saved to: " + filename, Colour::GREEN);
 }
 
 void REPL::showHistory() {
     if (history.empty()) {
-        Terminal::println("No command history", Color::YELLOW);
+        Terminal::println("No command history", Colour::YELLOW);
         return;
     }
     
-    Terminal::println("Command History:", Color::BRIGHT_YELLOW);
+    Terminal::println("Command History:", Colour::BRIGHT_YELLOW);
     for (size_t i = 0; i < history.size(); i++) {
         std::cout << "  " << (i + 1) << ": " << history[i] << "\n";
     }

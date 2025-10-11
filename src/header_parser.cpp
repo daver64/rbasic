@@ -171,13 +171,13 @@ void HeaderParser::addSDL2Definitions() {
     rectStruct.totalSize = 4 * sizeof(int);
     structs["SDL_Rect"] = rectStruct;
     
-    FFIStruct colorStruct("SDL_Color");
-    colorStruct.fields.push_back({"r", types["uint8_t"]});
-    colorStruct.fields.push_back({"g", types["uint8_t"]});
-    colorStruct.fields.push_back({"b", types["uint8_t"]});
-    colorStruct.fields.push_back({"a", types["uint8_t"]});
-    colorStruct.totalSize = 4 * sizeof(uint8_t);
-    structs["SDL_Color"] = colorStruct;
+    FFIStruct colourStruct("SDL_Colour");
+    colourStruct.fields.push_back({"r", types["uint8_t"]});
+    colourStruct.fields.push_back({"g", types["uint8_t"]});
+    colourStruct.fields.push_back({"b", types["uint8_t"]});
+    colourStruct.fields.push_back({"a", types["uint8_t"]});
+    colourStruct.totalSize = 4 * sizeof(uint8_t);
+    structs["SDL_Colour"] = colourStruct;
     
     FFIStruct pointStruct("SDL_Point");
     pointStruct.fields.push_back({"x", types["int"]});

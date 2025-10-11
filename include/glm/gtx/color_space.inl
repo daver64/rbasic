@@ -1,4 +1,4 @@
-/// @ref gtx_color_space
+/// @ref gtx_colour_space
 
 #include <glm/ext/scalar_relational.hpp>
 #include <glm/ext/scalar_constants.hpp>
@@ -6,14 +6,14 @@
 namespace glm
 {
 	template<typename T, qualifier Q>
-	GLM_FUNC_QUALIFIER vec<3, T, Q> rgbColor(const vec<3, T, Q>& hsvColor)
+	GLM_FUNC_QUALIFIER vec<3, T, Q> rgbColour(const vec<3, T, Q>& hsvColour)
 	{
-		vec<3, T, Q> hsv = hsvColor;
-		vec<3, T, Q> rgbColor;
+		vec<3, T, Q> hsv = hsvColour;
+		vec<3, T, Q> rgbColour;
 
 		if(equal(hsv.y, static_cast<T>(0), epsilon<T>()))
 			// achromatic (grey)
-			rgbColor = vec<3, T, Q>(hsv.z);
+			rgbColour = vec<3, T, Q>(hsv.z);
 		else
 		{
 			T sector = floor(hsv.x * (T(1) / T(60)));
@@ -27,47 +27,47 @@ namespace glm
 			{
 			default:
 			case 0:
-				rgbColor.r = hsv.z;
-				rgbColor.g = q;
-				rgbColor.b = o;
+				rgbColour.r = hsv.z;
+				rgbColour.g = q;
+				rgbColour.b = o;
 				break;
 			case 1:
-				rgbColor.r = p;
-				rgbColor.g = hsv.z;
-				rgbColor.b = o;
+				rgbColour.r = p;
+				rgbColour.g = hsv.z;
+				rgbColour.b = o;
 				break;
 			case 2:
-				rgbColor.r = o;
-				rgbColor.g = hsv.z;
-				rgbColor.b = q;
+				rgbColour.r = o;
+				rgbColour.g = hsv.z;
+				rgbColour.b = q;
 				break;
 			case 3:
-				rgbColor.r = o;
-				rgbColor.g = p;
-				rgbColor.b = hsv.z;
+				rgbColour.r = o;
+				rgbColour.g = p;
+				rgbColour.b = hsv.z;
 				break;
 			case 4:
-				rgbColor.r = q;
-				rgbColor.g = o;
-				rgbColor.b = hsv.z;
+				rgbColour.r = q;
+				rgbColour.g = o;
+				rgbColour.b = hsv.z;
 				break;
 			case 5:
-				rgbColor.r = hsv.z;
-				rgbColor.g = o;
-				rgbColor.b = p;
+				rgbColour.r = hsv.z;
+				rgbColour.g = o;
+				rgbColour.b = p;
 				break;
 			}
 		}
 
-		return rgbColor;
+		return rgbColour;
 	}
 
 	template<typename T, qualifier Q>
-	GLM_FUNC_QUALIFIER vec<3, T, Q> hsvColor(const vec<3, T, Q>& rgbColor)
+	GLM_FUNC_QUALIFIER vec<3, T, Q> hsvColour(const vec<3, T, Q>& rgbColour)
 	{
-		vec<3, T, Q> hsv = rgbColor;
-		T Min   = min(min(rgbColor.r, rgbColor.g), rgbColor.b);
-		T Max   = max(max(rgbColor.r, rgbColor.g), rgbColor.b);
+		vec<3, T, Q> hsv = rgbColour;
+		T Min   = min(min(rgbColour.r, rgbColour.g), rgbColour.b);
+		T Max   = max(max(rgbColour.r, rgbColour.g), rgbColour.b);
 		T Delta = Max - Min;
 
 		hsv.z = Max;
@@ -77,15 +77,15 @@ namespace glm
 			hsv.y = Delta / hsv.z;
 			T h = static_cast<T>(0);
 
-			if(equal(rgbColor.r, Max, epsilon<T>()))
+			if(equal(rgbColour.r, Max, epsilon<T>()))
 				// between yellow & magenta
-				h = static_cast<T>(0) + T(60) * (rgbColor.g - rgbColor.b) / Delta;
-			else if(equal(rgbColor.g, Max, epsilon<T>()))
+				h = static_cast<T>(0) + T(60) * (rgbColour.g - rgbColour.b) / Delta;
+			else if(equal(rgbColour.g, Max, epsilon<T>()))
 				// between cyan & yellow
-				h = static_cast<T>(120) + T(60) * (rgbColor.b - rgbColor.r) / Delta;
+				h = static_cast<T>(120) + T(60) * (rgbColour.b - rgbColour.r) / Delta;
 			else
 				// between magenta & cyan
-				h = static_cast<T>(240) + T(60) * (rgbColor.r - rgbColor.g) / Delta;
+				h = static_cast<T>(240) + T(60) * (rgbColour.r - rgbColour.g) / Delta;
 
 			if(h < T(0))
 				hsv.x = h + T(360);
@@ -124,21 +124,21 @@ namespace glm
 	}
 
 	template<typename T, qualifier Q>
-	GLM_FUNC_QUALIFIER vec<3, T, Q> saturation(const T s, const vec<3, T, Q>& color)
+	GLM_FUNC_QUALIFIER vec<3, T, Q> saturation(const T s, const vec<3, T, Q>& colour)
 	{
-		return vec<3, T, Q>(saturation(s) * vec<4, T, Q>(color, T(0)));
+		return vec<3, T, Q>(saturation(s) * vec<4, T, Q>(colour, T(0)));
 	}
 
 	template<typename T, qualifier Q>
-	GLM_FUNC_QUALIFIER vec<4, T, Q> saturation(const T s, const vec<4, T, Q>& color)
+	GLM_FUNC_QUALIFIER vec<4, T, Q> saturation(const T s, const vec<4, T, Q>& colour)
 	{
-		return saturation(s) * color;
+		return saturation(s) * colour;
 	}
 
 	template<typename T, qualifier Q>
-	GLM_FUNC_QUALIFIER T luminosity(const vec<3, T, Q>& color)
+	GLM_FUNC_QUALIFIER T luminosity(const vec<3, T, Q>& colour)
 	{
 		const vec<3, T, Q> tmp = vec<3, T, Q>(0.33, 0.59, 0.11);
-		return dot(color, tmp);
+		return dot(colour, tmp);
 	}
 }//namespace glm

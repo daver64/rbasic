@@ -103,7 +103,7 @@ rbasic includes a comprehensive Foreign Function Interface with advanced graphic
 - **Complete SDL2 Integration**: Window management, hardware-accelerated rendering, event handling
 - **Enhanced Graphics Operations**: Drawing operations, filled shapes, advanced geometry
   - **Filled Shapes**: Proper solid triangle rendering with SDL2_gfx `filledTrigonRGBA`
-  - **Graphics Primitives**: Points, lines, rectangles, circles, ellipses with color support
+  - **Graphics Primitives**: Points, lines, rectangles, circles, ellipses with colour support
   - **Advanced Rendering**: Multi-parameter graphics functions (up to 11 parameters)
 - **Event Processing**: Complete keyboard and mouse event handling with scan code support
 - **Cross-Mode Support**: FFI works identically in both interpreter and compiled modes
@@ -260,7 +260,7 @@ function main() {
         // Animated filled triangle (SDL2_gfx integration)
         var tri_x = 400 + 100 * cos(elapsed_ms / 1000.0);
         var tri_y = 300 + 50 * sin(elapsed_ms / 800.0);
-        sdl_set_color(255, 255, 0);  // Yellow
+        sdl_set_colour(255, 255, 0);  // Yellow
         sdl_fill_triangle(tri_x, tri_y, tri_x + 50, tri_y + 80, tri_x - 50, tri_y + 80);
         
         // Event handling with scan codes

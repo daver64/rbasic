@@ -8,11 +8,11 @@ print("");
 print("1. Vector Creation and Component Access:");
 var position = vec2(100.0, 200.0);
 var velocity = vec3(1.5, -2.3, 4.7);
-var color = vec4(0.8, 0.6, 0.4, 1.0);
+var colour = vec4(0.8, 0.6, 0.4, 1.0);
 
 print("vec2 position: (" + position.x + ", " + position.y + ")");
 print("vec3 velocity: (" + velocity.x + ", " + velocity.y + ", " + velocity.z + ")");
-print("vec4 color RGBA: (" + color.x + ", " + color.y + ", " + color.z + ", " + color.w + ")");
+print("vec4 colour RGBA: (" + colour.x + ", " + colour.y + ", " + colour.z + ", " + colour.w + ")");
 print("");
 
 // ===== Component Assignment =====

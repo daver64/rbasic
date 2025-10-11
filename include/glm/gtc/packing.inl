@@ -628,19 +628,19 @@ namespace detail
 	GLM_FUNC_QUALIFIER uint32 packF3x9_E1x5(vec3 const& v)
 	{
 		float const SharedExpMax = (pow(2.0f, 9.0f - 1.0f) / pow(2.0f, 9.0f)) * pow(2.0f, 31.f - 15.f);
-		vec3 const Color = clamp(v, 0.0f, SharedExpMax);
-		float const MaxColor = max(Color.x, max(Color.y, Color.z));
+		vec3 const Colour = clamp(v, 0.0f, SharedExpMax);
+		float const MaxColour = max(Colour.x, max(Colour.y, Colour.z));
 
-		float const ExpSharedP = max(-15.f - 1.f, floor(log2(MaxColor))) + 1.0f + 15.f;
-		float const MaxShared = floor(MaxColor / pow(2.0f, (ExpSharedP - 15.f - 9.f)) + 0.5f);
+		float const ExpSharedP = max(-15.f - 1.f, floor(log2(MaxColour))) + 1.0f + 15.f;
+		float const MaxShared = floor(MaxColour / pow(2.0f, (ExpSharedP - 15.f - 9.f)) + 0.5f);
 		float const ExpShared = equal(MaxShared, pow(2.0f, 9.0f), epsilon<float>()) ? ExpSharedP + 1.0f : ExpSharedP;
 
-		uvec3 const ColorComp(floor(Color / pow(2.f, (ExpShared - 15.f - 9.f)) + 0.5f));
+		uvec3 const ColourComp(floor(Colour / pow(2.f, (ExpShared - 15.f - 9.f)) + 0.5f));
 
 		detail::u9u9u9e5 Unpack;
-		Unpack.data.x = ColorComp.x;
-		Unpack.data.y = ColorComp.y;
-		Unpack.data.z = ColorComp.z;
+		Unpack.data.x = ColourComp.x;
+		Unpack.data.y = ColourComp.y;
+		Unpack.data.z = ColourComp.z;
 		Unpack.data.w = uint(ExpShared);
 		return Unpack.pack;
 	}
@@ -653,14 +653,14 @@ namespace detail
 		return vec3(Unpack.data.x, Unpack.data.y, Unpack.data.z) * pow(2.0f, static_cast<float>(Unpack.data.w) - 15.f - 9.f);
 	}
 
-	// Based on Brian Karis http://graphicrants.blogspot.fr/2009/04/rgbm-color-encoding.html
+	// Based on Brian Karis http://graphicrants.blogspot.fr/2009/04/rgbm-colour-encoding.html
 	template<typename T, qualifier Q>
 	GLM_FUNC_QUALIFIER vec<4, T, Q> packRGBM(vec<3, T, Q> const& rgb)
 	{
-		vec<3, T, Q> const Color(rgb * static_cast<T>(1.0 / 6.0));
-		T Alpha = clamp(max(max(Color.x, Color.y), max(Color.z, static_cast<T>(1e-6))), static_cast<T>(0), static_cast<T>(1));
+		vec<3, T, Q> const Colour(rgb * static_cast<T>(1.0 / 6.0));
+		T Alpha = clamp(max(max(Colour.x, Colour.y), max(Colour.z, static_cast<T>(1e-6))), static_cast<T>(0), static_cast<T>(1));
 		Alpha = ceil(Alpha * static_cast<T>(255.0)) / static_cast<T>(255.0);
-		return vec<4, T, Q>(Color / Alpha, Alpha);
+		return vec<4, T, Q>(Colour / Alpha, Alpha);
 	}
 
 	template<typename T, qualifier Q>
