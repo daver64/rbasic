@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
+#include <vector>
 
 #ifdef _WIN32
     #include <windows.h>
@@ -30,6 +31,10 @@ public:
     bool unload_library(const std::string& name);
     std::shared_ptr<Library> get_library(const std::string& name);
     
+    // Search path management
+    void add_library_search_path(const std::string& path);
+    void clear_library_search_paths();
+    
     // Cleanup
     void cleanup();
     
@@ -38,6 +43,7 @@ private:
     ~FFIManager() = default;
     
     std::unordered_map<std::string, std::shared_ptr<Library>> loaded_libraries_;
+    std::vector<std::string> library_search_paths_;
 };
 
 // Represents a loaded dynamic library

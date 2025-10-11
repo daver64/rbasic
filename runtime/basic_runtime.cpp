@@ -3581,4 +3581,15 @@ BasicValue func_not_null(const BasicValue& value) {
     return not_null(value);
 }
 
+// FFI library path configuration
+BasicValue add_ffi_library_path(const BasicValue& path) {
+    try {
+        auto& ffi_manager = rbasic::ffi::FFIManager::instance();
+        ffi_manager.add_library_search_path(to_string(path));
+        return BasicValue(1.0); // Success
+    } catch (const std::exception& e) {
+        return BasicValue(0.0); // Failure
+    }
+}
+
 } // namespace basic_runtime

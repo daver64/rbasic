@@ -2,6 +2,7 @@
 #include "common.h"
 #include <iostream>
 #include <algorithm>
+#include <vector>
 
 namespace rbasic {
 namespace ffi {
@@ -28,7 +29,30 @@ std::shared_ptr<Library> FFIManager::load_library(const std::string& name) {
 #ifdef _WIN32
     handle = LoadLibraryA(platform_name.c_str());
 #else
+    // On Linux, try multiple approaches
+    // 1. Try the name as-is first
     handle = dlopen(platform_name.c_str(), RTLD_LAZY);
+    
+    // 2. If that fails, try common system paths for SDL2
+    if (!handle && (name.find("SDL2") != std::string::npos || name.find("sdl2") != std::string::npos)) {
+        // Try common SDL2 locations
+        std::vector<std::string> sdl_paths = {
+            "/usr/lib/x86_64-linux-gnu/libSDL2.so.0",
+            "/usr/lib/libSDL2.so.0", 
+            "/usr/local/lib/libSDL2.so",
+            "libSDL2-2.0.so.0"
+        };
+        
+        for (const auto& path : sdl_paths) {
+            handle = dlopen(path.c_str(), RTLD_LAZY);
+            if (handle) break;
+        }
+    }
+    
+    // 3. Try with RTLD_NOW if RTLD_LAZY failed
+    if (!handle) {
+        handle = dlopen(platform_name.c_str(), RTLD_NOW);
+    }
 #endif
     
     if (!handle) {
@@ -62,6 +86,15 @@ std::shared_ptr<Library> FFIManager::get_library(const std::string& name) {
 
 void FFIManager::cleanup() {
     loaded_libraries_.clear();
+    library_search_paths_.clear();
+}
+
+void FFIManager::add_library_search_path(const std::string& path) {
+    library_search_paths_.push_back(path);
+}
+
+void FFIManager::clear_library_search_paths() {
+    library_search_paths_.clear();
 }
 
 // Library implementation
@@ -98,12 +131,43 @@ std::string get_platform_library_name(const std::string& base_name) {
         return base_name;
     }
     
+    // Handle common library mappings
+    std::string mapped_name = base_name;
+    
 #ifdef _WIN32
-    return base_name + ".dll";
-#elif defined(__APPLE__)
-    return "lib" + base_name + ".dylib";
+    // Windows: SDL2.dll, sqlite3.dll, etc.
+    if (mapped_name == "SDL2") {
+        return "SDL2.dll";
+    } else if (mapped_name == "SDL2_image") {
+        return "SDL2_image.dll";
+    } else if (mapped_name == "SDL2_gfx") {
+        return "SDL2_gfx.dll";
+    } else if (mapped_name == "sqlite3") {
+        return "sqlite3.dll";
+    }
+    return mapped_name + ".dll";
 #else
-    return "lib" + base_name + ".so";
+    // Linux: libSDL2.so, libsqlite3.so, etc.
+    if (mapped_name == "SDL2" || mapped_name == "SDL2.dll") {
+        return "libSDL2.so";
+    } else if (mapped_name == "SDL2_image" || mapped_name == "SDL2_image.dll") {
+        return "libSDL2_image.so";
+    } else if (mapped_name == "SDL2_gfx" || mapped_name == "SDL2_gfx.dll") {
+        return "libSDL2_gfx.so";
+    } else if (mapped_name == "sqlite3" || mapped_name == "sqlite3.dll") {
+        return "libsqlite3.so";
+    }
+    
+    // Default Linux naming
+    if (mapped_name.substr(0, 3) != "lib") {
+        mapped_name = "lib" + mapped_name;
+    }
+    
+#ifdef __APPLE__
+    return mapped_name + ".dylib";
+#else
+    return mapped_name + ".so";
+#endif
 #endif
 }
 
