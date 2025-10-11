@@ -29,11 +29,11 @@ var SDL_BLENDMODE_MOD = 4;
 // ========================================
 
 // Image loading functions
-ffi integer IMG_Init(flags as integer) from "SDL2_image.dll";
-ffi integer IMG_Quit() from "SDL2_image.dll";
-ffi pointer IMG_Load(file as string) from "SDL2_image.dll";
-ffi pointer IMG_LoadTexture(renderer as pointer, file as string) from "SDL2_image.dll";
-ffi integer IMG_SavePNG(surface as pointer, file as string) from "SDL2_image.dll";
+ffi integer IMG_Init(flags as integer) from "SDL2_image";
+ffi integer IMG_Quit() from "SDL2_image";
+ffi pointer IMG_Load(file as string) from "SDL2_image";
+ffi pointer IMG_LoadTexture(renderer as pointer, file as string) from "SDL2_image";
+ffi integer IMG_SavePNG(surface as pointer, file as string) from "SDL2_image";
 
 // SDL2 surface and BMP support
 ffi pointer SDL_LoadBMP(file as string) from "SDL2.dll";

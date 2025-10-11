@@ -7,55 +7,55 @@
 // ========================================
 
 // Essential SDL2 functions for basic window and rendering
-ffi integer SDL_Init(flags as integer) from "SDL2.dll";
-ffi integer SDL_Quit() from "SDL2.dll";
-ffi pointer SDL_CreateWindow(title as string, x as integer, y as integer, w as integer, h as integer, flags as integer) from "SDL2.dll";
-ffi integer SDL_DestroyWindow(window as pointer) from "SDL2.dll";
-ffi pointer SDL_CreateRenderer(window as pointer, index as integer, flags as integer) from "SDL2.dll";
-ffi integer SDL_DestroyRenderer(renderer as pointer) from "SDL2.dll";
+ffi integer SDL_Init(flags as integer) from "SDL2";
+ffi integer SDL_Quit() from "SDL2";
+ffi pointer SDL_CreateWindow(title as string, x as integer, y as integer, w as integer, h as integer, flags as integer) from "SDL2";
+ffi integer SDL_DestroyWindow(window as pointer) from "SDL2";
+ffi pointer SDL_CreateRenderer(window as pointer, index as integer, flags as integer) from "SDL2";
+ffi integer SDL_DestroyRenderer(renderer as pointer) from "SDL2";
 
 // Rendering functions
-ffi integer SDL_SetRenderDrawColor(renderer as pointer, r as integer, g as integer, b as integer, a as integer) from "SDL2.dll";
-ffi integer SDL_RenderClear(renderer as pointer) from "SDL2.dll";
-ffi integer SDL_RenderPresent(renderer as pointer) from "SDL2.dll";
+ffi integer SDL_SetRenderDrawColor(renderer as pointer, r as integer, g as integer, b as integer, a as integer) from "SDL2";
+ffi integer SDL_RenderClear(renderer as pointer) from "SDL2";
+ffi integer SDL_RenderPresent(renderer as pointer) from "SDL2";
 
 // SDL2_gfx functions for filled shapes (with correct signatures from SDL2_gfxPrimitives.h)
-ffi integer filledTrigonRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, x3 as integer, y3 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
-ffi integer filledCircleRGBA(renderer as pointer, x as integer, y as integer, rad as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
-ffi integer filledEllipseRGBA(renderer as pointer, x as integer, y as integer, rx as integer, ry as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
+ffi integer filledTrigonRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, x3 as integer, y3 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx";
+ffi integer filledCircleRGBA(renderer as pointer, x as integer, y as integer, rad as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx";
+ffi integer filledEllipseRGBA(renderer as pointer, x as integer, y as integer, rx as integer, ry as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx";
 
 // SDL2_gfx functions for lines and rectangles  
-ffi integer lineRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
-ffi integer rectangleRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
-ffi integer boxRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx.dll";
+ffi integer lineRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx";
+ffi integer rectangleRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx";
+ffi integer boxRGBA(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer, r as integer, g as integer, b as integer, a as integer) from "SDL2_gfx";
 
 // Drawing functions
-ffi integer SDL_RenderDrawPoint(renderer as pointer, x as integer, y as integer) from "SDL2.dll";
-ffi integer SDL_RenderDrawLine(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer) from "SDL2.dll";
-ffi integer SDL_RenderDrawRect(renderer as pointer, rect as pointer) from "SDL2.dll";
-ffi integer SDL_RenderFillRect(renderer as pointer, rect as pointer) from "SDL2.dll";
+ffi integer SDL_RenderDrawPoint(renderer as pointer, x as integer, y as integer) from "SDL2";
+ffi integer SDL_RenderDrawLine(renderer as pointer, x1 as integer, y1 as integer, x2 as integer, y2 as integer) from "SDL2";
+ffi integer SDL_RenderDrawRect(renderer as pointer, rect as pointer) from "SDL2";
+ffi integer SDL_RenderFillRect(renderer as pointer, rect as pointer) from "SDL2";
 
 // Window management functions
-ffi integer SDL_SetWindowTitle(window as pointer, title as string) from "SDL2.dll";
-ffi integer SDL_GetWindowSize(window as pointer, w as pointer, h as pointer) from "SDL2.dll";
-ffi integer SDL_SetWindowSize(window as pointer, w as integer, h as integer) from "SDL2.dll";
+ffi integer SDL_SetWindowTitle(window as pointer, title as string) from "SDL2";
+ffi integer SDL_GetWindowSize(window as pointer, w as pointer, h as pointer) from "SDL2";
+ffi integer SDL_SetWindowSize(window as pointer, w as integer, h as integer) from "SDL2";
 
 // Timing functions  
-ffi integer SDL_GetTicks() from "SDL2.dll";
-ffi integer SDL_GetPerformanceCounter() from "SDL2.dll";
-ffi integer SDL_GetPerformanceFrequency() from "SDL2.dll";
+ffi integer SDL_GetTicks() from "SDL2";
+ffi integer SDL_GetPerformanceCounter() from "SDL2";
+ffi integer SDL_GetPerformanceFrequency() from "SDL2";
 
 // Event handling
-ffi integer SDL_PollEvent(event as pointer) from "SDL2.dll";
+ffi integer SDL_PollEvent(event as pointer) from "SDL2";
 
 // Texture functions
-ffi pointer SDL_CreateTexture(renderer as pointer, format as integer, access as integer, w as integer, h as integer) from "SDL2.dll";
-ffi integer SDL_DestroyTexture(texture as pointer) from "SDL2.dll";
-ffi integer SDL_QueryTexture(texture as pointer, format as pointer, access as pointer, w as pointer, h as pointer) from "SDL2.dll";
-ffi integer SDL_RenderCopy(renderer as pointer, texture as pointer, src as pointer, dest as pointer) from "SDL2.dll";
-ffi integer SDL_SetTextureBlendMode(texture as pointer, blend_mode as integer) from "SDL2.dll";
-ffi integer SDL_SetTextureAlphaMod(texture as pointer, alpha as integer) from "SDL2.dll";
-ffi integer SDL_SetTextureColorMod(texture as pointer, r as integer, g as integer, b as integer) from "SDL2.dll";
+ffi pointer SDL_CreateTexture(renderer as pointer, format as integer, access as integer, w as integer, h as integer) from "SDL2";
+ffi integer SDL_DestroyTexture(texture as pointer) from "SDL2";
+ffi integer SDL_QueryTexture(texture as pointer, format as pointer, access as pointer, w as pointer, h as pointer) from "SDL2";
+ffi integer SDL_RenderCopy(renderer as pointer, texture as pointer, src as pointer, dest as pointer) from "SDL2";
+ffi integer SDL_SetTextureBlendMode(texture as pointer, blend_mode as integer) from "SDL2";
+ffi integer SDL_SetTextureAlphaMod(texture as pointer, alpha as integer) from "SDL2";
+ffi integer SDL_SetTextureColorMod(texture as pointer, r as integer, g as integer, b as integer) from "SDL2";
 
 // Texture constants
 var SDL_PIXELFORMAT_RGBA8888 = 373694468;
@@ -70,7 +70,7 @@ var SDL_BLENDMODE_ADD = 2;
 var SDL_BLENDMODE_MOD = 4;
 
 // Timing
-ffi integer SDL_Delay(ms as integer) from "SDL2.dll";
+ffi integer SDL_Delay(ms as integer) from "SDL2";
 
 // ========================================
 // Global State

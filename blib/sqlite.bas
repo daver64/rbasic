@@ -2,24 +2,24 @@
 // Provides easy-to-use database operations and SQL execution
 
 // SQLite3 Library Loading
-ffi integer sqlite3_open(filename as string, ppDb as pointer) from "sqlite3.dll";
-ffi integer sqlite3_close(db as pointer) from "sqlite3.dll";
-ffi integer sqlite3_prepare_v2(db as pointer, sql as string, nByte as integer, ppStmt as pointer, pzTail as pointer) from "sqlite3.dll";
-ffi integer sqlite3_step(pStmt as pointer) from "sqlite3.dll";
-ffi integer sqlite3_finalize(pStmt as pointer) from "sqlite3.dll";
-ffi integer sqlite3_column_count(pStmt as pointer) from "sqlite3.dll";
-ffi pointer sqlite3_column_text(pStmt as pointer, iCol as integer) from "sqlite3.dll";
-ffi integer sqlite3_column_int(pStmt as pointer, iCol as integer) from "sqlite3.dll";
-ffi double sqlite3_column_double(pStmt as pointer, iCol as integer) from "sqlite3.dll";
-ffi pointer sqlite3_column_name(pStmt as pointer, iCol as integer) from "sqlite3.dll";
-ffi integer sqlite3_bind_text(pStmt as pointer, index as integer, value as string, n as integer, destructor as pointer) from "sqlite3.dll";
-ffi integer sqlite3_bind_int(pStmt as pointer, index as integer, value as integer) from "sqlite3.dll";
-ffi integer sqlite3_bind_double(pStmt as pointer, index as integer, value as double) from "sqlite3.dll";
-ffi integer sqlite3_reset(pStmt as pointer) from "sqlite3.dll";
-ffi integer sqlite3_clear_bindings(pStmt as pointer) from "sqlite3.dll";
-ffi pointer sqlite3_errmsg(db as pointer) from "sqlite3.dll";
-ffi integer sqlite3_changes(db as pointer) from "sqlite3.dll";
-ffi integer sqlite3_last_insert_rowid(db as pointer) from "sqlite3.dll";
+ffi integer sqlite3_open(filename as string, ppDb as pointer) from "sqlite3";
+ffi integer sqlite3_close(db as pointer) from "sqlite3";
+ffi integer sqlite3_prepare_v2(db as pointer, sql as string, nByte as integer, ppStmt as pointer, pzTail as pointer) from "sqlite3";
+ffi integer sqlite3_step(pStmt as pointer) from "sqlite3";
+ffi integer sqlite3_finalize(pStmt as pointer) from "sqlite3";
+ffi integer sqlite3_column_count(pStmt as pointer) from "sqlite3";
+ffi pointer sqlite3_column_text(pStmt as pointer, iCol as integer) from "sqlite3";
+ffi integer sqlite3_column_int(pStmt as pointer, iCol as integer) from "sqlite3";
+ffi double sqlite3_column_double(pStmt as pointer, iCol as integer) from "sqlite3";
+ffi pointer sqlite3_column_name(pStmt as pointer, iCol as integer) from "sqlite3";
+ffi integer sqlite3_bind_text(pStmt as pointer, index as integer, value as string, n as integer, destructor as pointer) from "sqlite3";
+ffi integer sqlite3_bind_int(pStmt as pointer, index as integer, value as integer) from "sqlite3";
+ffi integer sqlite3_bind_double(pStmt as pointer, index as integer, value as double) from "sqlite3";
+ffi integer sqlite3_reset(pStmt as pointer) from "sqlite3";
+ffi integer sqlite3_clear_bindings(pStmt as pointer) from "sqlite3";
+ffi pointer sqlite3_errmsg(db as pointer) from "sqlite3";
+ffi integer sqlite3_changes(db as pointer) from "sqlite3";
+ffi integer sqlite3_last_insert_rowid(db as pointer) from "sqlite3";
 
 // Global SQLite state
 var sqlite_db = NULL;
