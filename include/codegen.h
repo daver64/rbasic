@@ -9,6 +9,7 @@ namespace rbasic {
 class CodeGenerator : public ASTVisitor {
 private:
     std::ostringstream output;
+    std::string functionForwardDeclarations;
     std::string functionDeclarations;
     int indentLevel;
     std::string currentFunction; // Track current function name (empty if in main)

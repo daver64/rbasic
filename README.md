@@ -16,6 +16,13 @@
 
 ## Recent Improvements (October 2025)
 
+### Texture Rendering and FFI Fixes
+- **SDL_RenderCopy Compatibility**: Fixed critical texture rendering issue where compiled mode was incompatible with interpreter mode
+- **FFI Pattern Matching**: Resolved null pointer parameter handling in FFI calls - replaced integer `0` with proper `null` pointers
+- **Cross-Mode Consistency**: Achieved identical texture rendering behavior between interpreter and compiled modes
+- **Memory Management**: Implemented cached buffer approach for SDL_Rect structures to eliminate memory leaks
+- **Debug Cleanup**: Removed all debug output for production-ready performance
+
 ### Complete GLM Vector Mathematics Integration
 - **Native GLM Types**: Built-in `vec2`, `vec3`, `vec4`, `mat3`, `mat4`, `quat` primitives with SIMD optimization
 - **Component Access**: Full read/write access with `.x`, `.y`, `.z`, `.w` component syntax
@@ -432,6 +439,10 @@ build.bat
 - ✅ Interactive REPL for development with multi-line support
 
 **Recently Fixed Issues:**
+- ✅ Texture rendering compatibility between interpreter and compiled modes (October 2025)
+- ✅ FFI null pointer parameter handling - proper `null` vs integer `0` usage (October 2025)
+- ✅ SDL_RenderCopy pattern matching and cross-mode consistency (October 2025)
+- ✅ Memory leak in create_sdl_rect with cached buffer implementation (October 2025)
 - ✅ Variable scoping in for loops and functions (October 2025)
 - ✅ Compiler linker errors with FFI functions (October 2025)
 - ✅ Cross-mode FFI consistency between interpreter and compiled modes

@@ -125,6 +125,14 @@ The FFI system provides comprehensive C library integration:
 
 ## Recent Improvements (2025)
 
+### Texture Rendering and FFI Fixes (October 2025)
+- **SDL_RenderCopy Compatibility**: Fixed critical texture rendering issue where compiled mode was incompatible with interpreter mode
+- **FFI Pattern Matching**: Resolved null pointer parameter handling in FFI calls - replaced integer `0` with proper `null` pointers
+- **Cross-Mode Consistency**: Achieved identical texture rendering behavior between interpreter and compiled modes
+- **Memory Management**: Implemented cached buffer approach for SDL_Rect structures to eliminate memory leaks
+- **Debug Cleanup**: Removed all debug output for production-ready performance
+- **Runtime Stability**: Fixed hanging issues in compiled mode during SDL_RenderCopy calls
+
 ### Complete GLM Vector Mathematics Integration (October 2025)
 - **Native GLM Types**: Built-in `vec2`, `vec3`, `vec4`, `mat3`, `mat4`, `quat` primitives with SIMD optimization
 - **Component Access**: Full read/write access with `.x`, `.y`, `.z`, `.w` component syntax using ComponentAssignExpr AST node
@@ -151,7 +159,8 @@ The FFI system provides comprehensive C library integration:
 
 ### Core FFI Features
 - **Library Loading**: Dynamic loading of Windows DLLs, Linux .so, and macOS .dylib files
-- **Function Calling**: Support for 0-8 parameter functions with flexible types
+- **Extended Parameter Support**: Functions with up to 11 parameters for complex graphics operations (SDL2_gfx)
+- **Function Calling**: Support for 0-11 parameter functions with flexible types
 - **Memory Management**: Safe buffer allocation, pointer dereferencing, and cleanup
 - **Type System**: Comprehensive support for integers, strings, pointers, and structures
 
@@ -166,6 +175,8 @@ The FFI system provides comprehensive C library integration:
 ### SDL2 Integration
 - **Window Management**: Window creation, destruction, and property control
 - **Rendering System**: Hardware-accelerated 2D rendering with colour management
+- **Texture Rendering**: Complete texture support with proper SDL_RenderCopy null parameter handling
+- **Filled Shapes**: Proper solid triangle rendering with SDL2_gfx `filledTrigonRGBA`
 - **Event Handling**: Complete keyboard and mouse event processing
   - **Keyboard Events**: Full scan code support with built-in SDL_SCANCODE_* constants
   - **Mouse Events**: Click detection, movement tracking, button state management

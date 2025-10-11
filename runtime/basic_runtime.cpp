@@ -1537,6 +1537,22 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             throw std::runtime_error("Function not found: " + function_name);
         }
         
+        // FIXED PATTERN: (pointer, string) -> pointer (IMG_LoadTexture, IMG_Load, etc.)
+        // This must come FIRST before any debug code or variable extraction
+        if (std::holds_alternative<void*>(arg1) && std::holds_alternative<std::string>(arg2) &&
+            (function_name == "IMG_LoadTexture" || function_name == "IMG_Load" || function_name.find("Load") != std::string::npos)) {
+            
+            // Extract only the correct types for each argument - matches interpreter exactly
+            void* renderer = std::get<void*>(arg1);
+            std::string filename = std::get<std::string>(arg2);
+            
+            // Use exact same pattern as interpreter mode
+            typedef void* (*FuncType)(void*, const char*);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            void* result = func(renderer, filename.c_str());
+            return BasicValue(result);
+        }
+        
         // Generic 2-parameter FFI call with automatic type conversion - OPTIMIZED
         
         // Use unified FFI type conversion utilities (replaces 22+ duplicate lambdas)
@@ -1614,6 +1630,17 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
             typedef int (FFI_CALL_CONV *Func2)(void*, int);
             auto func = reinterpret_cast<Func2>(funcPtr);
             return BasicValue(static_cast<double>(func(p1, i2)));
+        }
+        
+        // Pattern: (pointer, string) -> pointer (IMG_LoadTexture, IMG_Load, etc.)
+        if (std::holds_alternative<void*>(arg1) && std::holds_alternative<std::string>(arg2) &&
+            (function_name == "IMG_LoadTexture" || function_name == "IMG_Load" || function_name.find("Load") != std::string::npos)) {
+            
+            // Use exact same pattern as interpreter mode
+            typedef void* (*FuncType)(void*, const char*);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            void* result = func(p1, s2.c_str());
+            return BasicValue(result);
         }
         
         // Pattern: (pointer, string) -> void (SDL_SetWindowTitle)
@@ -1753,6 +1780,7 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
 }
 
 BasicValue call_ffi_function(const std::string& library_name, const std::string& function_name, const BasicValue& arg1, const BasicValue& arg2, const BasicValue& arg3, const BasicValue& arg4) {
+    
     try {
         auto& ffi_manager = rbasic::ffi::FFIManager::instance();
         auto library = ffi_manager.get_library(library_name);
@@ -2705,17 +2733,23 @@ void cleanup_sdl_resources() {
 // ===== SDL STRUCT HELPERS =====
 
 BasicValue create_sdl_rect(int x, int y, int w, int h) {
-    // Create SDL_Rect structure using safe structure definition
+    // Use a simple cache approach to reduce allocations
     
-    // Use new[] for consistency with cleanup
-    uint8_t* buffer = new uint8_t[sizeof(SafeSDLRect)];
-    SafeSDLRect* rect = reinterpret_cast<SafeSDLRect*>(buffer);
+    // Reuse a single rectangle buffer for common cases
+    static uint8_t* cached_rect_buffer = nullptr;
+    static bool cache_initialized = false;
+    
+    if (!cache_initialized) {
+        cached_rect_buffer = new uint8_t[sizeof(SafeSDLRect)];
+        cache_initialized = true;
+    }
+    
+    SafeSDLRect* rect = reinterpret_cast<SafeSDLRect*>(cached_rect_buffer);
     rect->x = x;
     rect->y = y;
     rect->w = w;
     rect->h = h;
     
-    allocated_sdl_resources.push_back(buffer);
     return BasicValue(static_cast<void*>(rect));
 }
 

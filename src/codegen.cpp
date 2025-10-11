@@ -45,6 +45,7 @@ std::string CodeGenerator::escapeString(const std::string& str) {
 std::string CodeGenerator::generate(Program& program) {
     output.str("");
     output.clear();
+    functionForwardDeclarations = "";
     functionDeclarations = "";
     tempVarCounter = 0;
     indentLevel = 0;
@@ -58,7 +59,10 @@ std::string CodeGenerator::generate(Program& program) {
     
     generateIncludes();
     
-    // Output function declarations
+    // Output forward declarations first
+    output << functionForwardDeclarations;
+    
+    // Then output function implementations
     output << functionDeclarations;
     
     generateMain();
@@ -929,11 +933,19 @@ void CodeGenerator::visit(ReturnStmt& node) {
 }
 
 void CodeGenerator::visit(FunctionDecl& node) {
-    // Generate function declaration outside of main
-    // We need to move this to the beginning of the file
+    // Generate forward declaration first
+    functionForwardDeclarations += "BasicValue func_" + node.name + "(std::map<std::string, BasicValue>& variables";
+    
+    // Parameters for forward declaration
+    for (size_t i = 0; i < node.parameters.size(); i++) {
+        functionForwardDeclarations += ", BasicValue " + node.parameters[i];
+    }
+    functionForwardDeclarations += ");\n";
+    
+    // Generate function implementation
     functionDeclarations += "BasicValue func_" + node.name + "(std::map<std::string, BasicValue>& variables";
     
-    // Parameters
+    // Parameters for implementation
     for (size_t i = 0; i < node.parameters.size(); i++) {
         functionDeclarations += ", BasicValue " + node.parameters[i];
     }

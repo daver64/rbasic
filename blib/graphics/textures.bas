@@ -14,7 +14,7 @@ var texture_count = 0;
 // Texture Loading Functions
 // ========================================
 
-// Load a texture from file (PNG, JPG, WEBP supported)
+// Load a texture from file (PNG, JPG, WEBP, BMP supported)
 function load_texture(filename as string) as pointer {
     if (graphics_is_initialized() == 0) {
         print("ERROR: Graphics system not initialized. Call graphics_init() first.");
@@ -23,11 +23,12 @@ function load_texture(filename as string) as pointer {
     
     print("Loading texture: " + filename);
     
-    // Use SDL2_image to load texture directly
+    // Try IMG_LoadTexture first (supports BMP, PNG, JPG, etc.)
     var texture = IMG_LoadTexture(graphics_get_renderer(), filename);
     
     if (is_null(texture)) {
         print("ERROR: Failed to load texture: " + filename);
+        print("Make sure the file exists and is a supported format (BMP, PNG, JPG, WEBP)");
         return 0;
     }
     
@@ -89,14 +90,25 @@ function draw_texture(texture as pointer, x as double, y as double) {
     // Get texture dimensions
     var width_buffer = alloc_int_buffer();
     var height_buffer = alloc_int_buffer();
-    SDL_QueryTexture(texture, 0, 0, width_buffer, height_buffer);
+    var query_result = SDL_QueryTexture(texture, 0, 0, width_buffer, height_buffer);
+    
+    if (query_result != 0) {
+        print("ERROR: SDL_QueryTexture failed - using fallback size 128x128");
+        // Fallback to a reasonable default size
+        draw_texture_sized(texture, x, y, 128, 128);
+        return;
+    }
     
     var width = deref_int(width_buffer);
     var height = deref_int(height_buffer);
     
     // Convert to screen coordinates
-    var screen_x = graphics_world_to_screen_x(x);
-    var screen_y = graphics_world_to_screen_y(y);
+    var screen_x_float = graphics_world_to_screen_x(x);
+    var screen_y_float = graphics_world_to_screen_y(y);
+    
+    // Convert to integers for SDL rectangle
+    var screen_x = int(screen_x_float);
+    var screen_y = int(screen_y_float);
     
     // In cartesian mode, adjust for texture height
     if (graphics_get_coordinate_system() == 1) {
@@ -105,8 +117,47 @@ function draw_texture(texture as pointer, x as double, y as double) {
     
     print("Drawing texture at: " + screen_x + ", " + screen_y + " size: " + width + "x" + height);
     
-    // Simplified rendering (without proper destination rectangles for now)
-    SDL_RenderCopy(graphics_get_renderer(), texture, 0, 0);
+    // Create destination rectangle for proper positioning and sizing
+    var dest_rect = create_sdl_rect(screen_x, screen_y, width, height);
+    SDL_RenderCopy(graphics_get_renderer(), texture, null, dest_rect);
+}
+
+// Draw texture with custom width and height at world coordinates
+function draw_texture_sized(texture as pointer, x as double, y as double, width as integer, height as integer) {
+    if (graphics_is_initialized() == 0) {
+        print("ERROR: Graphics not initialized");
+        return;
+    }
+    
+    if (is_null(texture)) {
+        print("ERROR: Cannot draw null texture");
+        return;
+    }
+    
+    // Convert to screen coordinates
+    var screen_x_float = graphics_world_to_screen_x(x);
+    var screen_y_float = graphics_world_to_screen_y(y);
+    
+    // Convert to integers for SDL rectangle
+    var screen_x = int(screen_x_float);
+    var screen_y = int(screen_y_float);
+    
+    // In cartesian mode, adjust for texture height
+    if (graphics_get_coordinate_system() == 1) {
+        screen_y = screen_y - height;
+    }
+    
+    // Create destination rectangle with custom size
+    var dest_rect = create_sdl_rect(screen_x, screen_y, width, height);
+    
+    if (is_null(dest_rect)) {
+        print("ERROR: Failed to create SDL rectangle!");
+        return 0;
+    }
+    
+    SDL_RenderCopy(graphics_get_renderer(), texture, null, dest_rect);
+    
+    return 0;
 }
 
 // Set texture alpha (transparency)
@@ -146,7 +197,7 @@ function graphics_textures_info() {
     print("- Coordinate system integration");
     print("- Memory management");
     print("Loaded textures: " + texture_count);
-    print("Functions: load_texture(), draw_texture(), set_texture_alpha(), destroy_texture()");
+    print("Functions: load_texture(), draw_texture(), draw_texture_sized(), set_texture_alpha(), destroy_texture()");
 }
 
 print("Graphics Textures Module loaded successfully!");

@@ -1412,6 +1412,9 @@ bool Interpreter::handleTerminalFunctions(CallExpr& node) {
             UnifiedValue result = rbasic::ffi::create_safe_sdl_rect(x, y, w, h);
             if (holds_type<void*>(result)) {
                 lastValue = get_value<void*>(result);
+            } else if (holds_type<std::shared_ptr<UnifiedPointer>>(result)) {
+                auto ptr = get_value<std::shared_ptr<UnifiedPointer>>(result);
+                lastValue = ptr->get();
             } else {
                 lastValue = static_cast<void*>(nullptr);
             }

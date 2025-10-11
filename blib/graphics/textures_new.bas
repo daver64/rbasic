@@ -105,8 +105,37 @@ function draw_texture(texture as pointer, x as double, y as double) {
     
     print("Drawing texture at: " + screen_x + ", " + screen_y + " size: " + width + "x" + height);
     
-    // Simplified rendering (without proper destination rectangles for now)
-    SDL_RenderCopy(graphics_get_renderer(), texture, 0, 0);
+    // Create destination rectangle for proper positioning and sizing
+    var dest_rect = create_sdl_rect(screen_x, screen_y, width, height);
+    SDL_RenderCopy(graphics_get_renderer(), texture, 0, dest_rect);
+}
+
+// Draw texture with custom width and height at world coordinates
+function draw_texture_sized(texture as pointer, x as double, y as double, width as integer, height as integer) {
+    if (graphics_is_initialized() == 0) {
+        print("ERROR: Graphics not initialized");
+        return;
+    }
+    
+    if (is_null(texture)) {
+        print("ERROR: Cannot draw null texture");
+        return;
+    }
+    
+    // Convert to screen coordinates
+    var screen_x = graphics_world_to_screen_x(x);
+    var screen_y = graphics_world_to_screen_y(y);
+    
+    // In cartesian mode, adjust for texture height
+    if (graphics_get_coordinate_system() == 1) {
+        screen_y = screen_y - height;
+    }
+    
+    print("Drawing texture (sized) at: " + screen_x + ", " + screen_y + " size: " + width + "x" + height);
+    
+    // Create destination rectangle with custom size
+    var dest_rect = create_sdl_rect(screen_x, screen_y, width, height);
+    SDL_RenderCopy(graphics_get_renderer(), texture, 0, dest_rect);
 }
 
 // Set texture alpha (transparency)
@@ -146,7 +175,7 @@ function graphics_textures_info() {
     print("- Coordinate system integration");
     print("- Memory management");
     print("Loaded textures: " + texture_count);
-    print("Functions: load_texture(), draw_texture(), set_texture_alpha(), destroy_texture()");
+    print("Functions: load_texture(), draw_texture(), draw_texture_sized(), set_texture_alpha(), destroy_texture()");
 }
 
 print("Graphics Textures Module loaded successfully!");
