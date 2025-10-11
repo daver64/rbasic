@@ -1,6 +1,7 @@
 // Graphics Colours Module - Rebuilt working version
 // Colour utilities and management
 
+import "blib/sdl2.bas";
 import "blib/graphics/core.bas";
 
 // ========================================
@@ -158,7 +159,7 @@ function set_colour_rgb(r as integer, g as integer, b as integer) {
         b = 255;
     }
     
-    SDL_SetRenderDrawColour(graphics_get_renderer(), r, g, b, 255);
+    SDL_SetRenderDrawColor(sdl_renderer, r, g, b, 255);
 }
 
 // Set the current drawing colour using a colour value

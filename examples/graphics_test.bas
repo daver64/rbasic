@@ -1,135 +1,35 @@
-// Graphics Module Test - Demonstrates the new graphics system
-// Tests texture loading, coordinate systems, and colour management
+// Graphics Test - Simple test with blue screen and yellow line
+// Press ESCAPE or close window to quit
 
 import "blib/sdl2.bas";
-import "blib/graphics/core.bas";
-import "blib/graphics/textures.bas";
-import "blib/graphics/colours.bas";
 
-print("=== Graphics Module Test ===");
+print("Graphics Test - Blue screen with yellow line");
+print("Press ESCAPE to quit");
 
-// Initialize SDL2 first
-if (sdl_init("Graphics Module Test", 800, 600) == 0) {
+// Initialize SDL
+if (sdl_init("Graphics Test", 800, 600) == 0) {
     print("Failed to initialize SDL");
     return;
 }
 
-// Initialize graphics module
-if (graphics_init(sdl_renderer, 800, 600) == 0) {
-    print("Failed to initialize graphics module");
-    sdl_cleanup();
-    return;
-}
-
-// Show module information
-graphics_core_info();
-graphics_textures_info();
-graphics_colours_info();
-
-var frame_count = 0;
-var test_phase = 0; // 0 = coordinate system demo, 1 = colour demo
-
-print("Starting graphics test...");
-print("Press ESCAPE to exit, any other key to switch test phase");
-
-// Main test loop
+// Main rendering loop
 while (sdl_is_running()) {
-    // Clear screen
-    set_black();
-    SDL_RenderClear(sdl_renderer);
+    // Clear to blue background
+    sdl_clear_blue();
     
-    if (test_phase == 0) {
-        // Test coordinate systems and basic drawing
-        
-        // Draw coordinate system indicators
-        set_red();
-        graphics_draw_point(0, 0); // Origin
-        
-        set_green();
-        graphics_draw_line(0, 0, 100, 0); // X axis
-        
-        set_blue();
-        graphics_draw_line(0, 0, 0, 100); // Y axis
-        
-        // Draw some test points
-        set_yellow();
-        graphics_draw_point(100, 100);
-        graphics_draw_point(200, 150);
-        graphics_draw_point(300, 200);
-        
-        // Draw test lines
-        set_cyan();
-        graphics_draw_line(50, 50, 150, 100);
-        graphics_draw_line(200, 50, 300, 150);
-        
-        // Draw coordinate system info
-        set_white();
-        var coord_text = "Coordinate System: " + (graphics_get_coordinate_system() == 0 ? "Screen" : "Cartesian");
-        // Note: Text rendering will be added in fonts module
-        
-    } else if (test_phase == 1) {
-        // Test colour system
-        
-        // Draw rainbow gradient using HSV
-        var x = 0;
-        while (x < 800) {
-            var hue = (x / 800.0) * 360.0;
-            var colour = hsv_to_rgb(hue, 1.0, 1.0);
-            set_colour_packed(colour);
-            graphics_draw_line(x, 100, x, 200);
-            x = x + 2;
-        }
-        
-        // Draw colour mixing demo
-        var time = sdl_get_ticks() / 1000.0;
-        var mix_ratio = (sin(time) + 1.0) / 2.0; // 0.0 to 1.0
-        var mixed_colour = mix_colours(COLOUR_RED, COLOUR_BLUE, mix_ratio);
-        set_colour_packed(mixed_colour);
-        
-        // Draw some shapes with mixed colour
-        var y = 250;
-        while (y < 350) {
-            graphics_draw_line(200, y, 600, y);
-            y = y + 5;
-        }
-        
-        // Draw brightness demo
-        var brightness_x = 100;
-        var brightness_val = -1.0;
-        while (brightness_x < 700) {
-            var bright_colour = adjust_brightness(COLOUR_GREEN, brightness_val);
-            set_colour_packed(bright_colour);
-            graphics_draw_line(brightness_x, 400, brightness_x, 500);
-            brightness_x = brightness_x + 2;
-            brightness_val = brightness_val + (2.0 / 600.0); // -1.0 to 1.0
-        }
-    }
+    // Draw a yellow line
+    sdl_draw_coloured_line(100, 100, 700, 500, 255, 255, 0);  // Yellow line
     
-    // Present frame
+    // Present the frame
     sdl_present();
     
     // Process events
     sdl_process_events();
     
-    // Simple frame rate control
+    // Frame rate control
     sdl_delay(16); // ~60 FPS
-    
-    frame_count = frame_count + 1;
-    
-    // Switch test phase every 300 frames (5 seconds)
-    if (frame_count % 300 == 0) {
-        test_phase = 1 - test_phase; // Toggle between 0 and 1
-        print("Switching to test phase: " + str(test_phase));
-        
-        // Switch coordinate system for demo
-        graphics_set_coordinate_system(1 - graphics_get_coordinate_system());
-    }
 }
 
-print("Graphics test completed!");
-print("Total frames rendered: " + str(frame_count));
-
 // Cleanup
-graphics_cleanup();
 sdl_cleanup();
-print("Graphics Module Test finished successfully!");
+print("Graphics test complete!");

@@ -267,7 +267,6 @@ function sdl_process_events() as integer {
         // Handle quit event (window close button)
         if (event_type == get_constant("SDL_QUIT")) {
             sdl_running = 0;
-            print("Quit event received");
         }
         
         // Handle key press events
@@ -277,7 +276,6 @@ function sdl_process_events() as integer {
             // Check for escape key
             if (key_code == get_constant("SDL_SCANCODE_ESCAPE")) {
                 sdl_running = 0;
-                print("Escape key pressed");
             }
         }
     }
