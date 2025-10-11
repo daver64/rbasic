@@ -191,6 +191,12 @@ function graphics_draw_line(x1 as double, y1 as double, x2 as double, y2 as doub
 // Module Information
 // ========================================
 
+// Simple test function to verify function generation
+function graphics_test_simple() {
+    print("Simple test function works!");
+    return 42;
+}
+
 function graphics_core_info() {
     print("=== Graphics Core Module ===");
     print("Features:");
@@ -202,11 +208,15 @@ function graphics_core_info() {
     
     if (graphics_initialized == 1) {
         print("Status: INITIALIZED");
-        print("Renderer: " + str(graphics_current_renderer));
-        print("Screen: " + str(graphics_screen_width) + "x" + str(graphics_screen_height));
-        print("Coordinate system: " + (graphics_coordinate_system == 0 ? "Screen" : "Cartesian"));
+        print("Renderer active and ready");
+        if (graphics_coordinate_system == 0) {
+            print("Coordinate system: Screen coordinates");
+        } else {
+            print("Coordinate system: Cartesian coordinates");
+        }
     } else {
         print("Status: NOT INITIALIZED");
         print("Call graphics_init() first");
     }
+    print("Graphics Core Module ready for use!");
 }
