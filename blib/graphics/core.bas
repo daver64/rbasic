@@ -1,6 +1,8 @@
 // Graphics Core Module - Fundamental graphics operations and coordinate system management
 // Provides the foundation for all graphics operations with configurable coordinate systems
 
+import "blib/sdl2.bas";
+
 // ========================================
 // SDL2_image Constants (must be first)
 // ========================================
@@ -9,6 +11,18 @@ var IMG_INIT_JPG = 1;
 var IMG_INIT_PNG = 2;
 var IMG_INIT_TIF = 4;
 var IMG_INIT_WEBP = 8;
+
+// SDL2 Texture constants
+var SDL_PIXELFORMAT_RGBA8888 = 373694468;
+var SDL_TEXTUREACCESS_STATIC = 0;
+var SDL_TEXTUREACCESS_STREAMING = 1;
+var SDL_TEXTUREACCESS_TARGET = 2;
+
+// Blend modes
+var SDL_BLENDMODE_NONE = 0;
+var SDL_BLENDMODE_BLEND = 1;
+var SDL_BLENDMODE_ADD = 2;
+var SDL_BLENDMODE_MOD = 4;
 
 // ========================================
 // SDL2_image FFI Declarations

@@ -543,6 +543,11 @@ bool Interpreter::handleIOFunctions(CallExpr& node) {
         return true;
     }
     
+    if (node.name == "exit" && node.arguments.size() == 0) {
+        std::exit(0);
+        return true;
+    }
+    
     return false; // Function not handled by this dispatcher
 }
 

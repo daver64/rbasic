@@ -143,6 +143,11 @@ function sdl_is_running() as integer {
     return sdl_running;
 }
 
+// Get the SDL renderer
+function sdl_get_renderer() as pointer {
+    return sdl_renderer;
+}
+
 // Clear screen to blue color
 function sdl_clear_blue() {
     SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 255, 255); // Blue background

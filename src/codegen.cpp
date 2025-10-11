@@ -433,6 +433,11 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
     
+    if (node.name == "exit" && node.arguments.size() == 0) {
+        write("std::exit(0)");
+        return;
+    }
+    
     // Note: External functions (graphics, database, etc.) will be handled via FFI
     
     // String conversion functions
@@ -521,10 +526,8 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
 
-    if (node.name == "alloc_int_buffer" && node.arguments.size() == 1) {
-        write("basic_runtime::alloc_int_buffer(to_int(");
-        node.arguments[0]->accept(*this);
-        write("))");
+    if (node.name == "alloc_int_buffer" && node.arguments.size() == 0) {
+        write("basic_runtime::alloc_int_buffer()");
         return;
     }
 
