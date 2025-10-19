@@ -3,6 +3,7 @@ build/
 *.dir/
 mingw64/
 mingw64_temp/
+mingw64_disabled/
 build_mingw/
 # Executables
 *.exe

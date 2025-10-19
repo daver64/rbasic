@@ -474,6 +474,14 @@ BasicValue get_struct_field(const BasicStruct& struct_, const std::string& field
     return 0; // Default value if field not found
 }
 
+// Overload that accepts BasicValue and extracts the struct
+BasicValue get_struct_field(const BasicValue& value, const std::string& fieldName) {
+    if (std::holds_alternative<BasicStruct>(value)) {
+        return get_struct_field(std::get<BasicStruct>(value), fieldName);
+    }
+    return 0; // Return 0 if not a struct
+}
+
 void set_struct_field(BasicStruct& struct_, const std::string& fieldName, const BasicValue& value) {
     struct_.fields[fieldName] = value;
 }

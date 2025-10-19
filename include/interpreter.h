@@ -84,6 +84,7 @@ public:
     void visit(StructLiteralExpr& node) override;
     void visit(GLMConstructorExpr& node) override;
     void visit(GLMComponentAccessExpr& node) override;
+    void visit(MemberAccessExpr& node) override;
     
     void visit(ExpressionStmt& node) override;
     void visit(VarStmt& node) override;

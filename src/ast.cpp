@@ -100,4 +100,8 @@ void GLMComponentAccessExpr::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
 }
 
+void MemberAccessExpr::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
 } // namespace rbasic

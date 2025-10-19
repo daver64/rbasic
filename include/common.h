@@ -17,8 +17,10 @@
 namespace rbasic {
 
 // Forward declarations for complex types
+struct StructValue;
+
 struct ArrayValue {
-    std::map<int, std::variant<int, double, std::string, bool>> elements;
+    std::map<int, std::variant<int, double, std::string, bool, StructValue>> elements;
     std::vector<int> dimensions;
     
     ArrayValue() = default;

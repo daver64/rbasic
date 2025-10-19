@@ -197,6 +197,8 @@ void Interpreter::visit(VariableExpr& node) {
                     lastValue = std::get<std::string>(element);
                 } else if (std::holds_alternative<bool>(element)) {
                     lastValue = std::get<bool>(element);
+                } else if (std::holds_alternative<StructValue>(element)) {
+                    lastValue = std::get<StructValue>(element);
                 }
             } else {
                 // Return default value based on context - for now, return 0
@@ -358,6 +360,8 @@ void Interpreter::visit(AssignExpr& node) {
                 array.elements[flatIndex] = std::get<std::string>(value);
             } else if (std::holds_alternative<bool>(value)) {
                 array.elements[flatIndex] = std::get<bool>(value);
+            } else if (std::holds_alternative<StructValue>(value)) {
+                array.elements[flatIndex] = std::get<StructValue>(value);
             }
             
             setVariable(node.variable, array);
@@ -2804,7 +2808,73 @@ void Interpreter::visit(GLMComponentAccessExpr& node) {
             throw RuntimeError("Invalid component '" + node.component + "' for vec4");
         }
     } else {
-        throw RuntimeError("Component access not supported for this type");
+        throw RuntimeError("Component access not supported for this type");  
+    }
+}
+
+void Interpreter::visit(MemberAccessExpr& node) {
+    ValueType objectValue = evaluate(*node.object);
+    
+    // Check if this is GLM component access first
+    if ((node.member == "x" || node.member == "y" || node.member == "z" || node.member == "w") &&
+        (std::holds_alternative<Vec2Value>(objectValue) || std::holds_alternative<Vec3Value>(objectValue) || std::holds_alternative<Vec4Value>(objectValue))) {
+        
+        // Handle GLM component access
+        if (std::holds_alternative<Vec2Value>(objectValue)) {
+            const Vec2Value& vec = std::get<Vec2Value>(objectValue);
+            if (node.member == "x") {
+                lastValue = static_cast<double>(vec.data.x);
+            } else if (node.member == "y") {
+                lastValue = static_cast<double>(vec.data.y);
+            } else {
+                throw RuntimeError("Invalid component '" + node.member + "' for vec2");
+            }
+        } else if (std::holds_alternative<Vec3Value>(objectValue)) {
+            const Vec3Value& vec = std::get<Vec3Value>(objectValue);
+            if (node.member == "x") {
+                lastValue = static_cast<double>(vec.data.x);
+            } else if (node.member == "y") {
+                lastValue = static_cast<double>(vec.data.y);
+            } else if (node.member == "z") {
+                lastValue = static_cast<double>(vec.data.z);
+            } else {
+                throw RuntimeError("Invalid component '" + node.member + "' for vec3");
+            }
+        } else if (std::holds_alternative<Vec4Value>(objectValue)) {
+            const Vec4Value& vec = std::get<Vec4Value>(objectValue);
+            if (node.member == "x") {
+                lastValue = static_cast<double>(vec.data.x);
+            } else if (node.member == "y") {
+                lastValue = static_cast<double>(vec.data.y);
+            } else if (node.member == "z") {
+                lastValue = static_cast<double>(vec.data.z);
+            } else if (node.member == "w") {
+                lastValue = static_cast<double>(vec.data.w);
+            } else {
+                throw RuntimeError("Invalid component '" + node.member + "' for vec4");
+            }
+        }
+    } else if (std::holds_alternative<StructValue>(objectValue)) {
+        // Handle struct member access
+        const StructValue& structVal = std::get<StructValue>(objectValue);
+        auto it = structVal.fields.find(node.member);
+        if (it != structVal.fields.end()) {
+            // Convert from struct field variant to ValueType
+            auto& fieldValue = it->second;
+            if (std::holds_alternative<int>(fieldValue)) {
+                lastValue = std::get<int>(fieldValue);
+            } else if (std::holds_alternative<double>(fieldValue)) {
+                lastValue = std::get<double>(fieldValue);
+            } else if (std::holds_alternative<std::string>(fieldValue)) {
+                lastValue = std::get<std::string>(fieldValue);
+            } else if (std::holds_alternative<bool>(fieldValue)) {
+                lastValue = std::get<bool>(fieldValue);
+            }
+        } else {
+            throw RuntimeError("Struct member '" + node.member + "' not found");
+        }
+    } else {
+        throw RuntimeError("Member access is only supported on struct and GLM vector types");
     }
 }
 
@@ -2860,6 +2930,8 @@ void Interpreter::visit(VarStmt& node) {
                 array.elements[flatIndex] = std::get<std::string>(value);
             } else if (std::holds_alternative<bool>(value)) {
                 array.elements[flatIndex] = std::get<bool>(value);
+            } else if (std::holds_alternative<StructValue>(value)) {
+                array.elements[flatIndex] = std::get<StructValue>(value);
             }
             
             setVariable(node.variable, array);  // Use setVariable instead of defineVariable

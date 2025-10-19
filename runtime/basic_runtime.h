@@ -423,6 +423,7 @@ void set_array_element(BasicValue& arrayVar, const std::vector<BasicValue>& indi
 // Structure functions
 BasicStruct create_struct(const std::string& typeName);
 BasicValue get_struct_field(const BasicStruct& struct_, const std::string& fieldName);
+BasicValue get_struct_field(const BasicValue& value, const std::string& fieldName);
 void set_struct_field(BasicStruct& struct_, const std::string& fieldName, const BasicValue& value);
 
 // Buffer allocation and output parameter functions

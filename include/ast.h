@@ -138,6 +138,17 @@ public:
     void accept(ASTVisitor& visitor) override;
 };
 
+class MemberAccessExpr : public Expression {
+public:
+    std::unique_ptr<Expression> object;
+    std::string member;  // struct member name
+    
+    MemberAccessExpr(std::unique_ptr<Expression> obj, std::string mem,
+                    const SourcePosition& pos = SourcePosition())
+        : Expression(pos), object(std::move(obj)), member(std::move(mem)) {}
+    void accept(ASTVisitor& visitor) override;
+};
+
 // Statement nodes
 class Statement : public ASTNode {
 public:
@@ -329,6 +340,7 @@ public:
     virtual void visit(StructLiteralExpr& node) = 0;
     virtual void visit(GLMConstructorExpr& node) = 0;
     virtual void visit(GLMComponentAccessExpr& node) = 0;
+    virtual void visit(MemberAccessExpr& node) = 0;
     
     virtual void visit(ExpressionStmt& node) = 0;
     virtual void visit(VarStmt& node) = 0;

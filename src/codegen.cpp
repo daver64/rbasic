@@ -789,6 +789,13 @@ void CodeGenerator::visit(GLMComponentAccessExpr& node) {
     write(", \"" + node.component + "\")");
 }
 
+void CodeGenerator::visit(MemberAccessExpr& node) {
+    // Generate struct member access call  
+    write("get_struct_field(");
+    node.object->accept(*this);
+    write(", \"" + node.member + "\")");
+}
+
 void CodeGenerator::visit(ExpressionStmt& node) {
     indent();
     node.expression->accept(*this);

@@ -283,13 +283,8 @@ std::unique_ptr<Expression> Parser::call() {
         } else if (match({TokenType::DOT})) {
             auto member = consume(TokenType::IDENTIFIER, "Expected member name after '.'");
             
-            // Check if this is GLM component access (x, y, z, w)
-            if (member.value == "x" || member.value == "y" || member.value == "z" || member.value == "w") {
-                expr = std::make_unique<GLMComponentAccessExpr>(std::move(expr), member.value);
-            } else if (auto var = dynamic_cast<VariableExpr*>(expr.get())) {
-                // Regular struct member access
-                var->member = member.value;
-            }
+            // Use MemberAccessExpr for all member access - let runtime determine if it's GLM or struct
+            expr = std::make_unique<MemberAccessExpr>(std::move(expr), member.value);
         } else {
             break;
         }
