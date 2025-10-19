@@ -1,4 +1,6 @@
 #include "parser.h"
+#include <algorithm>
+#include <iostream>
 
 namespace rbasic {
 
@@ -353,6 +355,26 @@ std::vector<std::unique_ptr<Expression>> Parser::arguments() {
 // Statement parsing
 std::unique_ptr<Statement> Parser::statement() {
     try {
+        // Strict check: detect common typo pattern at statement start where a user types
+        // an identifier followed by another identifier and '=' (e.g. "vay y=2;")
+        // This is most likely a typo for the 'var' keyword. Emit a clear syntax error.
+        if (check(TokenType::IDENTIFIER)) {
+            // Ensure we have at least two more tokens to inspect safely
+            if (current + 2 < tokens.size()) {
+                Token first = tokens[current];
+                Token second = tokens[current + 1];
+                Token third = tokens[current + 2];
+
+                if (second.type == TokenType::IDENTIFIER && third.type == TokenType::ASSIGN) {
+                    std::string nameLower = first.value;
+                    std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+                    if (nameLower != "var") {
+                        throw SyntaxError("Unexpected identifier '" + first.value + "' at start of statement. Did you mean 'var'?", first.line);
+                    }
+                }
+            }
+        }
+
         if (match({TokenType::VAR})) return varStatement();
         if (match({TokenType::IF})) return ifStatement();
         if (match({TokenType::FOR})) return forStatement();
@@ -366,7 +388,7 @@ std::unique_ptr<Statement> Parser::statement() {
         if (match({TokenType::IMPORT})) return importStatement();
         
         return expressionStatement();
-    } catch (const std::exception&) {
+    } catch (const std::exception& e) {
         synchronize();
         throw;
     }
@@ -785,9 +807,9 @@ std::unique_ptr<Program> Parser::parse() {
     while (!isAtEnd()) {
         try {
             statements.push_back(statement());
-        } catch (const std::exception& /* e */) {
-            // Error recovery - skip to next statement
-            synchronize();
+        } catch (const std::exception& e) {
+            // Re-throw the exception instead of silently ignoring it
+            throw;
         }
     }
     

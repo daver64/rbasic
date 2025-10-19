@@ -306,6 +306,14 @@ BasicValue log_val(const BasicValue& value) {
     return std::log(val);
 }
 
+BasicValue ln_val(const BasicValue& value) {
+    double val = to_double(value);
+    if (val <= 0) {
+        throw std::runtime_error("LN requires a positive argument");
+    }
+    return std::log(val);  // ln is natural logarithm (same as log)
+}
+
 BasicValue log10_val(const BasicValue& value) {
     double val = to_double(value);
     if (val <= 0) {

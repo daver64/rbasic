@@ -291,6 +291,7 @@ BasicValue acos_val(const BasicValue& value);
 BasicValue atan_val(const BasicValue& value);
 BasicValue atan2_val(const BasicValue& y, const BasicValue& x);
 BasicValue log_val(const BasicValue& value);
+BasicValue ln_val(const BasicValue& value);  // ln is alias for natural logarithm
 BasicValue log10_val(const BasicValue& value);
 BasicValue exp_val(const BasicValue& value);
 BasicValue pow_val(const BasicValue& base, const BasicValue& exp);

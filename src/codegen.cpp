@@ -295,6 +295,11 @@ void CodeGenerator::visit(CallExpr& node) {
             node.arguments[0]->accept(*this);
             write(")");
             return;
+        } else if (node.name == "ln") {
+            write("ln_val(");
+            node.arguments[0]->accept(*this);
+            write(")");
+            return;
         } else if (node.name == "log10") {
             write("log10_val(");
             node.arguments[0]->accept(*this);

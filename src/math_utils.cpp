@@ -18,6 +18,7 @@ MathFunctionDispatcher::MathFunctionDispatcher() {
     functions["acos"] = [](double x) { return std::acos(x); };
     functions["atan"] = [](double x) { return std::atan(x); };
     functions["log"] = safelog;
+    functions["ln"] = safelog;  // ln is an alias for natural logarithm
     functions["log10"] = safelog10;
     functions["exp"] = [](double x) { return std::exp(x); };
     functions["floor"] = [](double x) { return std::floor(x); };
