@@ -36,9 +36,9 @@ ffi pointer IMG_LoadTexture(renderer as pointer, file as string) from "SDL2_imag
 ffi integer IMG_SavePNG(surface as pointer, file as string) from "SDL2_image";
 
 // SDL2 surface and BMP support
-ffi pointer SDL_LoadBMP(file as string) from "SDL2.dll";
-ffi pointer SDL_CreateTextureFromSurface(renderer as pointer, surface as pointer) from "SDL2.dll";
-ffi integer SDL_FreeSurface(surface as pointer) from "SDL2.dll";
+ffi pointer SDL_LoadBMP(file as string) from "SDL2";
+ffi pointer SDL_CreateTextureFromSurface(renderer as pointer, surface as pointer) from "SDL2";
+ffi integer SDL_FreeSurface(surface as pointer) from "SDL2";
 
 // ========================================
 // Graphics Core State

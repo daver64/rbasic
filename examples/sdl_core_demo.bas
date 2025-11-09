@@ -123,7 +123,10 @@ while (sdl_is_running()) {
     // Update title every 2 seconds
     if ((elapsed_ms / 2000) != ((elapsed_ms - 33) / 2000)) {
         var seconds = elapsed_ms / 1000;
-        var fps = frame_count * 1000 / elapsed_ms;
+        var fps = 0.0;
+        if (elapsed_ms > 0) {
+            fps = frame_count * 1000 / elapsed_ms;
+        }
         var title = "SDL2 Demo - " + str(seconds) + "s - Frame " + str(frame_count) + " - FPS " + str(fps);
         sdl_set_window_title(title);
     }
@@ -140,7 +143,7 @@ while (sdl_is_running()) {
     
     // Status indicator
     var status_colour = 0;
-    if (resize_cycle >= 5 && resize_cycle < 10) {
+    if (resize_cycle >= 5 and resize_cycle < 10) {
         status_colour = 255;  // Red for large mode
         sdl_set_colour(255, 0, 0);
     } else {

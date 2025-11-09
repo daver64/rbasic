@@ -4,7 +4,7 @@
 import "blib/sdl2.bas";
 
 // Add IMG_LoadTexture if not available
-ffi pointer IMG_LoadTexture(renderer as pointer, file as string) from "SDL2_image.dll";
+ffi pointer IMG_LoadTexture(renderer as pointer, file as string) from "SDL2_image";
 
 print("=== Direct SDL2 Texture Test ===");
 

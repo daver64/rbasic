@@ -38,7 +38,39 @@ std::shared_ptr<SafeLibrary> SafeFFIManager::load_library(const std::string& nam
 #ifdef _WIN32
     LibraryHandle handle = LoadLibraryA(name.c_str());
 #else
+    // On Linux, try multiple approaches for library loading
     LibraryHandle handle = dlopen(name.c_str(), RTLD_LAZY);
+    
+    // If initial load fails, try platform-specific paths for common libraries
+    if (!handle) {
+        std::vector<std::string> try_paths;
+        
+        if (name == "SDL2" || name == "libSDL2.so") {
+            try_paths = {
+                "/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0",
+                "/usr/lib/libSDL2-2.0.so.0",
+                "/usr/local/lib/libSDL2.so",
+                "libSDL2-2.0.so.0"
+            };
+        } else if (name == "SDL2_gfx" || name == "libSDL2_gfx.so") {
+            try_paths = {
+                "/usr/lib/x86_64-linux-gnu/libSDL2_gfx.so",
+                "/usr/lib/x86_64-linux-gnu/libSDL2_gfx-1.0.so.0",
+                "/usr/lib/libSDL2_gfx.so"
+            };
+        } else if (name == "SDL2_image" || name == "libSDL2_image.so") {
+            try_paths = {
+                "/usr/lib/x86_64-linux-gnu/libSDL2_image.so",
+                "/usr/lib/x86_64-linux-gnu/libSDL2_image-2.0.so.0",
+                "/usr/lib/libSDL2_image.so"
+            };
+        }
+        
+        for (const auto& path : try_paths) {
+            handle = dlopen(path.c_str(), RTLD_LAZY);
+            if (handle) break;
+        }
+    }
 #endif
     
     if (!handle) {

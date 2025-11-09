@@ -393,6 +393,8 @@ BasicValue func_terminal_clear();
 BasicValue func_terminal_set_cursor(const BasicValue& row, const BasicValue& col);
 BasicValue func_terminal_get_cursor_row();
 BasicValue func_terminal_get_cursor_col();
+BasicValue func_terminal_save_cursor();
+BasicValue func_terminal_restore_cursor();
 BasicValue func_terminal_set_colour(const BasicValue& foreground, const BasicValue& background);
 BasicValue func_terminal_reset_colour();
 BasicValue func_terminal_print(const BasicValue& text);

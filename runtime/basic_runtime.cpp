@@ -1224,6 +1224,14 @@ BasicValue terminal_get_cursor_col() {
     return col;
 }
 
+void terminal_save_cursor() {
+    rbasic::Terminal::saveCursor();
+}
+
+void terminal_restore_cursor() {
+    rbasic::Terminal::restoreCursor();
+}
+
 void terminal_set_colour(int foreground, int background) {
     rbasic::Terminal::setColour(static_cast<rbasic::Colour>(foreground), 
                                static_cast<rbasic::Colour>(background));
@@ -1305,6 +1313,16 @@ BasicValue func_terminal_get_cursor_row() {
 
 BasicValue func_terminal_get_cursor_col() {
     return terminal_get_cursor_col();
+}
+
+BasicValue func_terminal_save_cursor() {
+    terminal_save_cursor();
+    return 0;
+}
+
+BasicValue func_terminal_restore_cursor() {
+    terminal_restore_cursor();
+    return 0;
 }
 
 BasicValue func_terminal_set_colour(const BasicValue& foreground, const BasicValue& background) {
@@ -1992,6 +2010,20 @@ BasicValue call_ffi_function(const std::string& library_name, const std::string&
         (void)d1; (void)d2; (void)d3; (void)d4; (void)d5; (void)p3; (void)p2;
         
         // Try different 5-parameter patterns in order of likelihood
+        
+        // Pattern: (pointer, pointer, pointer, pointer, pointer) -> int (SDL_QueryTexture)
+        // Only match if args 2 and 3 are actual pointers (not integer 0)
+        if (std::holds_alternative<void*>(arg1) && 
+            std::holds_alternative<void*>(arg2) &&
+            std::holds_alternative<void*>(arg3) &&
+            std::holds_alternative<void*>(arg4) &&
+            std::holds_alternative<void*>(arg5)) {
+            
+            typedef int (FFI_CALL_CONV *FuncType)(void*, void*, void*, void*, void*);
+            auto func = reinterpret_cast<FuncType>(funcPtr);
+            int result = func(p1, p2, p3, p4, p5);
+            return BasicValue(static_cast<double>(result));
+        }
         
         // Pattern: (pointer, int, int, int, int) -> int (SDL2 SetRenderDrawColour)
         if (std::holds_alternative<void*>(arg1) && 

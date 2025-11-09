@@ -72,6 +72,9 @@ var SDL_BLENDMODE_MOD = 4;
 // Timing
 ffi integer SDL_Delay(ms as integer) from "SDL2";
 
+// Error reporting
+ffi pointer SDL_GetError() from "SDL2";
+
 // ========================================
 // Global State
 // ========================================
@@ -123,16 +126,19 @@ function sdl_init(title as string, width as integer, height as integer) as integ
 
 // Cleanup SDL resources
 function sdl_cleanup() {
+    print("Cleaning up renderer...");
     if (not_null(sdl_renderer)) {
         SDL_DestroyRenderer(sdl_renderer);
         sdl_renderer = 0;
     }
     
+    print("Cleaning up window...");
     if (not_null(sdl_window)) {
         SDL_DestroyWindow(sdl_window);
         sdl_window = 0;
     }
     
+    print("Calling SDL_Quit...");
     SDL_Quit();
     sdl_running = 0;
     print("SDL2 cleanup complete");
@@ -255,14 +261,16 @@ function sdl_present() {
 function sdl_process_events() as integer {
     var events_processed = 0;
     
-    // Create a local event buffer to avoid global variable issues
-    var local_event_buffer = create_sdl_event();
+    // Reuse the global event buffer instead of creating a new one each time
+    if (is_null(sdl_event_buffer)) {
+        sdl_event_buffer = create_sdl_event();
+    }
     
-    while (SDL_PollEvent(local_event_buffer) == 1) {
+    while (SDL_PollEvent(sdl_event_buffer) == 1) {
         events_processed = events_processed + 1;
         
         // Use the safer get_event_type function
-        var event_type = get_event_type(local_event_buffer);
+        var event_type = get_event_type(sdl_event_buffer);
         
         // Handle quit event (window close button)
         if (event_type == get_constant("SDL_QUIT")) {
@@ -271,7 +279,7 @@ function sdl_process_events() as integer {
         
         // Handle key press events
         if (event_type == get_constant("SDL_KEYDOWN")) {
-            var key_code = get_key_code(local_event_buffer);
+            var key_code = get_key_code(sdl_event_buffer);
             
             // Check for escape key
             if (key_code == get_constant("SDL_SCANCODE_ESCAPE")) {

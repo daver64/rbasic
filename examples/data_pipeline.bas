@@ -111,10 +111,10 @@ if (file_exists("analysis_report.txt") and file_exists("sensor_data.bin")) {
     print("  [OK] All files created successfully");
 } else {
     print("  [ERROR] Some files missing");
-    if (!file_exists("analysis_report.txt")) {
+    if (not file_exists("analysis_report.txt")) {
         print("  Missing: analysis_report.txt");
     }
-    if (!file_exists("sensor_data.bin")) {
+    if (not file_exists("sensor_data.bin")) {
         print("  Missing: sensor_data.bin");
     }
 }

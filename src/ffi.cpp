@@ -33,17 +33,38 @@ std::shared_ptr<Library> FFIManager::load_library(const std::string& name) {
     // 1. Try the name as-is first
     handle = dlopen(platform_name.c_str(), RTLD_LAZY);
     
-    // 2. If that fails, try common system paths for SDL2
-    if (!handle && (name.find("SDL2") != std::string::npos || name.find("sdl2") != std::string::npos)) {
-        // Try common SDL2 locations
-        std::vector<std::string> sdl_paths = {
-            "/usr/lib/x86_64-linux-gnu/libSDL2.so.0",
-            "/usr/lib/libSDL2.so.0", 
-            "/usr/local/lib/libSDL2.so",
-            "libSDL2-2.0.so.0"
-        };
+    // 2. If that fails, try common system paths and versions for SDL2 libraries
+    if (!handle) {
+        std::vector<std::string> try_paths;
         
-        for (const auto& path : sdl_paths) {
+        if (name == "SDL2" || name.find("SDL2") == 0) {
+            // SDL2 base library
+            try_paths = {
+                "/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0",
+                "/usr/lib/libSDL2-2.0.so.0",
+                "/usr/local/lib/libSDL2.so",
+                "libSDL2-2.0.so.0",
+                "libSDL2.so"
+            };
+        } else if (name == "SDL2_gfx") {
+            // SDL2_gfx library
+            try_paths = {
+                "/usr/lib/x86_64-linux-gnu/libSDL2_gfx.so",
+                "/usr/lib/x86_64-linux-gnu/libSDL2_gfx-1.0.so.0",
+                "/usr/lib/libSDL2_gfx.so",
+                "libSDL2_gfx.so"
+            };
+        } else if (name == "SDL2_image") {
+            // SDL2_image library
+            try_paths = {
+                "/usr/lib/x86_64-linux-gnu/libSDL2_image.so",
+                "/usr/lib/x86_64-linux-gnu/libSDL2_image-2.0.so.0",
+                "/usr/lib/libSDL2_image.so",
+                "libSDL2_image.so"
+            };
+        }
+        
+        for (const auto& path : try_paths) {
             handle = dlopen(path.c_str(), RTLD_LAZY);
             if (handle) break;
         }

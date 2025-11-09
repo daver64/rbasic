@@ -25,11 +25,26 @@ function load_texture(filename as string) as pointer {
     
     // Try IMG_LoadTexture first (supports BMP, PNG, JPG, etc.)
     var texture = IMG_LoadTexture(graphics_get_renderer(), filename);
-    
+
     if (is_null(texture)) {
-        print("ERROR: Failed to load texture: " + filename);
-        print("Make sure the file exists and is a supported format (BMP, PNG, JPG, WEBP)");
-        return 0;
+        // Fallback: try loading as surface and create texture from surface
+        print("IMG_LoadTexture failed, attempting surface fallback for: " + filename);
+        var surface = IMG_Load(filename);
+        if (is_null(surface)) {
+            print("ERROR: Failed to load texture: " + filename);
+            print("Make sure the file exists and is a supported format (BMP, PNG, JPG, WEBP)");
+            return 0;
+        }
+
+        // Create texture from surface
+        texture = SDL_CreateTextureFromSurface(graphics_get_renderer(), surface);
+        // Free the surface regardless
+        SDL_FreeSurface(surface);
+
+        if (is_null(texture)) {
+            print("ERROR: Failed to create texture from surface for: " + filename);
+            return 0;
+        }
     }
     
     print("Texture loaded successfully: " + filename);
@@ -90,10 +105,14 @@ function draw_texture(texture as pointer, x as double, y as double) {
     // Get texture dimensions
     var width_buffer = alloc_int_buffer();
     var height_buffer = alloc_int_buffer();
-    var query_result = SDL_QueryTexture(texture, 0, 0, width_buffer, height_buffer);
+    var query_result = SDL_QueryTexture(texture, null, null, width_buffer, height_buffer);
     
     if (query_result != 0) {
         print("ERROR: SDL_QueryTexture failed - using fallback size 128x128");
+        // Print SDL error to help debugging
+        var err_ptr = SDL_GetError();
+        var err_msg = deref_string(err_ptr);
+        print("SDL_Error: " + err_msg);
         // Fallback to a reasonable default size
         draw_texture_sized(texture, x, y, 128, 128);
         return;
@@ -109,16 +128,18 @@ function draw_texture(texture as pointer, x as double, y as double) {
     // Convert to integers for SDL rectangle
     var screen_x = int(screen_x_float);
     var screen_y = int(screen_y_float);
+    var width_int = int(width);
+    var height_int = int(height);
     
     // In cartesian mode, adjust for texture height
     if (graphics_get_coordinate_system() == 1) {
-        screen_y = screen_y - height;
+        screen_y = screen_y - height_int;
     }
     
-    print("Drawing texture at: " + screen_x + ", " + screen_y + " size: " + width + "x" + height);
+    print("Drawing texture at: " + str(screen_x) + ", " + str(screen_y) + " size: " + str(width_int) + "x" + str(height_int));
     
     // Create destination rectangle for proper positioning and sizing
-    var dest_rect = create_sdl_rect(screen_x, screen_y, width, height);
+    var dest_rect = create_sdl_rect(screen_x, screen_y, width_int, height_int);
     SDL_RenderCopy(graphics_get_renderer(), texture, null, dest_rect);
 }
 

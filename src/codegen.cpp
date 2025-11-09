@@ -652,18 +652,28 @@ void CodeGenerator::visit(CallExpr& node) {
     }
 
     // Terminal functions
+    if (node.name == "terminal_init" && node.arguments.size() == 0) {
+        write("func_terminal_init()");
+        return;
+    }
+    
+    if (node.name == "terminal_cleanup" && node.arguments.size() == 0) {
+        write("func_terminal_cleanup()");
+        return;
+    }
+    
     if (node.name == "terminal_supports_colour" && node.arguments.size() == 0) {
-        write("basic_runtime::terminal_supports_colour()");
+        write("func_terminal_supports_colour()");
         return;
     }
     
     if (node.name == "terminal_clear" && node.arguments.size() == 0) {
-        write("basic_runtime::terminal_clear()");
+        write("func_terminal_clear()");
         return;
     }
     
     if (node.name == "terminal_set_cursor" && node.arguments.size() == 2) {
-        write("basic_runtime::terminal_set_cursor(to_int(");
+        write("func_terminal_set_cursor(to_int(");
         node.arguments[0]->accept(*this);
         write("), to_int(");
         node.arguments[1]->accept(*this);
@@ -671,8 +681,42 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
     
+    if (node.name == "terminal_get_cursor_row" && node.arguments.size() == 0) {
+        write("func_terminal_get_cursor_row()");
+        return;
+    }
+    
+    if (node.name == "terminal_get_cursor_col" && node.arguments.size() == 0) {
+        write("func_terminal_get_cursor_col()");
+        return;
+    }
+    
+    if (node.name == "terminal_save_cursor" && node.arguments.size() == 0) {
+        write("func_terminal_save_cursor()");
+        return;
+    }
+    
+    if (node.name == "terminal_restore_cursor" && node.arguments.size() == 0) {
+        write("func_terminal_restore_cursor()");
+        return;
+    }
+    
+    if (node.name == "terminal_set_colour" && node.arguments.size() == 2) {
+        write("func_terminal_set_colour(to_int(");
+        node.arguments[0]->accept(*this);
+        write("), to_int(");
+        node.arguments[1]->accept(*this);
+        write("))");
+        return;
+    }
+    
+    if (node.name == "terminal_reset_colour" && node.arguments.size() == 0) {
+        write("func_terminal_reset_colour()");
+        return;
+    }
+    
     if (node.name == "terminal_print" && node.arguments.size() == 3) {
-        write("basic_runtime::terminal_print(to_string(");
+        write("func_terminal_print(to_string(");
         node.arguments[0]->accept(*this);
         write("), to_int(");
         node.arguments[1]->accept(*this);
@@ -682,8 +726,62 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
     
-    if (node.name == "terminal_reset_colour" && node.arguments.size() == 0) {
-        write("basic_runtime::terminal_reset_colour()");
+    if (node.name == "terminal_println" && node.arguments.size() == 0) {
+        write("func_terminal_println()");
+        return;
+    }
+    
+    if (node.name == "terminal_println" && node.arguments.size() == 1) {
+        write("func_terminal_println(to_string(");
+        node.arguments[0]->accept(*this);
+        write("))");
+        return;
+    }
+    
+    if (node.name == "terminal_println" && node.arguments.size() == 2) {
+        write("func_terminal_println(to_string(");
+        node.arguments[0]->accept(*this);
+        write("), to_int(");
+        node.arguments[1]->accept(*this);
+        write("))");
+        return;
+    }
+    
+    if (node.name == "terminal_println" && node.arguments.size() == 3) {
+        write("func_terminal_println(to_string(");
+        node.arguments[0]->accept(*this);
+        write("), to_int(");
+        node.arguments[1]->accept(*this);
+        write("), to_int(");
+        node.arguments[2]->accept(*this);
+        write("))");
+        return;
+    }
+    
+    if (node.name == "terminal_get_rows" && node.arguments.size() == 0) {
+        write("func_terminal_get_rows()");
+        return;
+    }
+    
+    if (node.name == "terminal_get_cols" && node.arguments.size() == 0) {
+        write("func_terminal_get_cols()");
+        return;
+    }
+    
+    if (node.name == "terminal_kbhit" && node.arguments.size() == 0) {
+        write("func_terminal_kbhit()");
+        return;
+    }
+    
+    if (node.name == "terminal_getch" && node.arguments.size() == 0) {
+        write("func_terminal_getch()");
+        return;
+    }
+    
+    if (node.name == "terminal_show_cursor" && node.arguments.size() == 1) {
+        write("func_terminal_show_cursor(");
+        node.arguments[0]->accept(*this);
+        write(")");
         return;
     }
 

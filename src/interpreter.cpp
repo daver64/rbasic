@@ -2083,8 +2083,37 @@ bool Interpreter::callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExp
             const auto& param4Type = ffiFunc.parameters[3].second;
             const auto& param5Type = ffiFunc.parameters[4].second;
             
-            // Pattern: (pointer, string, int, pointer, pointer) - sqlite3_prepare_v2
+            // Pattern: (pointer, pointer, pointer, pointer, pointer) - SDL_QueryTexture
             if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) &&
+                (param2Type == "pointer" || param2Type.find('*') != std::string::npos) &&
+                (param3Type == "pointer" || param3Type.find('*') != std::string::npos) &&
+                (param4Type == "pointer" || param4Type.find('*') != std::string::npos) &&
+                (param5Type == "pointer" || param5Type.find('*') != std::string::npos)) {
+                
+                void* param1 = getPointerValue(arg1Val);
+                void* param2 = getPointerValue(arg2Val);
+                void* param3 = getPointerValue(arg3Val);
+                void* param4 = getPointerValue(arg4Val);
+                void* param5 = getPointerValue(arg5Val);
+                
+                if (returnsInteger) {
+                    typedef int (*Func5)(void*, void*, void*, void*, void*);
+                    auto func = reinterpret_cast<Func5>(funcPtr);
+                    lastValue = static_cast<double>(func(param1, param2, param3, param4, param5));
+                } else if (returnsPointer) {
+                    typedef void* (*Func5)(void*, void*, void*, void*, void*);
+                    auto func = reinterpret_cast<Func5>(funcPtr);
+                    lastValue = func(param1, param2, param3, param4, param5);
+                } else {
+                    typedef void (*Func5)(void*, void*, void*, void*, void*);
+                    auto func = reinterpret_cast<Func5>(funcPtr);
+                    func(param1, param2, param3, param4, param5);
+                    lastValue = 0.0;
+                }
+            }
+            
+            // Pattern: (pointer, string, int, pointer, pointer) - sqlite3_prepare_v2
+            else if ((param1Type == "pointer" || param1Type.find('*') != std::string::npos) &&
                 param2Type == "string" &&
                 (param3Type == "int" || param3Type == "integer") &&
                 (param4Type == "pointer" || param4Type.find('*') != std::string::npos) &&
