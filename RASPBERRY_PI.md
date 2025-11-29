@@ -1,15 +1,45 @@
 # Raspberry Pi Hardware Support
 
-## Overview
+rbasic is designed for Raspberry Pi and single-board computer development, providing native hardware access without external libraries. Control GPIO, SPI, I2C, PWM, and serial interfaces directly from BASIC code.
 
-rbasic provides native hardware access for Raspberry Pi devices, allowing you to control GPIO pins, communicate over SPI/I2C buses, generate PWM signals, and use serial ports. The support is **conditionally compiled** - programs work on both x86/x64 and ARM platforms, with hardware functions only available on Raspberry Pi.
+## Why rbasic for Raspberry Pi?
+
+- ⚡ **Native Performance**: Compile to ARM executables that run at near-C speeds
+- 🔧 **No Dependencies**: Direct hardware access via `/dev` interfaces, no pigpio or WiringPi needed
+- 🎮 **Interactive Development**: Test hardware in real-time with REPL mode
+- 📝 **Simple Syntax**: BASIC's clarity with modern C-style control structures
+- 🚀 **Rapid Prototyping**: Interpret mode for quick hardware testing, compile for deployment
+- 💾 **Small Footprint**: Minimal memory usage, perfect for Pi Zero and embedded systems
 
 ## Supported Hardware
 
 - **Raspberry Pi Zero 2W** (BCM2837, ARM Cortex-A53, 64-bit)
 - **Raspberry Pi 3** (BCM2837)
 - **Raspberry Pi 4** (BCM2711)
-- Other Raspberry Pi models with similar architecture
+- **Raspberry Pi 5** (BCM2712)
+- Compatible ARM single-board computers
+
+## Complete Examples
+
+### 📍 GPIO Examples
+- **`rpi_gpio_blink.bas`** - Basic LED control (start here!)
+- **`rpi_button_led.bas`** - Interactive button input with debouncing
+- **`rpi_act_led_blink.bas`** - Control the green Activity LED on the board
+- **`rpi_distance_sensor.bas`** - HC-SR04 ultrasonic sensor
+
+### 🎛️ PWM Examples
+- **`rpi_pwm_servo.bas`** - Servo motor control (0-180 degrees with hardware PWM)
+
+### 📡 SPI Examples
+- **`rpi_spi_sensor.bas`** - MCP3008 8-channel ADC (analog input)
+
+### 🔌 I2C Examples
+- **`rpi_i2c_bme280.bas`** - BME280 temperature/pressure/humidity sensor
+
+### 📊 System Integration
+- **`rpi_temperature_logger.bas`** - CPU temperature monitoring with file logging
+
+All examples work in both **interpreter mode** (fast testing) and **compiled mode** (production deployment).
 
 ## Platform Detection
 

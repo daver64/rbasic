@@ -1,19 +1,31 @@
-# rbasic - Modern BASIC Language Transpiler (Alpha)
+# rbasic - Modern BASIC for Raspberry Pi & Single Board Computers
 
-**rbasic** is an experimental modern BASIC language transpiler that implements C-style syntax while maintaining BASIC's simplicity. Currently in Alpha development, it supports both interpretation for rapid development and compilation to native C++ executables.
+**rbasic** is a modern BASIC language transpiler designed for Raspberry Pi, embedded systems, and single-board computers. It combines BASIC's simplicity with C-style syntax, native hardware access, and the ability to compile to optimised native executables.
+
+🎯 **Primary Target**: Raspberry Pi Zero 2W, Pi 3/4/5, and compatible ARM single-board computers
 
 ⚠️ **Alpha Software**: This project is in early development. Features may be incomplete, unstable, or subject to breaking changes.
+
+## Why rbasic for Embedded Systems?
+
+- **🔌 Native Hardware Access**: Direct GPIO, SPI, I2C, PWM, and UART control without external libraries
+- **⚡ Dual Execution**: Rapid prototyping with interpreter (`-i`), deploy with native compilation (`-c`)
+- **🎮 Interactive Development**: REPL mode for testing hardware in real-time
+- **📦 Zero Dependencies**: Self-contained executables, no runtime requirements
+- **🚀 Performance**: Near-C++ speeds with automatic multi-core optimisation
+- **🔄 Cross-Compilation**: Develop on PC, compile for ARM from any platform
+- **💾 Small Footprint**: Minimal memory usage, perfect for constrained systems
 
 ## Current Alpha Features
 
 - **C-Style Syntax**: Modern control structures with braces `{}` and proper variable scoping
 - **Dual Execution**: Interpret for development (`-i`) or compile to native executables (`-c`) with identical behaviour
-- **Interactive REPL**: Read-Eval-Print Loop for rapid prototyping (`-r`)
+- **Interactive REPL**: Read-Eval-Print Loop for rapid hardware prototyping (`-r`)
 - **Import System**: Complete modular programming with `import "file.bas"` syntax
 - **GLM Vector Math**: Native vec2, vec3, vec4 types with SIMD-optimised operations
 - **Automatic Parallelisation**: OpenMP-based multi-core optimisation for large array operations
-- **Raspberry Pi Support**: Native GPIO, SPI, I2C, PWM, and Serial access on ARM platforms
-- **Cross-Platform**: Windows (MinGW64/MSVC), Linux (GCC), macOS (Clang), and ARM (Raspberry Pi) with identical behaviour
+- **Raspberry Pi Hardware**: Native GPIO, SPI, I2C, PWM, and Serial (UART) access on ARM platforms
+- **Cross-Platform Development**: Windows (MinGW64/MSVC), Linux (GCC), macOS (Clang) with ARM cross-compilation
 
 ## Recent Improvements (November 2025)
 
@@ -51,15 +63,32 @@
 
 ## Quick Start
 
+### On Raspberry Pi
+```bash
+# Blink an LED connected to GPIO 17
+./rbasic -i examples/rpi_gpio_blink.bas
+
+# Control a servo on GPIO 18 (PWM)
+./rbasic -i examples/rpi_pwm_servo.bas
+
+# Compile for production deployment
+./rbasic -c examples/rpi_button_led.bas -o button_led
+./button_led
+
+# Interactive hardware testing
+./rbasic -r
+```
+
+### On Development PC
 ```bash
 # Interpret a program directly (fast development)
 ./rbasic -i hello.bas
 
-# Compile to standalone executable (deployment)
+# Compile to standalone executable
 ./rbasic -c hello.bas -o hello
 ./hello
 
-# Interactive development with REPL
+# Interactive REPL for algorithm testing
 ./rbasic -r
 ```
 
@@ -80,12 +109,33 @@ cmake .. && cmake --build . --config Release
 ```
 
 ### 2. Try the Examples
-```bash
-# Simple programs
-./rbasic -i examples/hello.bas
-./rbasic -i examples/fibonacci.bas
 
-# Graphics programming (requires SDL2.dll)
+#### Raspberry Pi Hardware Examples
+```bash
+# GPIO LED control
+./rbasic -i examples/rpi_gpio_blink.bas
+./rbasic -i examples/rpi_button_led.bas
+
+# PWM servo control
+./rbasic -i examples/rpi_pwm_servo.bas
+
+# SPI sensor communication
+./rbasic -i examples/rpi_spi_sensor.bas
+
+# System monitoring and file I/O
+./rbasic -i examples/rpi_temperature_logger.bas
+
+# Board LED control (requires sudo)
+sudo ./rbasic -i examples/rpi_act_led_blink.bas
+```
+
+#### General Programming Examples
+```bash
+# Algorithm development
+./rbasic -i examples/fibonacci.bas
+./rbasic -i examples/functions.bas
+
+# Graphics programming (requires SDL2)
 ./rbasic -i examples/sdl_core_demo.bas
 
 # Compile for deployment
@@ -408,22 +458,29 @@ rbasic/
 
 ## Featured Examples
 
-### Enhanced SDL2 Graphics Programming
-- **`examples/sdl_core_demo.bas`** - Complete SDL2 demonstration with filled shapes, timing, and event handling
-- **`blib/sdl2.bas`** - Comprehensive SDL2 wrapper library with 200+ function bindings
-- **Advanced Features**: Filled triangles, hardware acceleration, cross-mode compatibility
+### Raspberry Pi Hardware Programming
+- **`examples/rpi_gpio_blink.bas`** - LED control with GPIO output
+- **`examples/rpi_button_led.bas`** - Interactive button input with LED toggle
+- **`examples/rpi_pwm_servo.bas`** - Hardware PWM servo motor control (0-180 degrees)
+- **`examples/rpi_spi_sensor.bas`** - SPI communication with MCP3008 ADC chip
+- **`examples/rpi_i2c_bme280.bas`** - I2C temperature/humidity sensor reading
+- **`examples/rpi_temperature_logger.bas`** - System monitoring with file logging
+- **`examples/rpi_act_led_blink.bas`** - Control onboard Activity LED
+- **`examples/rpi_distance_sensor.bas`** - HC-SR04 ultrasonic distance measurement
+
+### Graphics and Multimedia (SDL2)
+- **`examples/sdl_core_demo.bas`** - Complete SDL2 demonstration with shapes and events
+- **`blib/sdl2.bas`** - Comprehensive SDL2 wrapper library with 200+ functions
 
 ### Database Integration
-- **`examples/sqlite_simple_demo.bas`** - SQLite database integration with full CRUD operations
-- **`blib/sqlite.bas`** - Complete SQLite wrapper with prepared statements and transactions
+- **`examples/sqlite_simple_demo.bas`** - SQLite database with CRUD operations
+- **`blib/sqlite.bas`** - SQLite wrapper with prepared statements
 
-### Language Features
-- **`examples/functions.bas`** - Function definitions, parameters, return values, and scoping
-- **`examples/glm_vector_math.bas`** - Comprehensive GLM vector mathematics with all operations and practical examples
-- **`examples/glm_test.bas`** - Complete GLM test suite demonstrating all vector math features
-- **`examples/arrays.bas`** - Array operations, multidimensional data, and typed arrays  
-- **`examples/fibonacci.bas`** - Recursive functions and mathematical computations
-- **`examples/hello.bas`** - Basic program structure and output formatting
+### Algorithm Development
+- **`examples/functions.bas`** - Function definitions, parameters, scoping
+- **`examples/glm_vector_math.bas`** - GLM vector mathematics for 3D graphics
+- **`examples/arrays.bas`** - Array operations and multidimensional data
+- **`examples/fibonacci.bas`** - Recursive functions and computations
 
 ## Documentation
 
@@ -436,5 +493,5 @@ MIT License - Copyright (c) 2025 David Rowbotham. See LICENSE file for details.
 
 ---
 
-**rbasic** - Where BASIC meets modern C-style programming with comprehensive graphics and database integration. Perfect for rapid prototyping and educational programming while maintaining the power for serious application development.
+**rbasic** - Modern BASIC designed for Raspberry Pi and embedded systems. Combining BASIC's simplicity with native hardware access, C-style syntax, and the performance of compiled executables. Perfect for robotics, IoT, sensor projects, and embedded application development.
 
