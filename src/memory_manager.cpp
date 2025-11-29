@@ -1,5 +1,4 @@
 #include "memory_manager.h"
-#include "safe_ffi.h"
 #include <stdexcept>
 #include <algorithm>
 #include <string>
@@ -179,5 +178,3 @@ char* FFIScope::allocate_string_buffer(size_t size) {
 template char* rbasic::FFIScope::allocate_temp<char>(size_t);
 
 // Explicit template instantiations for SDL types
-template rbasic::ffi::SafeSDLRect* rbasic::MemoryManager::SafeBuffer::as<rbasic::ffi::SafeSDLRect>(size_t);
-template rbasic::ffi::SafeSDLEvent* rbasic::MemoryManager::SafeBuffer::as<rbasic::ffi::SafeSDLEvent>(size_t);

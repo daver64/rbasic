@@ -785,24 +785,6 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
 
-    // Check if this is an FFI function call
-    auto ffiIt = ffiFunctions.find(node.name);
-    if (ffiIt != ffiFunctions.end()) {
-        const auto& ffiFunc = *ffiIt->second;
-        
-        // Generate FFI function call
-        write("basic_runtime::call_ffi_function(\"" + ffiFunc.library + "\", \"" + ffiFunc.name + "\"");
-        
-        // Add arguments
-        for (size_t i = 0; i < node.arguments.size(); i++) {
-            write(", ");
-            node.arguments[i]->accept(*this);
-        }
-        
-        write(")");
-        return;
-    }
-
     // User-defined function calls
     write("func_" + node.name + "(variables");
     for (size_t i = 0; i < node.arguments.size(); i++) {
@@ -1184,39 +1166,6 @@ void CodeGenerator::visit(ImportStmt& node) {
     writeLine("// Import statement resolved at compile time: " + node.filename);
 }
 
-void CodeGenerator::visit(FFIFunctionDecl& node) {
-    // Store the FFI function declaration for use in call generation
-    ffiFunctions[node.name] = std::make_unique<FFIFunctionDecl>(node.name, node.library, node.returnType, node.parameters);
-    
-    // Generate wrapper function for the FFI call and add to function declarations
-    std::ostringstream ffiFunc;
-    
-    ffiFunc << "// FFI Function Declaration: " << node.name << " from " << node.library << "\n";
-    ffiFunc << "BasicValue func_" << node.name << "(";
-    
-    // Generate parameter list
-    bool first = true;
-    for (size_t i = 0; i < node.parameters.size(); ++i) {
-        if (!first) ffiFunc << ", ";
-        ffiFunc << "const BasicValue& arg" << i;
-        first = false;
-    }
-    
-    ffiFunc << ") {\n";
-    ffiFunc << "    return call_ffi_function(\"" << node.library << "\", \"" << node.name << "\"";
-    
-    for (size_t i = 0; i < node.parameters.size(); ++i) {
-        ffiFunc << ", arg" << i;
-    }
-    
-    ffiFunc << ");\n";
-    ffiFunc << "}\n\n";
-    
-    // Add to function declarations
-    functionDeclarations += ffiFunc.str();
-    
-    // FFI function processed
-}
 
 void CodeGenerator::visit(Program& node) {
     for (auto& stmt : node.statements) {

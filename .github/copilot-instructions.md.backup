@@ -23,6 +23,7 @@ This is a C-leaning BASIC language transpiler written in C++. The project suppor
 7. **Cross-Platform Terminal** - Colour support and cursor management for all platforms
 8. **Automatic Parallelization** - OpenMP-based multi-core optimization for large array operations
 9. **Import System** - Complete modular programming with compile-time and runtime import resolution
+10. **Foreign Function Interface (FFI)** - Comprehensive C library integration with extensive API support
 
 ## Build Instructions
 Use CMake to build the project. The executable will be placed in the project root.
@@ -56,6 +57,7 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 - GLM vector math: Native `vec2`, `vec3`, `vec4` types with component access and mathematical operations
 - Interactive development: Full REPL with session management
 - Modular programming: Complete import system with `import "file.bas"` syntax
+- External integration: Comprehensive FFI system for C libraries
 
 ## Import System Features
 - **Modular Programming**: `import "filename.bas"` syntax for code organization
@@ -84,6 +86,24 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 - Immediate execution and feedback
 - Import support in interactive mode
 
+## Foreign Function Interface (FFI)
+
+The FFI system provides comprehensive C library integration:
+
+### Core FFI Features
+- **Library Loading**: Dynamic loading of Windows DLLs, Linux .so, and macOS .dylib files
+- **Extended Parameter Support**: Functions with up to 11 parameters for complex graphics operations (SDL2_gfx)
+- **Function Calling**: Support for 0-11 parameter functions with flexible types
+- **Memory Management**: Safe buffer allocation, pointer dereferencing, and cleanup
+- **Type System**: Comprehensive support for integers, strings, pointers, and structures
+
+### Advanced FFI Features
+- **Buffer Operations**: `alloc_buffer()`, `alloc_int_buffer()`, `alloc_pointer_buffer()`
+- **Pointer Operations**: `deref_int()`, `deref_pointer()`, `deref_string()`, `deref_int_offset()`
+- **Structure Support**: SDL2 structures (`create_sdl_rect()`, `create_sdl_event()`)
+- **Constant System**: Built-in constants for SDL2, SQLite, Windows API
+- **Null Handling**: `is_null()`, `not_null()` for safe pointer operations
+- **Event Processing**: Complete SDL2 event handling with `get_key_code()` for keyboard events
 
 ### SDL2 Integration
 - **Window Management**: Window creation, destruction, and property control
@@ -105,6 +125,14 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 
 ## Recent Improvements (2025)
 
+### Texture Rendering and FFI Fixes (October 2025)
+- **SDL_RenderCopy Compatibility**: Fixed critical texture rendering issue where compiled mode was incompatible with interpreter mode
+- **FFI Pattern Matching**: Resolved null pointer parameter handling in FFI calls - replaced integer `0` with proper `null` pointers
+- **Cross-Mode Consistency**: Achieved identical texture rendering behavior between interpreter and compiled modes
+- **Memory Management**: Implemented cached buffer approach for SDL_Rect structures to eliminate memory leaks
+- **Debug Cleanup**: Removed all debug output for production-ready performance
+- **Runtime Stability**: Fixed hanging issues in compiled mode during SDL_RenderCopy calls
+
 ### Complete GLM Vector Mathematics Integration (October 2025)
 - **Native GLM Types**: Built-in `vec2`, `vec3`, `vec4`, `mat3`, `mat4`, `quat` primitives with SIMD optimization
 - **Component Access**: Full read/write access with `.x`, `.y`, `.z`, `.w` component syntax using ComponentAssignExpr AST node
@@ -119,6 +147,30 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 - **Cross-Mode Consistency**: Identical scoping behavior in interpreter and compiled modes
 - **Root Cause**: Modified `ModernForStmt::visit()` to use variable backup/restore instead of isolated scopes
 
+### Extended FFI Support (October 2025)
+- **Parameter Expansion**: Extended FFI from 8 to 11 parameters for SDL2_gfx integration
+- **Runtime Compatibility**: Updated both interpreter and runtime library for consistent behavior
+- **Graphics Enhancement**: Enabled proper filled triangle rendering with `filledTrigonRGBA`
+- **Implementation**: Added cases 9, 10, and 11 to FFI parameter handling in both execution modes
+
+## Foreign Function Interface (FFI)
+
+The FFI system provides comprehensive C library integration:
+
+### Core FFI Features
+- **Library Loading**: Dynamic loading of Windows DLLs, Linux .so, and macOS .dylib files
+- **Extended Parameter Support**: Functions with up to 11 parameters for complex graphics operations (SDL2_gfx)
+- **Function Calling**: Support for 0-11 parameter functions with flexible types
+- **Memory Management**: Safe buffer allocation, pointer dereferencing, and cleanup
+- **Type System**: Comprehensive support for integers, strings, pointers, and structures
+
+### Advanced FFI Features
+- **Buffer Operations**: `alloc_buffer()`, `alloc_int_buffer()`, `alloc_pointer_buffer()`
+- **Pointer Operations**: `deref_int()`, `deref_pointer()`, `deref_string()`, `deref_int_offset()`
+- **Structure Support**: SDL2 structures (`create_sdl_rect()`, `create_sdl_event()`)
+- **Constant System**: Built-in constants for SDL2, SQLite, Windows API
+- **Null Handling**: `is_null()`, `not_null()` for safe pointer operations
+- **Event Processing**: Complete SDL2 event handling with `get_key_code()` for keyboard events
 
 ### SDL2 Integration
 - **Window Management**: Window creation, destruction, and property control
@@ -141,6 +193,9 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 ### Usage Examples
 ```basic
 // SDL2 Graphics with Event Handling
+ffi integer SDL_Init(flags as integer) from "SDL2.dll";
+ffi pointer SDL_CreateWindow(title as string, x as integer, y as integer, w as integer, h as integer, flags as integer) from "SDL2.dll";
+ffi integer SDL_PollEvent(event as pointer) from "SDL2.dll";
 
 var window = SDL_CreateWindow("Interactive Demo", 100, 100, 800, 600, SDL_WINDOW_SHOWN);
 var event_buffer = create_sdl_event();
@@ -159,10 +214,13 @@ while (running == 1) {
 }
 
 // SQLite Database
+ffi "sqlite3.dll" sqlite3_open(filename as string, db as pointer) as integer;
 var db_ptr = alloc_pointer_buffer();
 var result = sqlite3_open("data.db", db_ptr);
 
 // Windows API
+ffi "user32.dll" MessageBoxA(hwnd as integer, text as string, caption as string, type as integer) as integer;
+MessageBoxA(0, "Hello from rbasic!", "FFI Demo", MB_OK);
 ```
 
 ## Architecture Philosophy
@@ -172,6 +230,7 @@ The project is designed as a transpiler where interpreter, REPL, and compiled ou
 1. **Rapid Prototyping**: Use interpreter/REPL mode for development
 2. **Deployment**: Compile to optimized C++ executables
 3. **Modular Development**: Import system enables standard library ecosystem
+4. **External Integration**: FFI provides seamless C library access
 5. **Cross-Platform Consistency**: Same behavior on Windows, Linux, and macOS
 
 The architecture supports building a comprehensive standard library ecosystem where modules can be developed, tested, and deployed across all execution modes with identical behavior.

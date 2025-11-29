@@ -300,21 +300,6 @@ public:
     void accept(ASTVisitor& visitor) override;
 };
 
-// FFI Function Declaration
-class FFIFunctionDecl : public Statement {
-public:
-    std::string name;
-    std::string library;
-    std::string returnType;
-    std::vector<std::pair<std::string, std::string>> parameters; // name, type pairs
-    
-    FFIFunctionDecl(std::string n, std::string lib, std::string retType, 
-                    std::vector<std::pair<std::string, std::string>> params)
-        : name(std::move(n)), library(std::move(lib)), returnType(std::move(retType)), 
-          parameters(std::move(params)) {}
-    void accept(ASTVisitor& visitor) override;
-};
-
 // Program node
 class Program : public ASTNode {
 public:
@@ -354,7 +339,6 @@ public:
     virtual void visit(DimStmt& node) = 0;
     virtual void visit(InputStmt& node) = 0;
     virtual void visit(ImportStmt& node) = 0;
-    virtual void visit(FFIFunctionDecl& node) = 0;
     
     virtual void visit(Program& node) = 0;
 };

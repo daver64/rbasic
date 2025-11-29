@@ -17,7 +17,6 @@ private:
     std::vector<std::map<std::string, ValueType>> scopes;
     std::map<std::string, std::unique_ptr<FunctionDecl>> functions;
     std::map<std::string, std::unique_ptr<StructDecl>> structs;
-    std::map<std::string, std::unique_ptr<FFIFunctionDecl>> ffiFunctions; // Store FFI function declarations
     std::map<std::string, std::map<std::string, ValueType>> structInstances;
     std::set<std::string> importedFiles;     // Track imported files to prevent re-importing
     std::set<std::string> importStack;       // Track current import chain for circular detection
@@ -62,15 +61,6 @@ public:
     bool handleArrayFunctions(CallExpr& node);
     bool handleFileFunctions(CallExpr& node);
     bool handleTerminalFunctions(CallExpr& node);
-    bool handleFFIFunctions(CallExpr& node);
-    bool callDirectFFIFunction(const FFIFunctionDecl& ffiFunc, CallExpr& node, void* funcPtr);
-    bool callGenericFFIFunction(const FFIFunctionDecl& ffiFunc, CallExpr& node, void* funcPtr);
-    
-    // FFI helper functions
-    int getIntValue(const ValueType& value);
-    std::string getStringValue(const ValueType& value);
-    void* getPointerValue(const ValueType& value);
-    double getDoubleValue(const ValueType& value);
     bool handleUserDefinedFunction(CallExpr& node);
     
     // Visitor methods
@@ -98,7 +88,6 @@ public:
     void visit(FunctionDecl& node) override;
     void visit(StructDecl& node) override;
     void visit(DimStmt& node) override;
-    void visit(FFIFunctionDecl& node) override;
     
     void visit(Program& node) override;
 };

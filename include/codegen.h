@@ -14,7 +14,6 @@ private:
     int indentLevel;
     std::string currentFunction; // Track current function name (empty if in main)
     std::map<std::string, std::unique_ptr<StructDecl>> structs; // Store struct declarations
-    std::map<std::string, std::unique_ptr<FFIFunctionDecl>> ffiFunctions; // Store FFI function declarations
     
     void indent();
     void writeLine(const std::string& line);
@@ -55,7 +54,6 @@ public:
     void visit(FunctionDecl& node) override;
     void visit(StructDecl& node) override;
     void visit(DimStmt& node) override;
-    void visit(FFIFunctionDecl& node) override;
     
     void visit(Program& node) override;
     

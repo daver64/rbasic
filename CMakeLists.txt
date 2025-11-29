@@ -45,17 +45,14 @@ set(SOURCES
     src/runtime.cpp
     src/common.cpp
     src/io_handler.cpp
-    src/ffi.cpp
     src/console_io_handler.cpp
     src/command_builder.cpp
     src/type_utils.cpp
     src/terminal.cpp
     src/repl.cpp
     src/math_utils.cpp
-    src/ffi_utils.cpp
     src/memory_manager.cpp
     src/unified_value.cpp
-    src/safe_ffi.cpp
 )
 
 # Header files
@@ -73,12 +70,9 @@ set(HEADERS
     include/type_utils.h
     include/terminal.h
     include/repl.h
-    include/ffi.h
     include/math_utils.h
-    include/ffi_utils.h
     include/memory_manager.h
     include/unified_value.h
-    include/safe_ffi.h
 )
 
 # Create main executable
@@ -90,16 +84,10 @@ add_library(rbasic_runtime STATIC
     runtime/basic_runtime.h
     src/terminal.cpp
     include/terminal.h
-    src/ffi.cpp
-    include/ffi.h
-    src/ffi_utils.cpp
-    include/ffi_utils.h
     src/memory_manager.cpp
     include/memory_manager.h
     src/unified_value.cpp
     include/unified_value.h
-    src/safe_ffi.cpp
-    include/safe_ffi.h
 )
 
 # Include directories for runtime library
@@ -121,9 +109,6 @@ if(NOT WIN32)
     # On Linux/Unix, link with stdc++fs for filesystem support (GCC < 9)
     target_link_libraries(rbasic stdc++fs)
     target_link_libraries(rbasic_runtime stdc++fs)
-    # Link with dl for dynamic library loading
-    target_link_libraries(rbasic dl)
-    target_link_libraries(rbasic_runtime dl)
 endif()
 
 # Enable testing
@@ -148,10 +133,8 @@ add_executable(rbasic_tests
     src/terminal.cpp
     src/repl.cpp
     src/math_utils.cpp
-    src/ffi_utils.cpp
     src/memory_manager.cpp
     src/unified_value.cpp
-    src/safe_ffi.cpp
 )
 
 target_include_directories(rbasic_tests PRIVATE include)
