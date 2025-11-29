@@ -2,6 +2,18 @@
 #include "../include/io_handler.h"
 #include "../include/common.h"
 #include "../include/terminal.h"
+
+// Raspberry Pi hardware support (conditional)
+#ifdef RPI_SUPPORT_ENABLED
+#include "../include/rpi_gpio.h"
+#include "../include/rpi_spi.h"
+#include "../include/rpi_i2c.h"
+#include "../include/rpi_pwm.h"
+#include "../include/rpi_serial.h"
+// Expose C functions to runtime
+using namespace rbasic::rpi;
+#endif
+
 #include <iostream>
 #include <sstream>
 #include <algorithm>

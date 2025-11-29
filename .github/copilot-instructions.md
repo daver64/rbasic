@@ -23,6 +23,7 @@ This is a C-leaning BASIC language transpiler written in C++. The project suppor
 7. **Cross-Platform Terminal** - Colour support and cursor management for all platforms
 8. **Automatic Parallelization** - OpenMP-based multi-core optimization for large array operations
 9. **Import System** - Complete modular programming with compile-time and runtime import resolution
+10. **Raspberry Pi Support** - Native GPIO, SPI, I2C, PWM, and Serial hardware access on ARM platforms
 
 ## Build Instructions
 Use CMake to build the project. The executable will be placed in the project root.
@@ -35,9 +36,12 @@ Use CMake to build the project. The executable will be placed in the project roo
 ## Compilation Support
 - **Windows**: Bundled MinGW64 (portable) with MSVC fallback
 - **Linux/macOS**: System GCC or Clang
+- **Raspberry Pi**: ARM64/aarch64 support with hardware access
+- **Cross-Compilation**: pi-toolchain.cmake for building on x86 for ARM
 - **Automatic Detection**: Chooses best available compiler
 - **Static Linking**: Self-contained executables with MinGW64
 - **OpenMP Parallelization**: Automatic multi-core optimization for both interpreted and compiled modes
+- **Conditional Compilation**: RPI hardware support only compiled on ARM platforms
 
 ## Performance Features
 - **Automatic Parallelization**: OpenMP-based array operations for arrays ≥1000 elements
@@ -138,31 +142,58 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 - **Windows API**: System calls, message boxes, process management
 - **OpenGL**: Ready for graphics programming integration
 
+## Raspberry Pi Hardware Support
+
+### Overview
+Native hardware access for Raspberry Pi devices with conditional compilation:
+- **GPIO**: Direct /dev/gpiomem register access (no root required)
+- **SPI**: High-speed serial peripheral interface for sensors/displays
+- **I2C**: Two-wire interface for sensor communication
+- **PWM**: Hardware PWM for servos, LED dimming, motor control
+- **Serial (UART)**: Asynchronous serial communication
+
+### Platform Detection
+CMake automatically detects ARM architecture and enables RPI_SUPPORT_ENABLED:
+```cmake
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm.*|ARM.*|aarch64.*|AARCH64.*")
+    add_compile_definitions(RPI_SUPPORT_ENABLED)
+endif()
+```
+
+### Cross-Compilation
+Use pi-toolchain.cmake for building on x86 for Raspberry Pi:
+```bash
+cmake -DCMAKE_TOOLCHAIN_FILE=../pi-toolchain.cmake ..
+make
+```
+
 ### Usage Examples
 ```basic
-// SDL2 Graphics with Event Handling
+// GPIO LED Blink
+gpio_init();
+gpio_set_mode(17, 1); // OUTPUT
+gpio_write(17, 1);    // ON
+sleep(500);
+gpio_write(17, 0);    // OFF
+gpio_cleanup();
 
-var window = SDL_CreateWindow("Interactive Demo", 100, 100, 800, 600, SDL_WINDOW_SHOWN);
-var event_buffer = create_sdl_event();
-while (running == 1) {
-    if (SDL_PollEvent(event_buffer) == 1) {
-        var event_type = deref_int(event_buffer);
-        if (event_type == SDL_MOUSEBUTTONDOWN) {
-            print("Mouse clicked!");
-        } else if (event_type == SDL_KEYDOWN) {
-            var key = get_key_code(event_buffer);
-            if (key == SDL_SCANCODE_ESCAPE) {
-                running = 0;
-            }
-        }
-    }
-}
+// I2C Sensor
+var i2c = i2c_open(1);
+i2c_set_address(i2c, 0x76);
+var chip_id = i2c_read_reg(i2c, 0xD0);
+i2c_close(i2c);
 
-// SQLite Database
-var db_ptr = alloc_pointer_buffer();
-var result = sqlite3_open("data.db", db_ptr);
+// PWM Servo Control
+pwm_init(0);
+pwm_set_frequency(0, 50);
+pwm_set_duty_cycle(0, 7.5); // Center position
+pwm_enable(0);
 
-// Windows API
+// Serial Communication
+var serial = serial_open("/dev/serial0");
+serial_set_baud(serial, 115200);
+serial_write_string(serial, "Hello!\n");
+serial_close(serial);
 ```
 
 ## Architecture Philosophy

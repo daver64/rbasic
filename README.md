@@ -12,14 +12,25 @@
 - **Import System**: Complete modular programming with `import "file.bas"` syntax
 - **GLM Vector Math**: Native vec2, vec3, vec4 types with SIMD-optimized operations
 - **Automatic Parallelization**: OpenMP-based multi-core optimization for large array operations
+- **Raspberry Pi Support**: Native GPIO, SPI, I2C, PWM, and Serial access on ARM platforms
 - **Cross-Platform**: Windows (MinGW64/MSVC), Linux (GCC), macOS (Clang), and ARM (Raspberry Pi) with identical behavior
 
 ## Recent Improvements (November 2025)
 
-### FFI Removal and Code Simplification
+### Raspberry Pi Hardware Support (November 2025)
+- **Native GPIO Access**: Direct hardware control via /dev/gpiomem (no root required)
+- **SPI Communication**: High-speed serial peripheral interface for sensors and displays
+- **I2C Support**: Two-wire interface for sensor communication (BME280, OLED, etc.)
+- **PWM Control**: Hardware PWM for servos, LED dimming, and motor control
+- **Serial (UART)**: Asynchronous serial communication for GPS, Arduino, etc.
+- **Conditional Compilation**: RPI functions only available on ARM platforms, x86/x64 compatibility maintained
+- **Cross-Compilation**: Complete toolchain support for building on x86 for Raspberry Pi
+- **See**: [RASPBERRY_PI.md](RASPBERRY_PI.md) for comprehensive hardware documentation
+
+### FFI Removal and Code Simplification (November 2025)
 - **Removed FFI System**: Eliminated complex Foreign Function Interface in favor of built-in functionality
 - **Cleaner Architecture**: Simplified codebase focuses on core language features
-- **Platform-Specific Support**: Preparing for native Raspberry Pi GPIO/SPI/I2C support
+- **Native Hardware Support**: Direct implementation of Raspberry Pi GPIO/SPI/I2C instead of FFI-based approach
 
 ### Complete GLM Vector Mathematics Integration (October 2025)
 - **Native GLM Types**: Built-in `vec2`, `vec3`, `vec4`, `mat3`, `mat4`, `quat` primitives with SIMD optimization

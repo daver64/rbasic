@@ -8,6 +8,16 @@
 #include "math_utils.h"
 #include "../runtime/basic_runtime.h"
 #include "../include/unified_value.h"
+
+// Raspberry Pi hardware support (conditional)
+#ifdef RPI_SUPPORT_ENABLED
+#include "rpi_gpio.h"
+#include "rpi_spi.h"
+#include "rpi_i2c.h"
+#include "rpi_pwm.h"
+#include "rpi_serial.h"
+#endif
+
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
@@ -484,6 +494,7 @@ void Interpreter::visit(CallExpr& node) {
         handleArrayFunctions(node) ||
         handleFileFunctions(node) ||
         handleTerminalFunctions(node) ||
+        handleRPIFunctions(node) ||
         handleUserDefinedFunction(node)) {
         return;
     }
@@ -2015,6 +2026,360 @@ std::string Interpreter::getCurrentExecutablePath() {
     }
     
     return std::string(buffer.data(), len);
+#endif
+}
+
+// Raspberry Pi Hardware Functions Handler
+bool Interpreter::handleRPIFunctions([[maybe_unused]] CallExpr& node) {
+#ifdef RPI_SUPPORT_ENABLED
+    const std::string& fname = node.name;
+    
+    // GPIO Functions
+    if (fname == "gpio_init") {
+        int result = rpi::gpio_init();
+        lastValue = result;
+        return true;
+    }
+    if (fname == "gpio_cleanup") {
+        rpi::gpio_cleanup();
+        lastValue = 0;
+        return true;
+    }
+    if (fname == "gpio_set_mode") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("gpio_set_mode requires 2 arguments (pin, mode)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int pin = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        int mode = std::get<int>(lastValue);
+        int result = rpi::gpio_set_mode(pin, mode);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "gpio_set_pull") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("gpio_set_pull requires 2 arguments (pin, pull)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int pin = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        int pull = std::get<int>(lastValue);
+        int result = rpi::gpio_set_pull(pin, pull);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "gpio_write") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("gpio_write requires 2 arguments (pin, value)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int pin = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        int value = std::get<int>(lastValue);
+        int result = rpi::gpio_write(pin, value);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "gpio_read") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("gpio_read requires 1 argument (pin)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int pin = std::get<int>(lastValue);
+        int result = rpi::gpio_read(pin);
+        lastValue = result;
+        return true;
+    }
+    
+    // SPI Functions
+    if (fname == "spi_open") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("spi_open requires 2 arguments (bus, cs)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int bus = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        int cs = std::get<int>(lastValue);
+        int result = rpi::spi_open(bus, cs);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "spi_close") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("spi_close requires 1 argument (handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        rpi::spi_close(handle);
+        lastValue = 0;
+        return true;
+    }
+    if (fname == "spi_set_speed") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("spi_set_speed requires 2 arguments (handle, speed)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        int speed = std::get<int>(lastValue);
+        int result = rpi::spi_set_speed(handle, speed);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "spi_write_byte") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("spi_write_byte requires 2 arguments (handle, byte)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        int byte = std::get<int>(lastValue);
+        int result = rpi::spi_write_byte(handle, byte);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "spi_read_byte") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("spi_read_byte requires 1 argument (handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        int result = rpi::spi_read_byte(handle);
+        lastValue = result;
+        return true;
+    }
+    
+    // I2C Functions
+    if (fname == "i2c_open") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("i2c_open requires 1 argument (bus)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int bus = std::get<int>(lastValue);
+        int result = rpi::i2c_open(bus);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "i2c_close") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("i2c_close requires 1 argument (handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        rpi::i2c_close(handle);
+        lastValue = 0;
+        return true;
+    }
+    if (fname == "i2c_set_address") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("i2c_set_address requires 2 arguments (handle, address)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        int address = std::get<int>(lastValue);
+        int result = rpi::i2c_set_address(handle, address);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "i2c_write_byte") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("i2c_write_byte requires 2 arguments (handle, value)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        int value = std::get<int>(lastValue);
+        int result = rpi::i2c_write_byte(handle, value);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "i2c_read_byte") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("i2c_read_byte requires 1 argument (handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        int result = rpi::i2c_read_byte(handle);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "i2c_write_reg") {
+        if (node.arguments.size() != 3) {
+            throw RuntimeError("i2c_write_reg requires 3 arguments (handle, reg, value)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        int reg = std::get<int>(lastValue);
+        node.arguments[2]->accept(*this);
+        int value = std::get<int>(lastValue);
+        int result = rpi::i2c_write_reg(handle, reg, value);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "i2c_read_reg") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("i2c_read_reg requires 2 arguments (handle, reg)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        int reg = std::get<int>(lastValue);
+        int result = rpi::i2c_read_reg(handle, reg);
+        lastValue = result;
+        return true;
+    }
+    
+    // PWM Functions
+    if (fname == "pwm_init") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("pwm_init requires 1 argument (channel)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int channel = std::get<int>(lastValue);
+        int result = rpi::pwm_init(channel);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "pwm_cleanup") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("pwm_cleanup requires 1 argument (channel)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int channel = std::get<int>(lastValue);
+        rpi::pwm_cleanup(channel);
+        lastValue = 0;
+        return true;
+    }
+    if (fname == "pwm_set_frequency") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("pwm_set_frequency requires 2 arguments (channel, frequency)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int channel = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        int frequency = std::get<int>(lastValue);
+        int result = rpi::pwm_set_frequency(channel, frequency);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "pwm_set_duty_cycle") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("pwm_set_duty_cycle requires 2 arguments (channel, percent)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int channel = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        double percent = std::holds_alternative<int>(lastValue) ? static_cast<double>(std::get<int>(lastValue)) : std::get<double>(lastValue);
+        int result = rpi::pwm_set_duty_cycle(channel, percent);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "pwm_enable") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("pwm_enable requires 1 argument (channel)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int channel = std::get<int>(lastValue);
+        int result = rpi::pwm_enable(channel);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "pwm_disable") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("pwm_disable requires 1 argument (channel)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int channel = std::get<int>(lastValue);
+        int result = rpi::pwm_disable(channel);
+        lastValue = result;
+        return true;
+    }
+    
+    // Serial Functions
+    if (fname == "serial_open") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("serial_open requires 1 argument (device)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        std::string device = std::get<std::string>(lastValue);
+        int result = rpi::serial_open(device.c_str());
+        lastValue = result;
+        return true;
+    }
+    if (fname == "serial_close") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("serial_close requires 1 argument (handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        rpi::serial_close(handle);
+        lastValue = 0;
+        return true;
+    }
+    if (fname == "serial_set_baud") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("serial_set_baud requires 2 arguments (handle, baud)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        int baud = std::get<int>(lastValue);
+        int result = rpi::serial_set_baud(handle, baud);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "serial_write_byte") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("serial_write_byte requires 2 arguments (handle, byte)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        int byte = std::get<int>(lastValue);
+        int result = rpi::serial_write_byte(handle, byte);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "serial_read_byte") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("serial_read_byte requires 1 argument (handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        int result = rpi::serial_read_byte(handle);
+        lastValue = result;
+        return true;
+    }
+    if (fname == "serial_write_string") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("serial_write_string requires 2 arguments (handle, string)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this);
+        std::string str = std::get<std::string>(lastValue);
+        int result = rpi::serial_write_string(handle, str.c_str());
+        lastValue = result;
+        return true;
+    }
+    if (fname == "serial_available") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("serial_available requires 1 argument (handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int handle = std::get<int>(lastValue);
+        int result = rpi::serial_available(handle);
+        lastValue = result;
+        return true;
+    }
+    
+    return false; // Function not recognized
+#else
+    // RPI support not enabled
+    return false;
 #endif
 }
 

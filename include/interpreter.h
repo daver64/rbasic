@@ -61,6 +61,7 @@ public:
     bool handleArrayFunctions(CallExpr& node);
     bool handleFileFunctions(CallExpr& node);
     bool handleTerminalFunctions(CallExpr& node);
+    bool handleRPIFunctions(CallExpr& node);
     bool handleUserDefinedFunction(CallExpr& node);
     
     // Visitor methods

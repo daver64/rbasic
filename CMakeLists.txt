@@ -32,6 +32,34 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR})
 # Include directories
 include_directories(include)
 
+# Detect ARM architecture (Raspberry Pi)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm.*|ARM.*|aarch64.*|AARCH64.*")
+    set(BUILD_RPI_SUPPORT ON)
+    message(STATUS "ARM architecture detected - enabling Raspberry Pi GPIO support")
+else()
+    set(BUILD_RPI_SUPPORT OFF)
+    message(STATUS "Non-ARM architecture (${CMAKE_SYSTEM_PROCESSOR}) - Raspberry Pi GPIO support disabled")
+endif()
+
+# Optional: Allow manual override
+option(FORCE_RPI_SUPPORT "Force enable Raspberry Pi support even on non-ARM platforms" OFF)
+if(FORCE_RPI_SUPPORT)
+    set(BUILD_RPI_SUPPORT ON)
+    message(STATUS "Raspberry Pi support force-enabled")
+endif()
+
+option(DISABLE_RPI_SUPPORT "Force disable Raspberry Pi support even on ARM platforms" OFF)
+if(DISABLE_RPI_SUPPORT)
+    set(BUILD_RPI_SUPPORT OFF)
+    message(STATUS "Raspberry Pi support force-disabled")
+endif()
+
+# Add preprocessor definition
+if(BUILD_RPI_SUPPORT)
+    add_compile_definitions(RPI_SUPPORT_ENABLED)
+    message(STATUS "RPI_SUPPORT_ENABLED defined")
+endif()
+
 # Core language build - no external dependencies
 
 # Source files
@@ -55,6 +83,17 @@ set(SOURCES
     src/unified_value.cpp
 )
 
+# Raspberry Pi support sources (conditional)
+if(BUILD_RPI_SUPPORT)
+    list(APPEND SOURCES
+        src/rpi_gpio.cpp
+        src/rpi_spi.cpp
+        src/rpi_i2c.cpp
+        src/rpi_pwm.cpp
+        src/rpi_serial.cpp
+    )
+endif()
+
 # Header files
 set(HEADERS
     include/lexer.h
@@ -75,6 +114,17 @@ set(HEADERS
     include/unified_value.h
 )
 
+# Raspberry Pi support headers (conditional)
+if(BUILD_RPI_SUPPORT)
+    list(APPEND HEADERS
+        include/rpi_gpio.h
+        include/rpi_spi.h
+        include/rpi_i2c.h
+        include/rpi_pwm.h
+        include/rpi_serial.h
+    )
+endif()
+
 # Create main executable
 add_executable(rbasic ${SOURCES} ${HEADERS})
 
@@ -89,6 +139,22 @@ add_library(rbasic_runtime STATIC
     src/unified_value.cpp
     include/unified_value.h
 )
+
+# Add Raspberry Pi support to runtime (conditional)
+if(BUILD_RPI_SUPPORT)
+    target_sources(rbasic_runtime PRIVATE
+        src/rpi_gpio.cpp
+        include/rpi_gpio.h
+        src/rpi_spi.cpp
+        include/rpi_spi.h
+        src/rpi_i2c.cpp
+        include/rpi_i2c.h
+        src/rpi_pwm.cpp
+        include/rpi_pwm.h
+        src/rpi_serial.cpp
+        include/rpi_serial.h
+    )
+endif()
 
 # Include directories for runtime library
 target_include_directories(rbasic_runtime PRIVATE include)
