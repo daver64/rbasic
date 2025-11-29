@@ -368,6 +368,9 @@ BasicValue func_load_double_array_csv(const std::string& filename);
 BasicValue func_save_int_array_csv(const BasicValue& filenameVal, const BasicValue& array);
 BasicValue func_save_double_array_csv(const BasicValue& filenameVal, const BasicValue& array);
 
+// Utility functions
+BasicValue func_sleep(const BasicValue& milliseconds);
+
 // Buffer allocation wrapper functions for code generator
 BasicValue func_alloc_int_buffer();
 BasicValue func_alloc_pointer_buffer();

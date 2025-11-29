@@ -144,6 +144,7 @@ add_library(rbasic_runtime STATIC
     include/memory_manager.h
     src/unified_value.cpp
     include/unified_value.h
+    src/glibc_compat.c
 )
 
 # Add Raspberry Pi support to runtime (conditional)

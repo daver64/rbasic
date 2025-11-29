@@ -447,6 +447,38 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
     
+    // Sleep functions
+    if (node.name == "sleep" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sleep(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    if (node.name == "sleep_ms" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sleep(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    // File I/O functions
+    if (node.name == "write_text_file" && node.arguments.size() == 2) {
+        write("basic_runtime::func_write_text_file(");
+        node.arguments[0]->accept(*this);
+        write(", ");
+        node.arguments[1]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    if (node.name == "read_text_file" && node.arguments.size() == 1) {
+        write("basic_runtime::func_read_text_file(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    
     // Note: External functions (graphics, database, etc.) will be handled via FFI
     
     // String conversion functions

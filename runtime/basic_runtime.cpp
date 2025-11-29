@@ -21,6 +21,8 @@ using namespace rbasic::rpi;
 #include <filesystem>
 #include <vector>
 #include <cstdlib>
+#include <chrono>
+#include <thread>
 
 #ifdef _WIN32
 // Undefine Windows macros that conflict with std::min/std::max
@@ -1179,6 +1181,13 @@ BasicValue func_load_int_array_csv(const std::string& filename) {
 
 BasicValue func_load_double_array_csv(const std::string& filename) {
     return load_double_array_csv(filename);
+}
+
+BasicValue func_sleep(const BasicValue& milliseconds) {
+    int ms = std::holds_alternative<int>(milliseconds) ? std::get<int>(milliseconds) :
+             static_cast<int>(std::get<double>(milliseconds));
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+    return 0;
 }
 
 BasicValue func_save_int_array_csv(const BasicValue& filenameVal, const BasicValue& array) {
