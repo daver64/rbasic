@@ -26,11 +26,12 @@ void test_lexer() {
         auto tokens = lexer.tokenize();
         
         assert(tokens.size() == 6); // print, (, "Hello, World!", ), ;, EOF
-        assert(tokens[0].type == TokenType::PRINT);
-        assert(tokens[1].type == TokenType::LPAREN);
+        assert(tokens[0].type == TokenType::IDENTIFIER);
+        assert(tokens[0].value == "print");
+        assert(tokens[1].type == TokenType::LEFT_PAREN);
         assert(tokens[2].type == TokenType::STRING);
         assert(tokens[2].value == "Hello, World!");
-        assert(tokens[3].type == TokenType::RPAREN);
+        assert(tokens[3].type == TokenType::RIGHT_PAREN);
         assert(tokens[4].type == TokenType::SEMICOLON);
     }
     
