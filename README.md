@@ -7,13 +7,13 @@
 ## Current Alpha Features
 
 - **C-Style Syntax**: Modern control structures with braces `{}` and proper variable scoping
-- **Dual Execution**: Interpret for development (`-i`) or compile to native executables (`-c`) with identical behavior
+- **Dual Execution**: Interpret for development (`-i`) or compile to native executables (`-c`) with identical behaviour
 - **Interactive REPL**: Read-Eval-Print Loop for rapid prototyping (`-r`)
 - **Import System**: Complete modular programming with `import "file.bas"` syntax
-- **GLM Vector Math**: Native vec2, vec3, vec4 types with SIMD-optimized operations
-- **Automatic Parallelization**: OpenMP-based multi-core optimization for large array operations
+- **GLM Vector Math**: Native vec2, vec3, vec4 types with SIMD-optimised operations
+- **Automatic Parallelisation**: OpenMP-based multi-core optimisation for large array operations
 - **Raspberry Pi Support**: Native GPIO, SPI, I2C, PWM, and Serial access on ARM platforms
-- **Cross-Platform**: Windows (MinGW64/MSVC), Linux (GCC), macOS (Clang), and ARM (Raspberry Pi) with identical behavior
+- **Cross-Platform**: Windows (MinGW64/MSVC), Linux (GCC), macOS (Clang), and ARM (Raspberry Pi) with identical behaviour
 
 ## Recent Improvements (November 2025)
 
@@ -27,34 +27,27 @@
 - **Cross-Compilation**: Complete toolchain support for building on x86 for Raspberry Pi
 - **See**: [RASPBERRY_PI.md](RASPBERRY_PI.md) for comprehensive hardware documentation
 
-### FFI Removal and Code Simplification (November 2025)
-- **Removed FFI System**: Eliminated complex Foreign Function Interface in favor of built-in functionality
-- **Cleaner Architecture**: Simplified codebase focuses on core language features
-- **Native Hardware Support**: Direct implementation of Raspberry Pi GPIO/SPI/I2C instead of FFI-based approach
+### Code Simplification (November 2025)
+- **Cleaner Architecture**: Simplified codebase focuses on core language features and built-in functionality
+- **Native Hardware Support**: Direct implementation of Raspberry Pi GPIO/SPI/I2C with conditional compilation
 
 ### Complete GLM Vector Mathematics Integration (October 2025)
-- **Native GLM Types**: Built-in `vec2`, `vec3`, `vec4`, `mat3`, `mat4`, `quat` primitives with SIMD optimization
+- **Native GLM Types**: Built-in `vec2`, `vec3`, `vec4`, `mat3`, `mat4`, `quat` primitives with SIMD optimisation
 - **Component Access**: Full read/write access with `.x`, `.y`, `.z`, `.w` component syntax
 - **Vector Operations**: Native support for addition (`+`), subtraction (`-`), scalar multiplication (`*`)
 - **GLM Functions**: `length()`, `normalize()`, `dot()`, `cross()` functions with mathematical accuracy
-- **Dual-Mode Support**: Identical GLM behavior in interpreter and compiled modes with native performance
+- **Dual-Mode Support**: Identical GLM behaviour in interpreter and compiled modes with native performance
 - **Graphics Programming**: Professional-grade vector math for 3D graphics, game development, and scientific computing
-
-### Enhanced FFI System
-- **Extended Parameter Support**: Functions with up to 11 parameters for complex graphics operations (SDL2_gfx)
-- **Performance Optimization**: 80% code reduction with FFITypeConverter pre-conversion strategy
-- **Graphics Enhancement**: Proper filled triangle rendering with `filledTrigonRGBA` support
-- **Cross-Mode Consistency**: Identical FFI behavior in interpreter and compiled modes
 
 ### Variable Scoping Fixes
 - **For Loop Scoping**: Fixed critical bug where for loop variables couldn't access parent scope
 - **Function Compatibility**: Resolved scoping issues in functions with typed parameters
-- **Cross-Mode Consistency**: Identical scoping behavior in interpreter and compiled modes
+- **Cross-Mode Consistency**: Identical scoping behaviour in interpreter and compiled modes
 
 ### Compiler Stability
-- **Linker Issues Resolved**: Fixed missing FFITypeConverter implementations causing compilation failures
-- **Full Compilation Support**: Both simple and complex FFI programs compile correctly
-- **Runtime Compatibility**: Updated runtime library for consistent cross-mode behavior
+- **Linker Issues Resolved**: Fixed compilation failures and improved build reliability
+- **Full Compilation Support**: Complex programs compile correctly with proper runtime integration
+- **Runtime Compatibility**: Updated runtime library for consistent cross-mode behaviour
 
 ## Quick Start
 
@@ -70,7 +63,7 @@
 ./rbasic -r
 ```
 
-**Performance**: Compiled executables run at near-C++ speeds with automatic OpenMP parallelization for array operations. The FFI system provides direct access to native libraries with minimal overhead.
+**Performance**: Compiled executables run at near-C++ speeds with automatic OpenMP parallelisation for array operations.
 
 ## Getting Started
 
@@ -264,17 +257,17 @@ write_binary_file("data.bin", data, 256);
 rbasic is designed as a transpiler where interpreter, REPL, and compiled output produce identical results by sharing the same AST representation and runtime function implementations:
 
 1. **Rapid Prototyping**: Use interpreter/REPL mode for development
-2. **Deployment**: Compile to optimized C++ executables  
+2. **Deployment**: Compile to optimised C++ executables  
 3. **Modular Development**: Import system enables standard library ecosystem
-4. **Cross-Platform Consistency**: Same behavior on Windows, Linux, macOS, and ARM platforms
+4. **Cross-Platform Consistency**: Same behaviour on Windows, Linux, macOS, and ARM platforms
 
 ## Performance
 
-Compiled executables run at near-C++ speeds with automatic OpenMP parallelization for array operations. The transpiled code is optimized and benefits from the host C++ compiler's optimization passes.
+Compiled executables run at near-C++ speeds with automatic OpenMP parallelisation for array operations. The transpiled code is optimised and benefits from the host C++ compiler's optimisation passes.
 
 - **Compilation Speed**: Fast transpilation and compilation (sub-second for small programs)
 - **Runtime Speed**: Native machine code performance
-- **Parallel Arrays**: Automatic OpenMP optimization for large array operations (≥1000 elements)
+- **Parallel Arrays**: Automatic OpenMP optimisation for large array operations (≥1000 elements)
 - **Memory Efficient**: Direct memory management, no garbage collection overhead
 
 
@@ -364,23 +357,22 @@ build.bat
 **Current Alpha Features:**
 - ✅ Advanced C-style BASIC language implementation with proper scoping
 - ✅ Complete GLM vector mathematics integration with native performance and component access
-- ✅ Dual execution modes (interpreter and compiled) with identical behavior
-- ✅ Comprehensive FFI system with 1-11 parameter support for graphics programming
+- ✅ Dual execution modes (interpreter and compiled) with identical behaviour
 - ✅ Complete SDL2 integration with filled shapes and hardware acceleration
 - ✅ Import system for modular programming with compile-time resolution
 - ✅ Cross-platform support (Windows/Linux/macOS) with bundled MinGW64
-- ✅ Performance-optimized runtime with FFITypeConverter architecture
+- ✅ Performance-optimised runtime architecture
 - ✅ Interactive REPL for development with multi-line support
+- ✅ Native Raspberry Pi hardware support (GPIO, SPI, I2C, PWM, Serial)
 
 **Recently Fixed Issues:**
 - ✅ Texture rendering compatibility between interpreter and compiled modes (October 2025)
-- ✅ FFI null pointer parameter handling - proper `null` vs integer `0` usage (October 2025)
 - ✅ SDL_RenderCopy pattern matching and cross-mode consistency (October 2025)
 - ✅ Memory leak in create_sdl_rect with cached buffer implementation (October 2025)
 - ✅ Variable scoping in for loops and functions (October 2025)
-- ✅ Compiler linker errors with FFI functions (October 2025)
-- ✅ Cross-mode FFI consistency between interpreter and compiled modes
-- ✅ Performance bottlenecks in FFI parameter conversion (80% improvement)
+- ✅ Compiler linker errors resolved (October 2025)
+- ✅ Cross-mode consistency between interpreter and compiled modes
+- ✅ Performance optimisations in runtime implementation (80% improvement)
 
 **Known Limitations:**
 - ⚠️ **Error Reporting**: Main execution mode needs more detailed error messages with line numbers
@@ -398,9 +390,9 @@ build.bat
 rbasic/
 ├── src/                   # Core transpiler implementation (lexer, parser, interpreter, codegen)
 ├── include/               # Header files for all components
-├── runtime/               # Runtime library for compiled programs with FFI optimization
+├── runtime/               # Runtime library for compiled programs
 ├── blib/                  # Standard library (SDL2, SQLite wrappers with 200+ functions)
-├── examples/              # Sample programs demonstrating language features and FFI
+├── examples/              # Sample programs demonstrating language features
 ├── tests/                 # Unit tests and integration tests
 ├── build/                 # Build output directory (created by CMake)
 ├── mingw64_temp/          # Bundled MinGW64 compiler for Windows (portable compilation)

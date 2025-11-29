@@ -2,7 +2,7 @@
 
 **⚠️ ALPHA SOFTWARE**: This project is in active Alpha development. While core features are functional, expect bugs, breaking changes, and incomplete functionality. Not recommended for production use.
 
-This is a C-leaning BASIC language transpiler written in C++. The project supports interpreting BASIC programs directly, transpiling them to native C++ executables, and interactive development via REPL, all with identical behavior.
+This is a C-leaning BASIC language transpiler written in C++. The project supports interpreting BASIC programs directly, transpiling them to native C++ executables, and interactive development via REPL, all with identical behaviour.
 
 ## Project Structure
 - `src/` - Main source code (lexer, parser, interpreter, code generator, REPL)
@@ -18,10 +18,10 @@ This is a C-leaning BASIC language transpiler written in C++. The project suppor
 2. **Parser** - Builds Abstract Syntax Tree (AST) from tokens with import statement support
 3. **Interpreter** - Directly executes AST nodes for rapid development with runtime import resolution
 4. **REPL** - Interactive Read-Eval-Print Loop with multi-line support and meta commands
-5. **Code Generator** - Transpiles AST to optimized C++ source code
-6. **Runtime Library** - Shared function implementations for both execution modes with OpenMP parallelization
+5. **Code Generator** - Transpiles AST to optimised C++ source code
+6. **Runtime Library** - Shared function implementations for both execution modes with OpenMP parallelisation
 7. **Cross-Platform Terminal** - Colour support and cursor management for all platforms
-8. **Automatic Parallelization** - OpenMP-based multi-core optimization for large array operations
+8. **Automatic Parallelisation** - OpenMP-based multi-core optimisation for large array operations
 9. **Import System** - Complete modular programming with compile-time and runtime import resolution
 10. **Raspberry Pi Support** - Native GPIO, SPI, I2C, PWM, and Serial hardware access on ARM platforms
 
@@ -40,15 +40,15 @@ Use CMake to build the project. The executable will be placed in the project roo
 - **Cross-Compilation**: pi-toolchain.cmake for building on x86 for ARM
 - **Automatic Detection**: Chooses best available compiler
 - **Static Linking**: Self-contained executables with MinGW64
-- **OpenMP Parallelization**: Automatic multi-core optimization for both interpreted and compiled modes
+- **OpenMP Parallelisation**: Automatic multi-core optimisation for both interpreted and compiled modes
 - **Conditional Compilation**: RPI hardware support only compiled on ARM platforms
 
 ## Performance Features
-- **Automatic Parallelization**: OpenMP-based array operations for arrays ≥1000 elements
-- **Invisible to Users**: Parallelization is completely transparent and automatic
+- **Automatic Parallelisation**: OpenMP-based array operations for arrays ≥1000 elements
+- **Invisible to Users**: Parallelisation is completely transparent and automatic
 - **Cross-Platform**: OpenMP support on Windows (MinGW64/MSVC), Linux (GCC), and macOS (Clang)
 - **Smart Thresholding**: Serial execution for small arrays to avoid threading overhead
-- **Both Modes**: Parallelization works in interpreter mode and compiled executables
+- **Both Modes**: Parallelisation works in interpreter mode and compiled executables
 
 ## Language Features
 rbasic implements a "C-leaning BASIC" with modern syntax:
@@ -69,7 +69,7 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 - **Circular Detection**: Prevents infinite import loops with clear error messages
 - **Compile-Time Resolution**: Imports resolved and inlined during compilation (C-style preprocessing)
 - **Runtime Resolution**: Dynamic import loading in interpreter mode
-- **Identical Behavior**: Same output in both interpreter and compile modes
+- **Identical Behaviour**: Same output in both interpreter and compile modes
 
 ## Syntax Features
 - Modern variable declarations: `var name = value;`
@@ -110,17 +110,17 @@ rbasic implements a "C-leaning BASIC" with modern syntax:
 ## Recent Improvements (2025)
 
 ### Complete GLM Vector Mathematics Integration (October 2025)
-- **Native GLM Types**: Built-in `vec2`, `vec3`, `vec4`, `mat3`, `mat4`, `quat` primitives with SIMD optimization
+- **Native GLM Types**: Built-in `vec2`, `vec3`, `vec4`, `mat3`, `mat4`, `quat` primitives with SIMD optimisation
 - **Component Access**: Full read/write access with `.x`, `.y`, `.z`, `.w` component syntax using ComponentAssignExpr AST node
 - **Vector Operations**: Native support for addition (`+`), subtraction (`-`), scalar multiplication (`*`) with GLM backing
 - **GLM Functions**: `length()`, `normalize()`, `dot()`, `cross()` functions with mathematical accuracy
-- **Dual-Mode Support**: Identical GLM behavior in interpreter and compiled modes with native performance
+- **Dual-Mode Support**: Identical GLM behaviour in interpreter and compiled modes with native performance
 - **Architecture**: Extended BasicValue variant with GLM wrapper types, runtime library GLM integration, proper AST nodes
 
 ### Variable Scoping Fix (October 2025)
 - **For Loop Scoping**: Fixed critical bug where for loop variables couldn't access parent scope
 - **Function Compatibility**: Resolved scoping issues in functions with typed parameters  
-- **Cross-Mode Consistency**: Identical scoping behavior in interpreter and compiled modes
+- **Cross-Mode Consistency**: Identical scoping behaviour in interpreter and compiled modes
 - **Root Cause**: Modified `ModernForStmt::visit()` to use variable backup/restore instead of isolated scopes
 
 
@@ -201,8 +201,8 @@ serial_close(serial);
 The project is designed as a transpiler where interpreter, REPL, and compiled output produce identical results by sharing the same AST representation and runtime function implementations. This enables:
 
 1. **Rapid Prototyping**: Use interpreter/REPL mode for development
-2. **Deployment**: Compile to optimized C++ executables
+2. **Deployment**: Compile to optimised C++ executables
 3. **Modular Development**: Import system enables standard library ecosystem
-5. **Cross-Platform Consistency**: Same behavior on Windows, Linux, and macOS
+5. **Cross-Platform Consistency**: Same behaviour on Windows, Linux, and macOS
 
-The architecture supports building a comprehensive standard library ecosystem where modules can be developed, tested, and deployed across all execution modes with identical behavior.
+The architecture supports building a comprehensive standard library ecosystem where modules can be developed, tested, and deployed across all execution modes with identical behaviour.

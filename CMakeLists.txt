@@ -19,6 +19,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)  # Disable compiler-specific extensions
 
+# Set C standard to C11 to avoid C23 GLIBC dependencies
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+
 # Ensure C++17 is used on all platforms
 if(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 17)
@@ -81,6 +86,7 @@ set(SOURCES
     src/math_utils.cpp
     src/memory_manager.cpp
     src/unified_value.cpp
+    src/glibc_compat.c
 )
 
 # Raspberry Pi support sources (conditional)

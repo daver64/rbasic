@@ -22,6 +22,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <chrono>
+#include <thread>
 
 // BasicValue is already available from basic_runtime.h
 #ifdef _WIN32
@@ -557,6 +559,24 @@ bool Interpreter::handleIOFunctions(CallExpr& node) {
     
     if (node.name == "exit" && node.arguments.size() == 0) {
         std::exit(0);
+        return true;
+    }
+    
+    if (node.name == "sleep" && node.arguments.size() == 1) {
+        node.arguments[0]->accept(*this);
+        int ms = std::holds_alternative<int>(lastValue) ? std::get<int>(lastValue) : 
+                 static_cast<int>(std::get<double>(lastValue));
+        std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+        lastValue = 0;
+        return true;
+    }
+    
+    if (node.name == "sleep_ms" && node.arguments.size() == 1) {
+        node.arguments[0]->accept(*this);
+        int ms = std::holds_alternative<int>(lastValue) ? std::get<int>(lastValue) : 
+                 static_cast<int>(std::get<double>(lastValue));
+        std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+        lastValue = 0;
         return true;
     }
     

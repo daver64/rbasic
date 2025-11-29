@@ -2,7 +2,7 @@
 
 ## Overview
 
-Successfully implemented native Raspberry Pi hardware support for rbasic with conditional compilation, allowing the project to work on both x86/x64 and ARM platforms with identical behavior.
+Successfully implemented native Raspberry Pi hardware support for rbasic with conditional compilation, allowing the project to work on both x86/x64 and ARM platforms with identical behaviour.
 
 ## Implementation Details
 
@@ -77,7 +77,7 @@ Created 10 new files (5 headers + 5 implementations):
 **RPI Function Exposure:**
 - Included RPI headers with conditional compilation
 - C-style extern functions automatically available to compiled programs
-- Identical behavior between interpreter and compiled modes
+- Identical behaviour between interpreter and compiled modes
 - Zero overhead when RPI support is disabled
 
 ### 5. Cross-Compilation Support

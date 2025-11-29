@@ -39,7 +39,7 @@ This folder contains experimental VS Code extension files for rbasic syntax high
   - Math: `sqrt`, `sin`, `cos`, `randomise`, `pi`
   - String: `len`, `left`, `right`, `mid`, `str`, `val`
   - I/O: `print`, `input`, `sleep_ms`
-  - Future: External functions via FFI system
+  - Hardware: GPIO, SPI, I2C, PWM, Serial (on Raspberry Pi)
 - **Data Types**: `integer`, `double`, `string`, `boolean`, `thread`, `mutex`
 - **Operators**: `+`, `-`, `*`, `/`, `==`, `!=`, `<=`, `>=`, `and`, `or`, `not`
 - **Literals**: Numbers, strings, booleans (`true`, `false`)
@@ -63,9 +63,8 @@ function fibonacci(n as integer) as integer {
 var result = fibonacci(10);
 print("Fibonacci(10) =", result);
 
-// Future: External functionality via FFI
-// graphics_mode(800, 600);  // Will be available via FFI
-// draw_text(110, 110, "Hello, rbasic!");  // Will be available via FFI
+// SDL2 Graphics
+// See examples/sdl_core_demo.bas for complete graphics programming
 ```
 
 ## Manual Installation Steps
