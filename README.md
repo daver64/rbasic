@@ -9,9 +9,10 @@
 ## Why rbasic for Embedded Systems?
 
 - **🔌 Native Hardware Access**: Direct GPIO, SPI, I2C, PWM, and UART control without external libraries
+- **🎨 Graphics & Database**: Optional SDL2 for GUIs and SQLite3 for data storage (build-time configurable)
 - **⚡ Dual Execution**: Rapid prototyping with interpreter (`-i`), deploy with native compilation (`-c`)
 - **🎮 Interactive Development**: REPL mode for testing hardware in real-time
-- **📦 Zero Dependencies**: Self-contained executables, no runtime requirements
+- **📦 Zero Dependencies**: Self-contained executables, optional libraries linked only when needed
 - **🚀 Performance**: Near-C++ speeds with automatic multi-core optimisation
 - **🔄 Cross-Compilation**: Develop on PC, compile for ARM from any platform
 - **💾 Small Footprint**: Minimal memory usage, perfect for constrained systems
@@ -24,10 +25,32 @@
 - **Import System**: Complete modular programming with `import "file.bas"` syntax
 - **GLM Vector Math**: Native vec2, vec3, vec4 types with SIMD-optimised operations
 - **Automatic Parallelisation**: OpenMP-based multi-core optimisation for large array operations
+- **SDL2 Graphics** *(optional)*: Complete window management, rendering, events, and hardware acceleration
+- **SQLite3 Database** *(optional)*: Embedded database with prepared statements and transactions
 - **Raspberry Pi Hardware**: Native GPIO, SPI, I2C, PWM, and Serial (UART) access on ARM platforms
 - **Cross-Platform Development**: Windows (MinGW64/MSVC), Linux (GCC), macOS (Clang) with ARM cross-compilation
 
 ## Recent Improvements (November 2025)
+
+### SDL2 & SQLite3 Integration (November 2025)
+- **Complete SDL2 Graphics Support**: Window management, hardware-accelerated rendering, event handling
+  - 40+ SDL2 functions with resource management
+  - SDL2_gfx integration for filled shapes (circles, ellipses, triangles)
+  - SDL2_image support for texture loading (PNG, JPG, BMP)
+  - Full keyboard/mouse event system with scan code constants
+  - Identical behavior in interpreter and compiled modes
+- **SQLite3 Database Support**: Full-featured embedded database integration
+  - 25+ SQLite3 functions including prepared statements
+  - Transaction support with commit/rollback
+  - Complete CRUD operations with type-safe bindings
+  - 30+ built-in constants (SQLITE_OK, SQLITE_ROW, etc.)
+  - Works in both interpreter and compiled modes
+- **Constant System**: 50+ SDL2 and 30+ SQLite3 constants accessible by name
+  - SDL_INIT_VIDEO, SDL_WINDOW_SHOWN, SDL_RENDERER_ACCELERATED
+  - SQLITE_OK, SQLITE_ROW, SQLITE_DONE
+  - Dynamic SDL scan code resolution for keyboard input
+- **Optional Compilation**: Enable with `-DWITH_SDL2=ON` and `-DWITH_SQLITE3=ON` flags
+- **Cross-Compilation Ready**: Library linking configured for native and cross-platform builds
 
 ### Raspberry Pi Hardware Support (November 2025)
 - **Native GPIO Access**: Direct hardware control via /dev/gpiomem (no root required)
@@ -102,10 +125,36 @@
 git clone https://github.com/daver64/rbasic.git
 cd rbasic
 mkdir build && cd build
+
+# Standard build (interpreter + compiler only)
 cmake .. && cmake --build . --config Release
+
+# With SDL2 graphics support
+cmake -DWITH_SDL2=ON .. && cmake --build . --config Release
+
+# With SQLite3 database support
+cmake -DWITH_SQLITE3=ON .. && cmake --build . --config Release
+
+# With both SDL2 and SQLite3
+cmake -DWITH_SDL2=ON -DWITH_SQLITE3=ON .. && cmake --build . --config Release
+
+# Cross-compile for Raspberry Pi (from x86/x64 Linux)
+cmake -DCMAKE_TOOLCHAIN_FILE=../pi-toolchain.cmake -DWITH_SQLITE3=ON .. && make -j$(nproc)
 
 # Windows convenience script
 # build.bat
+```
+
+**Note**: SDL2 and SQLite3 support requires development libraries:
+```bash
+# Ubuntu/Debian/Raspberry Pi OS
+sudo apt install libsdl2-dev libsdl2-gfx-dev libsdl2-image-dev libsqlite3-dev
+
+# Fedora/RHEL
+sudo dnf install SDL2-devel SDL2_gfx-devel SDL2_image-devel sqlite-devel
+
+# macOS
+brew install sdl2 sdl2_gfx sdl2_image sqlite3
 ```
 
 ### 2. Try the Examples
@@ -129,14 +178,31 @@ cmake .. && cmake --build . --config Release
 sudo ./rbasic -i examples/rpi_act_led_blink.bas
 ```
 
+#### SDL2 Graphics Examples (requires -DWITH_SDL2=ON)
+```bash
+# Simple window with rendering
+./rbasic -i examples/sdl_simple_window.bas
+
+# Compile SDL2 program to executable
+./rbasic -c examples/sdl_simple_window.bas -o sdl_demo
+./sdl_demo
+```
+
+#### SQLite3 Database Examples (requires -DWITH_SQLITE3=ON)
+```bash
+# Complete database operations
+./rbasic -i examples/sqlite_demo.bas
+
+# Compile database program
+./rbasic -c examples/sqlite_demo.bas -o db_demo
+./db_demo
+```
+
 #### General Programming Examples
 ```bash
 # Algorithm development
 ./rbasic -i examples/fibonacci.bas
 ./rbasic -i examples/functions.bas
-
-# Graphics programming (requires SDL2)
-./rbasic -i examples/sdl_core_demo.bas
 
 # Compile for deployment
 ./rbasic -c examples/fibonacci.bas -o fibonacci
@@ -381,9 +447,15 @@ var result = add_numbers(10, 20);
 
 ### Build
 ```bash
-# Standard build
+# Standard build (core language only)
 mkdir build && cd build
 cmake .. && cmake --build .
+
+# With optional libraries
+cmake -DWITH_SDL2=ON -DWITH_SQLITE3=ON .. && cmake --build .
+
+# Cross-compile for Raspberry Pi
+cmake -DCMAKE_TOOLCHAIN_FILE=../pi-toolchain.cmake .. && make
 
 # Windows convenience
 build.bat
@@ -408,14 +480,19 @@ build.bat
 - ✅ Advanced C-style BASIC language implementation with proper scoping
 - ✅ Complete GLM vector mathematics integration with native performance and component access
 - ✅ Dual execution modes (interpreter and compiled) with identical behaviour
-- ✅ Complete SDL2 integration with filled shapes and hardware acceleration
+- ✅ Complete SDL2 graphics integration with hardware acceleration and event handling (optional)
+- ✅ Complete SQLite3 database integration with prepared statements and transactions (optional)
 - ✅ Import system for modular programming with compile-time resolution
 - ✅ Cross-platform support (Windows/Linux/macOS) with bundled MinGW64
 - ✅ Performance-optimised runtime architecture
 - ✅ Interactive REPL for development with multi-line support
 - ✅ Native Raspberry Pi hardware support (GPIO, SPI, I2C, PWM, Serial)
+- ✅ Cross-compilation toolchain for ARM/Raspberry Pi targets
 
 **Recently Fixed Issues:**
+- ✅ SDL2 and SQLite3 namespace integration and linking (November 2025)
+- ✅ Constant system for SDL2 and SQLite3 in both execution modes (November 2025)
+- ✅ Cross-compilation library linking for optional dependencies (November 2025)
 - ✅ Texture rendering compatibility between interpreter and compiled modes (October 2025)
 - ✅ SDL_RenderCopy pattern matching and cross-mode consistency (October 2025)
 - ✅ Memory leak in create_sdl_rect with cached buffer implementation (October 2025)
@@ -456,7 +533,7 @@ rbasic/
 - **Standard Library**: `blib/sdl2.bas` and `blib/sqlite.bas` with comprehensive function wrappers
 - **Development Tools**: MinGW64 bundled for Windows, cross-platform build system
 
-## Featured Examples
+### Featured Examples
 
 ### Raspberry Pi Hardware Programming
 - **`examples/rpi_gpio_blink.bas`** - LED control with GPIO output
@@ -468,13 +545,12 @@ rbasic/
 - **`examples/rpi_act_led_blink.bas`** - Control onboard Activity LED
 - **`examples/rpi_distance_sensor.bas`** - HC-SR04 ultrasonic distance measurement
 
-### Graphics and Multimedia (SDL2)
-- **`examples/sdl_core_demo.bas`** - Complete SDL2 demonstration with shapes and events
-- **`blib/sdl2.bas`** - Comprehensive SDL2 wrapper library with 200+ functions
+### Graphics Programming (SDL2 - optional)
+- **`examples/sdl_simple_window.bas`** - Window creation with rendering and events
+- **`examples/sqlite_demo.bas`** - Complete database demo with CRUD operations
 
-### Database Integration
-- **`examples/sqlite_simple_demo.bas`** - SQLite database with CRUD operations
-- **`blib/sqlite.bas`** - SQLite wrapper with prepared statements
+### Database Integration (SQLite3 - optional)
+- **`examples/sqlite_demo.bas`** - Full database operations with prepared statements
 
 ### Algorithm Development
 - **`examples/functions.bas`** - Function definitions, parameters, scoping
