@@ -65,6 +65,47 @@ if(BUILD_RPI_SUPPORT)
     message(STATUS "RPI_SUPPORT_ENABLED defined")
 endif()
 
+# SDL2 Support (optional)
+option(WITH_SDL2 "Enable SDL2 graphics support" OFF)
+if(WITH_SDL2)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(SDL2 REQUIRED sdl2)
+    
+    # Add architecture-specific include path for SDL2 config
+    if(EXISTS "/usr/include/${CMAKE_LIBRARY_ARCHITECTURE}/SDL2")
+        list(APPEND SDL2_INCLUDE_DIRS "/usr/include/${CMAKE_LIBRARY_ARCHITECTURE}/SDL2")
+    endif()
+    
+    # Try to find SDL2_image
+    pkg_check_modules(SDL2_IMAGE SDL2_image)
+    
+    # Try to find SDL2_gfx for advanced drawing primitives
+    pkg_check_modules(SDL2_GFX SDL2_gfx)
+    
+    if(SDL2_GFX_FOUND)
+        message(STATUS "SDL2_gfx found - enabling advanced drawing primitives")
+        set(SDL2_GFX_AVAILABLE ON)
+    else()
+        message(STATUS "SDL2_gfx not found - advanced drawing primitives disabled")
+        set(SDL2_GFX_AVAILABLE OFF)
+    endif()
+    
+    add_compile_definitions(SDL2_SUPPORT_ENABLED)
+    if(SDL2_GFX_AVAILABLE)
+        add_compile_definitions(SDL2_GFX_AVAILABLE)
+    endif()
+    message(STATUS "SDL2 support enabled")
+endif()
+
+# SQLite3 Support (optional)
+option(WITH_SQLITE3 "Enable SQLite3 database support" OFF)
+if(WITH_SQLITE3)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(SQLITE3 REQUIRED sqlite3)
+    add_compile_definitions(SQLITE3_SUPPORT_ENABLED)
+    message(STATUS "SQLite3 support enabled")
+endif()
+
 # Core language build - no external dependencies
 
 # Source files
@@ -147,6 +188,30 @@ add_library(rbasic_runtime STATIC
     src/glibc_compat.c
 )
 
+# Add SDL2 wrapper to runtime (conditional)
+if(WITH_SDL2)
+    target_sources(rbasic_runtime PRIVATE
+        runtime/sdl2_wrapper.cpp
+        runtime/sdl2_wrapper.h
+    )
+    target_include_directories(rbasic_runtime PUBLIC ${SDL2_INCLUDE_DIRS})
+    target_compile_options(rbasic_runtime PUBLIC ${SDL2_CFLAGS_OTHER})
+    if(SDL2_GFX_AVAILABLE)
+        target_include_directories(rbasic_runtime PUBLIC ${SDL2_GFX_INCLUDE_DIRS})
+        target_compile_options(rbasic_runtime PUBLIC ${SDL2_GFX_CFLAGS_OTHER})
+    endif()
+endif()
+
+# Add SQLite3 wrapper to runtime (conditional)
+if(WITH_SQLITE3)
+    target_sources(rbasic_runtime PRIVATE
+        runtime/sqlite3_wrapper.cpp
+        runtime/sqlite3_wrapper.h
+    )
+    target_include_directories(rbasic_runtime PUBLIC ${SQLITE3_INCLUDE_DIRS})
+    target_compile_options(rbasic_runtime PUBLIC ${SQLITE3_CFLAGS_OTHER})
+endif()
+
 # Add Raspberry Pi support to runtime (conditional)
 if(BUILD_RPI_SUPPORT)
     target_sources(rbasic_runtime PRIVATE
@@ -176,6 +241,26 @@ target_link_libraries(rbasic rbasic_runtime)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(rbasic OpenMP::OpenMP_CXX)
     target_link_libraries(rbasic_runtime OpenMP::OpenMP_CXX)
+endif()
+
+# Link SDL2 libraries (conditional)
+if(WITH_SDL2)
+    target_link_libraries(rbasic ${SDL2_LIBRARIES})
+    target_link_libraries(rbasic_runtime ${SDL2_LIBRARIES})
+    if(SDL2_IMAGE_FOUND)
+        target_link_libraries(rbasic ${SDL2_IMAGE_LIBRARIES})
+        target_link_libraries(rbasic_runtime ${SDL2_IMAGE_LIBRARIES})
+    endif()
+    if(SDL2_GFX_AVAILABLE)
+        target_link_libraries(rbasic ${SDL2_GFX_LIBRARIES})
+        target_link_libraries(rbasic_runtime ${SDL2_GFX_LIBRARIES})
+    endif()
+endif()
+
+# Link SQLite3 libraries (conditional)
+if(WITH_SQLITE3)
+    target_link_libraries(rbasic ${SQLITE3_LIBRARIES})
+    target_link_libraries(rbasic_runtime ${SQLITE3_LIBRARIES})
 endif()
 
 if(NOT WIN32)

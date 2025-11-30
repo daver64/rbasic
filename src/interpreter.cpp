@@ -497,6 +497,8 @@ void Interpreter::visit(CallExpr& node) {
         handleFileFunctions(node) ||
         handleTerminalFunctions(node) ||
         handleRPIFunctions(node) ||
+        handleSDL2Functions(node) ||
+        handleSQLite3Functions(node) ||
         handleUserDefinedFunction(node)) {
         return;
     }
@@ -2399,6 +2401,391 @@ bool Interpreter::handleRPIFunctions([[maybe_unused]] CallExpr& node) {
     return false; // Function not recognized
 #else
     // RPI support not enabled
+    return false;
+#endif
+}
+
+// Helper function to convert BasicValue (from basic_runtime) to ValueType (interpreter)
+static ValueType convertBasicValue(const BasicValue& bv) {
+    return std::visit([](auto&& arg) -> ValueType {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, int> || std::is_same_v<T, double> || 
+                      std::is_same_v<T, std::string> || std::is_same_v<T, bool> ||
+                      std::is_same_v<T, void*>) {
+            return arg;
+        } else {
+            // For complex types, we return 0 as placeholder
+            // In practice, SDL2/SQLite3 functions mostly return int/string
+            return 0;
+        }
+    }, bv);
+}
+
+// SDL2 Graphics Functions Handler
+bool Interpreter::handleSDL2Functions([[maybe_unused]] CallExpr& node) {
+#ifdef SDL2_SUPPORT_ENABLED
+    std::string fname = node.name;
+    
+    // Core SDL functions
+    if (fname == "sdl_init") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sdl_init requires 1 argument (flags)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        int flags = std::get<int>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_init(flags));
+        return true;
+    }
+    if (fname == "sdl_quit") {
+        basic_runtime::func_sdl_quit();
+        lastValue = 0;
+        return true;
+    }
+    if (fname == "sdl_get_error") {
+        lastValue = convertBasicValue(basic_runtime::func_sdl_get_error());
+        return true;
+    }
+    
+    // Window functions
+    if (fname == "sdl_create_window") {
+        if (node.arguments.size() != 6) {
+            throw RuntimeError("sdl_create_window requires 6 arguments (title, x, y, w, h, flags)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); std::string title = std::get<std::string>(lastValue);
+        node.arguments[1]->accept(*this); int x = std::get<int>(lastValue);
+        node.arguments[2]->accept(*this); int y = std::get<int>(lastValue);
+        node.arguments[3]->accept(*this); int w = std::get<int>(lastValue);
+        node.arguments[4]->accept(*this); int h = std::get<int>(lastValue);
+        node.arguments[5]->accept(*this); int flags = std::get<int>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_create_window(title, x, y, w, h, flags));
+        return true;
+    }
+    if (fname == "sdl_destroy_window") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sdl_destroy_window requires 1 argument (window_handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_destroy_window(std::get<int>(lastValue)));
+        return true;
+    }
+    if (fname == "sdl_set_window_title") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("sdl_set_window_title requires 2 arguments (window_handle, title)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int handle = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); std::string title = std::get<std::string>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_set_window_title(handle, title));
+        return true;
+    }
+    
+    // Renderer functions
+    if (fname == "sdl_create_renderer") {
+        if (node.arguments.size() != 3) {
+            throw RuntimeError("sdl_create_renderer requires 3 arguments (window_handle, index, flags)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int window = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); int index = std::get<int>(lastValue);
+        node.arguments[2]->accept(*this); int flags = std::get<int>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_create_renderer(window, index, flags));
+        return true;
+    }
+    if (fname == "sdl_destroy_renderer") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sdl_destroy_renderer requires 1 argument (renderer_handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_destroy_renderer(std::get<int>(lastValue)));
+        return true;
+    }
+    if (fname == "sdl_render_clear") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sdl_render_clear requires 1 argument (renderer_handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_render_clear(std::get<int>(lastValue)));
+        return true;
+    }
+    if (fname == "sdl_render_present") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sdl_render_present requires 1 argument (renderer_handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_render_present(std::get<int>(lastValue)));
+        return true;
+    }
+    if (fname == "sdl_set_render_draw_color") {
+        if (node.arguments.size() != 5) {
+            throw RuntimeError("sdl_set_render_draw_color requires 5 arguments (renderer_handle, r, g, b, a)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int renderer = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); int r = std::get<int>(lastValue);
+        node.arguments[2]->accept(*this); int g = std::get<int>(lastValue);
+        node.arguments[3]->accept(*this); int b = std::get<int>(lastValue);
+        node.arguments[4]->accept(*this); int a = std::get<int>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_set_render_draw_color(renderer, r, g, b, a));
+        return true;
+    }
+    
+    // Drawing primitives
+    if (fname == "sdl_render_draw_line") {
+        if (node.arguments.size() != 5) {
+            throw RuntimeError("sdl_render_draw_line requires 5 arguments (renderer_handle, x1, y1, x2, y2)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int renderer = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); int x1 = std::get<int>(lastValue);
+        node.arguments[2]->accept(*this); int y1 = std::get<int>(lastValue);
+        node.arguments[3]->accept(*this); int x2 = std::get<int>(lastValue);
+        node.arguments[4]->accept(*this); int y2 = std::get<int>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_render_draw_line(renderer, x1, y1, x2, y2));
+        return true;
+    }
+    if (fname == "sdl_render_draw_rect") {
+        if (node.arguments.size() != 5) {
+            throw RuntimeError("sdl_render_draw_rect requires 5 arguments (renderer_handle, x, y, w, h)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int renderer = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); int x = std::get<int>(lastValue);
+        node.arguments[2]->accept(*this); int y = std::get<int>(lastValue);
+        node.arguments[3]->accept(*this); int w = std::get<int>(lastValue);
+        node.arguments[4]->accept(*this); int h = std::get<int>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_render_draw_rect(renderer, x, y, w, h));
+        return true;
+    }
+    if (fname == "sdl_render_fill_rect") {
+        if (node.arguments.size() != 5) {
+            throw RuntimeError("sdl_render_fill_rect requires 5 arguments (renderer_handle, x, y, w, h)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int renderer = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); int x = std::get<int>(lastValue);
+        node.arguments[2]->accept(*this); int y = std::get<int>(lastValue);
+        node.arguments[3]->accept(*this); int w = std::get<int>(lastValue);
+        node.arguments[4]->accept(*this); int h = std::get<int>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_render_fill_rect(renderer, x, y, w, h));
+        return true;
+    }
+    
+#ifdef SDL2_GFX_AVAILABLE
+    if (fname == "sdl_render_draw_circle") {
+        if (node.arguments.size() != 4) {
+            throw RuntimeError("sdl_render_draw_circle requires 4 arguments (renderer_handle, x, y, radius)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int renderer = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); int x = std::get<int>(lastValue);
+        node.arguments[2]->accept(*this); int y = std::get<int>(lastValue);
+        node.arguments[3]->accept(*this); int radius = std::get<int>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_render_draw_circle(renderer, x, y, radius));
+        return true;
+    }
+    if (fname == "sdl_render_fill_circle") {
+        if (node.arguments.size() != 4) {
+            throw RuntimeError("sdl_render_fill_circle requires 4 arguments (renderer_handle, x, y, radius)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int renderer = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); int x = std::get<int>(lastValue);
+        node.arguments[2]->accept(*this); int y = std::get<int>(lastValue);
+        node.arguments[3]->accept(*this); int radius = std::get<int>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_render_fill_circle(renderer, x, y, radius));
+        return true;
+    }
+#endif
+    
+    // Event functions
+    if (fname == "sdl_poll_event") {
+        lastValue = convertBasicValue(basic_runtime::func_sdl_poll_event());
+        return true;
+    }
+    if (fname == "sdl_get_event_type") {
+        lastValue = convertBasicValue(basic_runtime::func_sdl_get_event_type());
+        return true;
+    }
+    if (fname == "sdl_get_key_scancode") {
+        lastValue = convertBasicValue(basic_runtime::func_sdl_get_key_scancode());
+        return true;
+    }
+    if (fname == "sdl_get_mouse_x") {
+        lastValue = convertBasicValue(basic_runtime::func_sdl_get_mouse_x());
+        return true;
+    }
+    if (fname == "sdl_get_mouse_y") {
+        lastValue = convertBasicValue(basic_runtime::func_sdl_get_mouse_y());
+        return true;
+    }
+    if (fname == "sdl_delay") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sdl_delay requires 1 argument (milliseconds)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        lastValue = convertBasicValue(basic_runtime::func_sdl_delay(std::get<int>(lastValue)));
+        return true;
+    }
+    
+    return false;
+#else
+    return false;
+#endif
+}
+
+// SQLite3 Database Functions Handler
+bool Interpreter::handleSQLite3Functions([[maybe_unused]] CallExpr& node) {
+#ifdef SQLITE3_SUPPORT_ENABLED
+    std::string fname = node.name;
+    
+    // Core database functions
+    if (fname == "sqlite_open") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sqlite_open requires 1 argument (filename)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_open(std::get<std::string>(lastValue)));
+        return true;
+    }
+    if (fname == "sqlite_close") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sqlite_close requires 1 argument (db_handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_close(std::get<int>(lastValue)));
+        return true;
+    }
+    if (fname == "sqlite_exec") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("sqlite_exec requires 2 arguments (db_handle, sql)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int db = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); std::string sql = std::get<std::string>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_exec(db, sql));
+        return true;
+    }
+    if (fname == "sqlite_errmsg") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sqlite_errmsg requires 1 argument (db_handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_errmsg(std::get<int>(lastValue)));
+        return true;
+    }
+    
+    // Prepared statement functions
+    if (fname == "sqlite_prepare") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("sqlite_prepare requires 2 arguments (db_handle, sql)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int db = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); std::string sql = std::get<std::string>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_prepare(db, sql));
+        return true;
+    }
+    if (fname == "sqlite_finalize") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sqlite_finalize requires 1 argument (stmt_handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_finalize(std::get<int>(lastValue)));
+        return true;
+    }
+    if (fname == "sqlite_reset") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sqlite_reset requires 1 argument (stmt_handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_reset(std::get<int>(lastValue)));
+        return true;
+    }
+    
+    // Binding functions
+    if (fname == "sqlite_bind_int") {
+        if (node.arguments.size() != 3) {
+            throw RuntimeError("sqlite_bind_int requires 3 arguments (stmt_handle, index, value)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int stmt = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); int index = std::get<int>(lastValue);
+        node.arguments[2]->accept(*this); int value = std::get<int>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_bind_int(stmt, index, value));
+        return true;
+    }
+    if (fname == "sqlite_bind_double") {
+        if (node.arguments.size() != 3) {
+            throw RuntimeError("sqlite_bind_double requires 3 arguments (stmt_handle, index, value)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int stmt = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); int index = std::get<int>(lastValue);
+        node.arguments[2]->accept(*this); double value = std::get<double>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_bind_double(stmt, index, value));
+        return true;
+    }
+    if (fname == "sqlite_bind_text") {
+        if (node.arguments.size() != 3) {
+            throw RuntimeError("sqlite_bind_text requires 3 arguments (stmt_handle, index, value)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int stmt = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); int index = std::get<int>(lastValue);
+        node.arguments[2]->accept(*this); std::string value = std::get<std::string>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_bind_text(stmt, index, value));
+        return true;
+    }
+    
+    // Step and column access
+    if (fname == "sqlite_step") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sqlite_step requires 1 argument (stmt_handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_step(std::get<int>(lastValue)));
+        return true;
+    }
+    if (fname == "sqlite_column_count") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sqlite_column_count requires 1 argument (stmt_handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_column_count(std::get<int>(lastValue)));
+        return true;
+    }
+    if (fname == "sqlite_column_int") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("sqlite_column_int requires 2 arguments (stmt_handle, index)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int stmt = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); int index = std::get<int>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_column_int(stmt, index));
+        return true;
+    }
+    if (fname == "sqlite_column_double") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("sqlite_column_double requires 2 arguments (stmt_handle, index)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int stmt = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); int index = std::get<int>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_column_double(stmt, index));
+        return true;
+    }
+    if (fname == "sqlite_column_text") {
+        if (node.arguments.size() != 2) {
+            throw RuntimeError("sqlite_column_text requires 2 arguments (stmt_handle, index)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this); int stmt = std::get<int>(lastValue);
+        node.arguments[1]->accept(*this); int index = std::get<int>(lastValue);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_column_text(stmt, index));
+        return true;
+    }
+    
+    // Utility functions
+    if (fname == "sqlite_version") {
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_version());
+        return true;
+    }
+    
+    if (fname == "sqlite_changes") {
+        if (node.arguments.size() != 1) {
+            throw RuntimeError("sqlite_changes requires 1 argument (db_handle)", getCurrentPosition());
+        }
+        node.arguments[0]->accept(*this);
+        lastValue = convertBasicValue(basic_runtime::func_sqlite_changes(std::get<int>(lastValue)));
+        return true;
+    }
+    
+    return false;
+#else
     return false;
 #endif
 }

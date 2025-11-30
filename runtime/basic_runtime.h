@@ -568,4 +568,135 @@ BasicValue func_get_constant(const BasicValue& name);
 BasicValue func_is_null(const BasicValue& value);
 BasicValue func_not_null(const BasicValue& value);
 
+// ===================================================================
+// SDL2 Graphics Support (conditional - requires -DWITH_SDL2=ON)
+// ===================================================================
+#ifdef SDL2_SUPPORT_ENABLED
+
+// Core SDL functions
+BasicValue func_sdl_init(const BasicValue& flags);
+BasicValue func_sdl_quit();
+BasicValue func_sdl_get_error();
+
+// Window functions
+BasicValue func_sdl_create_window(const BasicValue& title, const BasicValue& x, const BasicValue& y, 
+                                  const BasicValue& w, const BasicValue& h, const BasicValue& flags);
+BasicValue func_sdl_destroy_window(const BasicValue& window_handle);
+BasicValue func_sdl_set_window_title(const BasicValue& window_handle, const BasicValue& title);
+BasicValue func_sdl_set_window_size(const BasicValue& window_handle, const BasicValue& w, const BasicValue& h);
+BasicValue func_sdl_set_window_position(const BasicValue& window_handle, const BasicValue& x, const BasicValue& y);
+BasicValue func_sdl_show_window(const BasicValue& window_handle);
+BasicValue func_sdl_hide_window(const BasicValue& window_handle);
+
+// Renderer functions
+BasicValue func_sdl_create_renderer(const BasicValue& window_handle, const BasicValue& index, const BasicValue& flags);
+BasicValue func_sdl_destroy_renderer(const BasicValue& renderer_handle);
+BasicValue func_sdl_render_clear(const BasicValue& renderer_handle);
+BasicValue func_sdl_render_present(const BasicValue& renderer_handle);
+BasicValue func_sdl_set_render_draw_color(const BasicValue& renderer_handle, const BasicValue& r, 
+                                          const BasicValue& g, const BasicValue& b, const BasicValue& a);
+
+// Drawing primitives
+BasicValue func_sdl_render_draw_point(const BasicValue& renderer_handle, const BasicValue& x, const BasicValue& y);
+BasicValue func_sdl_render_draw_line(const BasicValue& renderer_handle, const BasicValue& x1, const BasicValue& y1,
+                                     const BasicValue& x2, const BasicValue& y2);
+BasicValue func_sdl_render_draw_rect(const BasicValue& renderer_handle, const BasicValue& x, const BasicValue& y,
+                                     const BasicValue& w, const BasicValue& h);
+BasicValue func_sdl_render_fill_rect(const BasicValue& renderer_handle, const BasicValue& x, const BasicValue& y,
+                                     const BasicValue& w, const BasicValue& h);
+
+// Advanced drawing (SDL2_gfx)
+#ifdef SDL2_GFX_AVAILABLE
+BasicValue func_sdl_render_draw_circle(const BasicValue& renderer_handle, const BasicValue& x, 
+                                       const BasicValue& y, const BasicValue& radius);
+BasicValue func_sdl_render_fill_circle(const BasicValue& renderer_handle, const BasicValue& x, 
+                                       const BasicValue& y, const BasicValue& radius);
+BasicValue func_sdl_render_draw_ellipse(const BasicValue& renderer_handle, const BasicValue& x, const BasicValue& y,
+                                        const BasicValue& rx, const BasicValue& ry);
+BasicValue func_sdl_render_fill_ellipse(const BasicValue& renderer_handle, const BasicValue& x, const BasicValue& y,
+                                        const BasicValue& rx, const BasicValue& ry);
+BasicValue func_sdl_render_draw_triangle(const BasicValue& renderer_handle, 
+                                         const BasicValue& x1, const BasicValue& y1,
+                                         const BasicValue& x2, const BasicValue& y2,
+                                         const BasicValue& x3, const BasicValue& y3);
+BasicValue func_sdl_render_fill_triangle(const BasicValue& renderer_handle,
+                                         const BasicValue& x1, const BasicValue& y1,
+                                         const BasicValue& x2, const BasicValue& y2,
+                                         const BasicValue& x3, const BasicValue& y3);
+#endif
+
+// Texture functions
+BasicValue func_sdl_load_texture(const BasicValue& renderer_handle, const BasicValue& filename);
+BasicValue func_sdl_destroy_texture(const BasicValue& texture_handle);
+BasicValue func_sdl_render_copy(const BasicValue& renderer_handle, const BasicValue& texture_handle,
+                                const BasicValue& src_x, const BasicValue& src_y, 
+                                const BasicValue& src_w, const BasicValue& src_h,
+                                const BasicValue& dst_x, const BasicValue& dst_y, 
+                                const BasicValue& dst_w, const BasicValue& dst_h);
+BasicValue func_sdl_query_texture(const BasicValue& texture_handle);  // Returns width, height as struct
+
+// Event functions
+BasicValue func_sdl_poll_event();
+BasicValue func_sdl_get_event_type();
+BasicValue func_sdl_get_key_scancode();
+BasicValue func_sdl_get_key_keycode();
+BasicValue func_sdl_get_mouse_x();
+BasicValue func_sdl_get_mouse_y();
+BasicValue func_sdl_get_mouse_button();
+
+// Delay function
+BasicValue func_sdl_delay(const BasicValue& ms);
+
+#endif // SDL2_SUPPORT_ENABLED
+
+// ===================================================================
+// SQLite3 Database Support (conditional - requires -DWITH_SQLITE3=ON)
+// ===================================================================
+#ifdef SQLITE3_SUPPORT_ENABLED
+
+// Core database functions
+BasicValue func_sqlite_open(const BasicValue& filename);
+BasicValue func_sqlite_close(const BasicValue& db_handle);
+BasicValue func_sqlite_exec(const BasicValue& db_handle, const BasicValue& sql);
+BasicValue func_sqlite_errmsg(const BasicValue& db_handle);
+BasicValue func_sqlite_get_last_error_code(const BasicValue& db_handle);
+BasicValue func_sqlite_last_insert_rowid(const BasicValue& db_handle);
+BasicValue func_sqlite_changes(const BasicValue& db_handle);
+
+// Prepared statement functions
+BasicValue func_sqlite_prepare(const BasicValue& db_handle, const BasicValue& sql);
+BasicValue func_sqlite_finalize(const BasicValue& stmt_handle);
+BasicValue func_sqlite_reset(const BasicValue& stmt_handle);
+BasicValue func_sqlite_clear_bindings(const BasicValue& stmt_handle);
+
+// Binding functions
+BasicValue func_sqlite_bind_int(const BasicValue& stmt_handle, const BasicValue& index, const BasicValue& value);
+BasicValue func_sqlite_bind_int64(const BasicValue& stmt_handle, const BasicValue& index, const BasicValue& value);
+BasicValue func_sqlite_bind_double(const BasicValue& stmt_handle, const BasicValue& index, const BasicValue& value);
+BasicValue func_sqlite_bind_text(const BasicValue& stmt_handle, const BasicValue& index, const BasicValue& value);
+BasicValue func_sqlite_bind_null(const BasicValue& stmt_handle, const BasicValue& index);
+
+// Step and column access
+BasicValue func_sqlite_step(const BasicValue& stmt_handle);
+BasicValue func_sqlite_column_count(const BasicValue& stmt_handle);
+BasicValue func_sqlite_column_type(const BasicValue& stmt_handle, const BasicValue& index);
+BasicValue func_sqlite_column_name(const BasicValue& stmt_handle, const BasicValue& index);
+
+// Column retrieval functions
+BasicValue func_sqlite_column_int(const BasicValue& stmt_handle, const BasicValue& index);
+BasicValue func_sqlite_column_int64(const BasicValue& stmt_handle, const BasicValue& index);
+BasicValue func_sqlite_column_double(const BasicValue& stmt_handle, const BasicValue& index);
+BasicValue func_sqlite_column_text(const BasicValue& stmt_handle, const BasicValue& index);
+
+// Utility functions
+BasicValue func_sqlite_version();
+BasicValue func_sqlite_threadsafe();
+
+// Transaction helpers
+BasicValue func_sqlite_begin_transaction(const BasicValue& db_handle);
+BasicValue func_sqlite_commit_transaction(const BasicValue& db_handle);
+BasicValue func_sqlite_rollback_transaction(const BasicValue& db_handle);
+
+#endif // SQLITE3_SUPPORT_ENABLED
+
 } // namespace basic_runtime

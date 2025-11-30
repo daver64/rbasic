@@ -62,6 +62,8 @@ public:
     bool handleFileFunctions(CallExpr& node);
     bool handleTerminalFunctions(CallExpr& node);
     bool handleRPIFunctions(CallExpr& node);
+    bool handleSDL2Functions(CallExpr& node);
+    bool handleSQLite3Functions(CallExpr& node);
     bool handleUserDefinedFunction(CallExpr& node);
     
     // Visitor methods

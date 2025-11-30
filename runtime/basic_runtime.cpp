@@ -43,6 +43,14 @@ using namespace rbasic::rpi;
 #include <omp.h>
 #endif
 
+#ifdef SDL2_SUPPORT_ENABLED
+#include "sdl2_wrapper.h"
+#endif
+
+#ifdef SQLITE3_SUPPORT_ENABLED
+#include "sqlite3_wrapper.h"
+#endif
+
 namespace basic_runtime {
 
 // Array parallelization helpers
@@ -1434,6 +1442,102 @@ BasicValue get_constant(const std::string& name) {
         return BasicValue(false);
     }
     
+#ifdef SDL2_SUPPORT_ENABLED
+    // SDL2 constants
+    if (name.substr(0, 4) == "SDL_") {
+        // Init flags
+        if (name == "SDL_INIT_VIDEO") return BasicValue(constants::INIT_VIDEO);
+        if (name == "SDL_INIT_AUDIO") return BasicValue(constants::INIT_AUDIO);
+        if (name == "SDL_INIT_TIMER") return BasicValue(constants::INIT_TIMER);
+        if (name == "SDL_INIT_JOYSTICK") return BasicValue(constants::INIT_JOYSTICK);
+        if (name == "SDL_INIT_HAPTIC") return BasicValue(constants::INIT_HAPTIC);
+        if (name == "SDL_INIT_GAMECONTROLLER") return BasicValue(constants::INIT_GAMECONTROLLER);
+        if (name == "SDL_INIT_EVENTS") return BasicValue(constants::INIT_EVENTS);
+        if (name == "SDL_INIT_EVERYTHING") return BasicValue(constants::INIT_EVERYTHING);
+        
+        // Window flags
+        if (name == "SDL_WINDOW_FULLSCREEN") return BasicValue(constants::WINDOW_FULLSCREEN);
+        if (name == "SDL_WINDOW_OPENGL") return BasicValue(constants::WINDOW_OPENGL);
+        if (name == "SDL_WINDOW_SHOWN") return BasicValue(constants::WINDOW_SHOWN);
+        if (name == "SDL_WINDOW_HIDDEN") return BasicValue(constants::WINDOW_HIDDEN);
+        if (name == "SDL_WINDOW_BORDERLESS") return BasicValue(constants::WINDOW_BORDERLESS);
+        if (name == "SDL_WINDOW_RESIZABLE") return BasicValue(constants::WINDOW_RESIZABLE);
+        if (name == "SDL_WINDOW_MINIMIZED") return BasicValue(constants::WINDOW_MINIMIZED);
+        if (name == "SDL_WINDOW_MAXIMIZED") return BasicValue(constants::WINDOW_MAXIMIZED);
+        
+        // Renderer flags
+        if (name == "SDL_RENDERER_SOFTWARE") return BasicValue(constants::RENDERER_SOFTWARE);
+        if (name == "SDL_RENDERER_ACCELERATED") return BasicValue(constants::RENDERER_ACCELERATED);
+        if (name == "SDL_RENDERER_PRESENTVSYNC") return BasicValue(constants::RENDERER_PRESENTVSYNC);
+        if (name == "SDL_RENDERER_TARGETTEXTURE") return BasicValue(constants::RENDERER_TARGETTEXTURE);
+        
+        // Event types
+        if (name == "SDL_QUIT") return BasicValue(constants::EVENT_QUIT);
+        if (name == "SDL_KEYDOWN") return BasicValue(constants::EVENT_KEYDOWN);
+        if (name == "SDL_KEYUP") return BasicValue(constants::EVENT_KEYUP);
+        if (name == "SDL_MOUSEMOTION") return BasicValue(constants::EVENT_MOUSEMOTION);
+        if (name == "SDL_MOUSEBUTTONDOWN") return BasicValue(constants::EVENT_MOUSEBUTTONDOWN);
+        if (name == "SDL_MOUSEBUTTONUP") return BasicValue(constants::EVENT_MOUSEBUTTONUP);
+        if (name == "SDL_MOUSEWHEEL") return BasicValue(constants::EVENT_MOUSEWHEEL);
+        if (name == "SDL_WINDOWEVENT") return BasicValue(constants::EVENT_WINDOWEVENT);
+        
+        // Window position
+        if (name == "SDL_WINDOWPOS_UNDEFINED") return BasicValue(constants::WINDOWPOS_UNDEFINED);
+        if (name == "SDL_WINDOWPOS_CENTERED") return BasicValue(constants::WINDOWPOS_CENTERED);
+        
+        // Scan codes (dynamically extract from name)
+        if (name.substr(0, 13) == "SDL_SCANCODE_") {
+            std::string scancode_name = name.substr(4); // Remove "SDL_"
+            return BasicValue(SDL_GetScancodeFromName(scancode_name.c_str()));
+        }
+    }
+#endif
+    
+#ifdef SQLITE3_SUPPORT_ENABLED
+    // SQLite3 constants
+    if (name.substr(0, 7) == "SQLITE_") {
+        // Result codes
+        if (name == "SQLITE_OK") return BasicValue(constants::OK);
+        if (name == "SQLITE_ERROR") return BasicValue(constants::ERROR);
+        if (name == "SQLITE_BUSY") return BasicValue(constants::BUSY);
+        if (name == "SQLITE_LOCKED") return BasicValue(constants::LOCKED);
+        if (name == "SQLITE_NOMEM") return BasicValue(constants::NOMEM);
+        if (name == "SQLITE_READONLY") return BasicValue(constants::READONLY);
+        if (name == "SQLITE_INTERRUPT") return BasicValue(constants::INTERRUPT);
+        if (name == "SQLITE_IOERR") return BasicValue(constants::IOERR);
+        if (name == "SQLITE_CORRUPT") return BasicValue(constants::CORRUPT);
+        if (name == "SQLITE_NOTFOUND") return BasicValue(constants::NOTFOUND);
+        if (name == "SQLITE_FULL") return BasicValue(constants::FULL);
+        if (name == "SQLITE_CANTOPEN") return BasicValue(constants::CANTOPEN);
+        if (name == "SQLITE_PROTOCOL") return BasicValue(constants::PROTOCOL);
+        if (name == "SQLITE_EMPTY") return BasicValue(constants::EMPTY);
+        if (name == "SQLITE_SCHEMA") return BasicValue(constants::SCHEMA);
+        if (name == "SQLITE_TOOBIG") return BasicValue(constants::TOOBIG);
+        if (name == "SQLITE_CONSTRAINT") return BasicValue(constants::CONSTRAINT);
+        if (name == "SQLITE_MISMATCH") return BasicValue(constants::MISMATCH);
+        if (name == "SQLITE_MISUSE") return BasicValue(constants::MISUSE);
+        if (name == "SQLITE_NOLFS") return BasicValue(constants::NOLFS);
+        if (name == "SQLITE_AUTH") return BasicValue(constants::AUTH);
+        if (name == "SQLITE_FORMAT") return BasicValue(constants::FORMAT);
+        if (name == "SQLITE_RANGE") return BasicValue(constants::RANGE);
+        if (name == "SQLITE_NOTADB") return BasicValue(constants::NOTADB);
+        if (name == "SQLITE_ROW") return BasicValue(constants::ROW);
+        if (name == "SQLITE_DONE") return BasicValue(constants::DONE);
+        
+        // Column types
+        if (name == "SQLITE_INTEGER") return BasicValue(constants::INTEGER);
+        if (name == "SQLITE_FLOAT") return BasicValue(constants::FLOAT);
+        if (name == "SQLITE_TEXT") return BasicValue(constants::TEXT);
+        if (name == "SQLITE_BLOB") return BasicValue(constants::BLOB);
+        if (name == "SQLITE_NULL") return BasicValue(constants::NULL_TYPE);
+        
+        // Open flags
+        if (name == "SQLITE_OPEN_READONLY") return BasicValue(constants::OPEN_READONLY);
+        if (name == "SQLITE_OPEN_READWRITE") return BasicValue(constants::OPEN_READWRITE);
+        if (name == "SQLITE_OPEN_CREATE") return BasicValue(constants::OPEN_CREATE);
+    }
+#endif
+    
     // Unknown constant
     throw std::runtime_error("Unknown constant: " + name);
 }
@@ -1466,5 +1570,400 @@ BasicValue func_is_null(const BasicValue& value) {
 BasicValue func_not_null(const BasicValue& value) {
     return not_null(value);
 }
+
+// ===================================================================
+// SDL2 Graphics Support Implementation
+// ===================================================================
+#ifdef SDL2_SUPPORT_ENABLED
+
+// Core SDL functions
+BasicValue func_sdl_init(const BasicValue& flags) {
+    int result = sdl_init(to_int(flags));
+    return BasicValue(result);
+}
+
+BasicValue func_sdl_quit() {
+    sdl_quit();
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_get_error() {
+    return BasicValue(sdl_get_error());
+}
+
+// Window functions
+BasicValue func_sdl_create_window(const BasicValue& title, const BasicValue& x, const BasicValue& y,
+                                  const BasicValue& w, const BasicValue& h, const BasicValue& flags) {
+    int handle = sdl_create_window(to_string(title), to_int(x), to_int(y),
+                                                  to_int(w), to_int(h), to_int(flags));
+    return BasicValue(handle);
+}
+
+BasicValue func_sdl_destroy_window(const BasicValue& window_handle) {
+    sdl_destroy_window(to_int(window_handle));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_set_window_title(const BasicValue& window_handle, const BasicValue& title) {
+    sdl_set_window_title(to_int(window_handle), to_string(title));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_set_window_size(const BasicValue& window_handle, const BasicValue& w, const BasicValue& h) {
+    sdl_set_window_size(to_int(window_handle), to_int(w), to_int(h));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_set_window_position(const BasicValue& window_handle, const BasicValue& x, const BasicValue& y) {
+    sdl_set_window_position(to_int(window_handle), to_int(x), to_int(y));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_show_window(const BasicValue& window_handle) {
+    sdl_show_window(to_int(window_handle));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_hide_window(const BasicValue& window_handle) {
+    sdl_hide_window(to_int(window_handle));
+    return BasicValue(0);
+}
+
+// Renderer functions
+BasicValue func_sdl_create_renderer(const BasicValue& window_handle, const BasicValue& index, const BasicValue& flags) {
+    int handle = sdl_create_renderer(to_int(window_handle), to_int(index), to_int(flags));
+    return BasicValue(handle);
+}
+
+BasicValue func_sdl_destroy_renderer(const BasicValue& renderer_handle) {
+    sdl_destroy_renderer(to_int(renderer_handle));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_render_clear(const BasicValue& renderer_handle) {
+    sdl_render_clear(to_int(renderer_handle));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_render_present(const BasicValue& renderer_handle) {
+    sdl_render_present(to_int(renderer_handle));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_set_render_draw_color(const BasicValue& renderer_handle, const BasicValue& r,
+                                          const BasicValue& g, const BasicValue& b, const BasicValue& a) {
+    sdl_set_render_draw_color(to_int(renderer_handle), to_int(r), to_int(g), to_int(b), to_int(a));
+    return BasicValue(0);
+}
+
+// Drawing primitives
+BasicValue func_sdl_render_draw_point(const BasicValue& renderer_handle, const BasicValue& x, const BasicValue& y) {
+    sdl_render_draw_point(to_int(renderer_handle), to_int(x), to_int(y));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_render_draw_line(const BasicValue& renderer_handle, const BasicValue& x1, const BasicValue& y1,
+                                     const BasicValue& x2, const BasicValue& y2) {
+    sdl_render_draw_line(to_int(renderer_handle), to_int(x1), to_int(y1), to_int(x2), to_int(y2));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_render_draw_rect(const BasicValue& renderer_handle, const BasicValue& x, const BasicValue& y,
+                                     const BasicValue& w, const BasicValue& h) {
+    sdl_render_draw_rect(to_int(renderer_handle), to_int(x), to_int(y), to_int(w), to_int(h));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_render_fill_rect(const BasicValue& renderer_handle, const BasicValue& x, const BasicValue& y,
+                                     const BasicValue& w, const BasicValue& h) {
+    sdl_render_fill_rect(to_int(renderer_handle), to_int(x), to_int(y), to_int(w), to_int(h));
+    return BasicValue(0);
+}
+
+// Advanced drawing (SDL2_gfx)
+#ifdef SDL2_GFX_AVAILABLE
+BasicValue func_sdl_render_draw_circle(const BasicValue& renderer_handle, const BasicValue& x,
+                                       const BasicValue& y, const BasicValue& radius) {
+    sdl_render_draw_circle(to_int(renderer_handle), to_int(x), to_int(y), to_int(radius));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_render_fill_circle(const BasicValue& renderer_handle, const BasicValue& x,
+                                       const BasicValue& y, const BasicValue& radius) {
+    sdl_render_fill_circle(to_int(renderer_handle), to_int(x), to_int(y), to_int(radius));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_render_draw_ellipse(const BasicValue& renderer_handle, const BasicValue& x, const BasicValue& y,
+                                        const BasicValue& rx, const BasicValue& ry) {
+    sdl_render_draw_ellipse(to_int(renderer_handle), to_int(x), to_int(y), to_int(rx), to_int(ry));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_render_fill_ellipse(const BasicValue& renderer_handle, const BasicValue& x, const BasicValue& y,
+                                        const BasicValue& rx, const BasicValue& ry) {
+    sdl_render_fill_ellipse(to_int(renderer_handle), to_int(x), to_int(y), to_int(rx), to_int(ry));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_render_draw_triangle(const BasicValue& renderer_handle,
+                                         const BasicValue& x1, const BasicValue& y1,
+                                         const BasicValue& x2, const BasicValue& y2,
+                                         const BasicValue& x3, const BasicValue& y3) {
+    sdl_render_draw_triangle(to_int(renderer_handle), 
+                                           to_int(x1), to_int(y1),
+                                           to_int(x2), to_int(y2),
+                                           to_int(x3), to_int(y3));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_render_fill_triangle(const BasicValue& renderer_handle,
+                                         const BasicValue& x1, const BasicValue& y1,
+                                         const BasicValue& x2, const BasicValue& y2,
+                                         const BasicValue& x3, const BasicValue& y3) {
+    sdl_render_fill_triangle(to_int(renderer_handle),
+                                           to_int(x1), to_int(y1),
+                                           to_int(x2), to_int(y2),
+                                           to_int(x3), to_int(y3));
+    return BasicValue(0);
+}
+#endif
+
+// Texture functions
+BasicValue func_sdl_load_texture(const BasicValue& renderer_handle, const BasicValue& filename) {
+    int handle = sdl_load_texture(to_int(renderer_handle), to_string(filename));
+    return BasicValue(handle);
+}
+
+BasicValue func_sdl_destroy_texture(const BasicValue& texture_handle) {
+    sdl_destroy_texture(to_int(texture_handle));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_render_copy(const BasicValue& renderer_handle, const BasicValue& texture_handle,
+                                const BasicValue& src_x, const BasicValue& src_y,
+                                const BasicValue& src_w, const BasicValue& src_h,
+                                const BasicValue& dst_x, const BasicValue& dst_y,
+                                const BasicValue& dst_w, const BasicValue& dst_h) {
+    sdl_render_copy(to_int(renderer_handle), to_int(texture_handle),
+                                  to_int(src_x), to_int(src_y), to_int(src_w), to_int(src_h),
+                                  to_int(dst_x), to_int(dst_y), to_int(dst_w), to_int(dst_h));
+    return BasicValue(0);
+}
+
+BasicValue func_sdl_query_texture(const BasicValue& texture_handle) {
+    int format, access, w, h;
+    sdl_query_texture(to_int(texture_handle), &format, &access, &w, &h);
+    
+    // Return as a struct with width and height
+    BasicStruct result("SDL_TextureInfo");
+    result.fields["width"] = BasicValue(w);
+    result.fields["height"] = BasicValue(h);
+    result.fields["format"] = BasicValue(format);
+    result.fields["access"] = BasicValue(access);
+    return BasicValue(result);
+}
+
+// Event functions
+BasicValue func_sdl_poll_event() {
+    int result = sdl_poll_event();
+    return BasicValue(result);
+}
+
+BasicValue func_sdl_get_event_type() {
+    int type = sdl_get_event_type();
+    return BasicValue(type);
+}
+
+BasicValue func_sdl_get_key_scancode() {
+    int scancode = sdl_get_key_scancode();
+    return BasicValue(scancode);
+}
+
+BasicValue func_sdl_get_key_keycode() {
+    int keycode = sdl_get_key_keycode();
+    return BasicValue(keycode);
+}
+
+BasicValue func_sdl_get_mouse_x() {
+    int x = sdl_get_mouse_x();
+    return BasicValue(x);
+}
+
+BasicValue func_sdl_get_mouse_y() {
+    int y = sdl_get_mouse_y();
+    return BasicValue(y);
+}
+
+BasicValue func_sdl_get_mouse_button() {
+    int button = sdl_get_mouse_button();
+    return BasicValue(button);
+}
+
+// Delay function
+BasicValue func_sdl_delay(const BasicValue& ms) {
+    sdl_delay(to_int(ms));
+    return BasicValue(0);
+}
+
+#endif // SDL2_SUPPORT_ENABLED
+
+// ===================================================================
+// SQLite3 Database Support Implementation
+// ===================================================================
+#ifdef SQLITE3_SUPPORT_ENABLED
+
+
+
+// Core database functions
+BasicValue func_sqlite_open(const BasicValue& filename) {
+    int handle = sqlite_open(to_string(filename));
+    return BasicValue(handle);
+}
+
+BasicValue func_sqlite_close(const BasicValue& db_handle) {
+    sqlite_close(to_int(db_handle));
+    return BasicValue(0);
+}
+
+BasicValue func_sqlite_exec(const BasicValue& db_handle, const BasicValue& sql) {
+    int result = sqlite_exec(to_int(db_handle), to_string(sql));
+    return BasicValue(result);
+}
+
+BasicValue func_sqlite_errmsg(const BasicValue& db_handle) {
+    return BasicValue(sqlite_errmsg(to_int(db_handle)));
+}
+
+BasicValue func_sqlite_get_last_error_code(const BasicValue& db_handle) {
+    int code = sqlite_get_last_error_code(to_int(db_handle));
+    return BasicValue(code);
+}
+
+BasicValue func_sqlite_last_insert_rowid(const BasicValue& db_handle) {
+    long long rowid = sqlite_last_insert_rowid(to_int(db_handle));
+    return BasicValue(static_cast<int>(rowid));
+}
+
+BasicValue func_sqlite_changes(const BasicValue& db_handle) {
+    int changes = sqlite_changes(to_int(db_handle));
+    return BasicValue(changes);
+}
+
+// Prepared statement functions
+BasicValue func_sqlite_prepare(const BasicValue& db_handle, const BasicValue& sql) {
+    int handle = sqlite_prepare(to_int(db_handle), to_string(sql));
+    return BasicValue(handle);
+}
+
+BasicValue func_sqlite_finalize(const BasicValue& stmt_handle) {
+    int result = sqlite_finalize(to_int(stmt_handle));
+    return BasicValue(result);
+}
+
+BasicValue func_sqlite_reset(const BasicValue& stmt_handle) {
+    int result = sqlite_reset(to_int(stmt_handle));
+    return BasicValue(result);
+}
+
+BasicValue func_sqlite_clear_bindings(const BasicValue& stmt_handle) {
+    int result = sqlite_clear_bindings(to_int(stmt_handle));
+    return BasicValue(result);
+}
+
+// Binding functions
+BasicValue func_sqlite_bind_int(const BasicValue& stmt_handle, const BasicValue& index, const BasicValue& value) {
+    int result = sqlite_bind_int(to_int(stmt_handle), to_int(index), to_int(value));
+    return BasicValue(result);
+}
+
+BasicValue func_sqlite_bind_int64(const BasicValue& stmt_handle, const BasicValue& index, const BasicValue& value) {
+    long long val = static_cast<long long>(to_int(value));
+    int result = sqlite_bind_int64(to_int(stmt_handle), to_int(index), val);
+    return BasicValue(result);
+}
+
+BasicValue func_sqlite_bind_double(const BasicValue& stmt_handle, const BasicValue& index, const BasicValue& value) {
+    int result = sqlite_bind_double(to_int(stmt_handle), to_int(index), to_double(value));
+    return BasicValue(result);
+}
+
+BasicValue func_sqlite_bind_text(const BasicValue& stmt_handle, const BasicValue& index, const BasicValue& value) {
+    int result = sqlite_bind_text(to_int(stmt_handle), to_int(index), to_string(value));
+    return BasicValue(result);
+}
+
+BasicValue func_sqlite_bind_null(const BasicValue& stmt_handle, const BasicValue& index) {
+    int result = sqlite_bind_null(to_int(stmt_handle), to_int(index));
+    return BasicValue(result);
+}
+
+// Step and column access
+BasicValue func_sqlite_step(const BasicValue& stmt_handle) {
+    int result = sqlite_step(to_int(stmt_handle));
+    return BasicValue(result);
+}
+
+BasicValue func_sqlite_column_count(const BasicValue& stmt_handle) {
+    int count = sqlite_column_count(to_int(stmt_handle));
+    return BasicValue(count);
+}
+
+BasicValue func_sqlite_column_type(const BasicValue& stmt_handle, const BasicValue& index) {
+    int type = sqlite_column_type(to_int(stmt_handle), to_int(index));
+    return BasicValue(type);
+}
+
+BasicValue func_sqlite_column_name(const BasicValue& stmt_handle, const BasicValue& index) {
+    return BasicValue(sqlite_column_name(to_int(stmt_handle), to_int(index)));
+}
+
+// Column retrieval functions
+BasicValue func_sqlite_column_int(const BasicValue& stmt_handle, const BasicValue& index) {
+    int value = sqlite_column_int(to_int(stmt_handle), to_int(index));
+    return BasicValue(value);
+}
+
+BasicValue func_sqlite_column_int64(const BasicValue& stmt_handle, const BasicValue& index) {
+    long long value = sqlite_column_int64(to_int(stmt_handle), to_int(index));
+    return BasicValue(static_cast<int>(value));
+}
+
+BasicValue func_sqlite_column_double(const BasicValue& stmt_handle, const BasicValue& index) {
+    double value = sqlite_column_double(to_int(stmt_handle), to_int(index));
+    return BasicValue(value);
+}
+
+BasicValue func_sqlite_column_text(const BasicValue& stmt_handle, const BasicValue& index) {
+    return BasicValue(sqlite_column_text(to_int(stmt_handle), to_int(index)));
+}
+
+// Utility functions
+BasicValue func_sqlite_version() {
+    return BasicValue(sqlite_version());
+}
+
+BasicValue func_sqlite_threadsafe() {
+    int result = sqlite_threadsafe();
+    return BasicValue(result);
+}
+
+// Transaction helpers
+BasicValue func_sqlite_begin_transaction(const BasicValue& db_handle) {
+    int result = sqlite_begin_transaction(to_int(db_handle));
+    return BasicValue(result);
+}
+
+BasicValue func_sqlite_commit_transaction(const BasicValue& db_handle) {
+    int result = sqlite_commit_transaction(to_int(db_handle));
+    return BasicValue(result);
+}
+
+BasicValue func_sqlite_rollback_transaction(const BasicValue& db_handle) {
+    int result = sqlite_rollback_transaction(to_int(db_handle));
+    return BasicValue(result);
+}
+
+#endif // SQLITE3_SUPPORT_ENABLED
 
 } // namespace basic_runtime

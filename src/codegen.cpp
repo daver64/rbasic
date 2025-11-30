@@ -479,7 +479,297 @@ void CodeGenerator::visit(CallExpr& node) {
         return;
     }
     
-    // Note: External functions (graphics, database, etc.) will be handled via FFI
+    // SDL2 graphics functions (conditional)
+#ifdef SDL2_SUPPORT_ENABLED
+    // Core SDL functions
+    if (node.name == "sdl_init" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sdl_init(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sdl_quit" && node.arguments.size() == 0) {
+        write("basic_runtime::func_sdl_quit()");
+        return;
+    }
+    if (node.name == "sdl_get_error" && node.arguments.size() == 0) {
+        write("basic_runtime::func_sdl_get_error()");
+        return;
+    }
+    
+    // Window functions
+    if (node.name == "sdl_create_window" && node.arguments.size() == 6) {
+        write("basic_runtime::func_sdl_create_window(");
+        for (size_t i = 0; i < node.arguments.size(); i++) {
+            node.arguments[i]->accept(*this);
+            if (i < node.arguments.size() - 1) write(", ");
+        }
+        write(")");
+        return;
+    }
+    if (node.name == "sdl_destroy_window" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sdl_destroy_window(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sdl_set_window_title" && node.arguments.size() == 2) {
+        write("basic_runtime::func_sdl_set_window_title(");
+        node.arguments[0]->accept(*this);
+        write(", ");
+        node.arguments[1]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    // Renderer functions
+    if (node.name == "sdl_create_renderer" && node.arguments.size() == 3) {
+        write("basic_runtime::func_sdl_create_renderer(");
+        for (size_t i = 0; i < node.arguments.size(); i++) {
+            node.arguments[i]->accept(*this);
+            if (i < node.arguments.size() - 1) write(", ");
+        }
+        write(")");
+        return;
+    }
+    if (node.name == "sdl_destroy_renderer" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sdl_destroy_renderer(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sdl_render_clear" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sdl_render_clear(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sdl_render_present" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sdl_render_present(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sdl_set_render_draw_color" && node.arguments.size() == 5) {
+        write("basic_runtime::func_sdl_set_render_draw_color(");
+        for (size_t i = 0; i < node.arguments.size(); i++) {
+            node.arguments[i]->accept(*this);
+            if (i < node.arguments.size() - 1) write(", ");
+        }
+        write(")");
+        return;
+    }
+    
+    // Drawing primitives
+    if (node.name == "sdl_render_draw_line" && node.arguments.size() == 5) {
+        write("basic_runtime::func_sdl_render_draw_line(");
+        for (size_t i = 0; i < node.arguments.size(); i++) {
+            node.arguments[i]->accept(*this);
+            if (i < node.arguments.size() - 1) write(", ");
+        }
+        write(")");
+        return;
+    }
+    if (node.name == "sdl_render_draw_rect" && node.arguments.size() == 5) {
+        write("basic_runtime::func_sdl_render_draw_rect(");
+        for (size_t i = 0; i < node.arguments.size(); i++) {
+            node.arguments[i]->accept(*this);
+            if (i < node.arguments.size() - 1) write(", ");
+        }
+        write(")");
+        return;
+    }
+    if (node.name == "sdl_render_fill_rect" && node.arguments.size() == 5) {
+        write("basic_runtime::func_sdl_render_fill_rect(");
+        for (size_t i = 0; i < node.arguments.size(); i++) {
+            node.arguments[i]->accept(*this);
+            if (i < node.arguments.size() - 1) write(", ");
+        }
+        write(")");
+        return;
+    }
+    
+#ifdef SDL2_GFX_AVAILABLE
+    if (node.name == "sdl_render_draw_circle" && node.arguments.size() == 4) {
+        write("basic_runtime::func_sdl_render_draw_circle(");
+        for (size_t i = 0; i < node.arguments.size(); i++) {
+            node.arguments[i]->accept(*this);
+            if (i < node.arguments.size() - 1) write(", ");
+        }
+        write(")");
+        return;
+    }
+    if (node.name == "sdl_render_fill_circle" && node.arguments.size() == 4) {
+        write("basic_runtime::func_sdl_render_fill_circle(");
+        for (size_t i = 0; i < node.arguments.size(); i++) {
+            node.arguments[i]->accept(*this);
+            if (i < node.arguments.size() - 1) write(", ");
+        }
+        write(")");
+        return;
+    }
+#endif
+    
+    // Event functions
+    if (node.name == "sdl_poll_event" && node.arguments.size() == 0) {
+        write("basic_runtime::func_sdl_poll_event()");
+        return;
+    }
+    if (node.name == "sdl_get_event_type" && node.arguments.size() == 0) {
+        write("basic_runtime::func_sdl_get_event_type()");
+        return;
+    }
+    if (node.name == "sdl_get_key_scancode" && node.arguments.size() == 0) {
+        write("basic_runtime::func_sdl_get_key_scancode()");
+        return;
+    }
+    if (node.name == "sdl_get_mouse_x" && node.arguments.size() == 0) {
+        write("basic_runtime::func_sdl_get_mouse_x()");
+        return;
+    }
+    if (node.name == "sdl_get_mouse_y" && node.arguments.size() == 0) {
+        write("basic_runtime::func_sdl_get_mouse_y()");
+        return;
+    }
+    if (node.name == "sdl_delay" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sdl_delay(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+#endif // SDL2_SUPPORT_ENABLED
+    
+    // SQLite3 database functions (conditional)
+#ifdef SQLITE3_SUPPORT_ENABLED
+    // Core database functions
+    if (node.name == "sqlite_open" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sqlite_open(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sqlite_close" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sqlite_close(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sqlite_exec" && node.arguments.size() == 2) {
+        write("basic_runtime::func_sqlite_exec(");
+        node.arguments[0]->accept(*this);
+        write(", ");
+        node.arguments[1]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sqlite_errmsg" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sqlite_errmsg(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    // Prepared statement functions
+    if (node.name == "sqlite_prepare" && node.arguments.size() == 2) {
+        write("basic_runtime::func_sqlite_prepare(");
+        node.arguments[0]->accept(*this);
+        write(", ");
+        node.arguments[1]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sqlite_finalize" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sqlite_finalize(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sqlite_reset" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sqlite_reset(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    // Binding functions
+    if (node.name == "sqlite_bind_int" && node.arguments.size() == 3) {
+        write("basic_runtime::func_sqlite_bind_int(");
+        for (size_t i = 0; i < node.arguments.size(); i++) {
+            node.arguments[i]->accept(*this);
+            if (i < node.arguments.size() - 1) write(", ");
+        }
+        write(")");
+        return;
+    }
+    if (node.name == "sqlite_bind_double" && node.arguments.size() == 3) {
+        write("basic_runtime::func_sqlite_bind_double(");
+        for (size_t i = 0; i < node.arguments.size(); i++) {
+            node.arguments[i]->accept(*this);
+            if (i < node.arguments.size() - 1) write(", ");
+        }
+        write(")");
+        return;
+    }
+    if (node.name == "sqlite_bind_text" && node.arguments.size() == 3) {
+        write("basic_runtime::func_sqlite_bind_text(");
+        for (size_t i = 0; i < node.arguments.size(); i++) {
+            node.arguments[i]->accept(*this);
+            if (i < node.arguments.size() - 1) write(", ");
+        }
+        write(")");
+        return;
+    }
+    
+    // Step and column access
+    if (node.name == "sqlite_step" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sqlite_step(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sqlite_column_count" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sqlite_column_count(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sqlite_column_int" && node.arguments.size() == 2) {
+        write("basic_runtime::func_sqlite_column_int(");
+        node.arguments[0]->accept(*this);
+        write(", ");
+        node.arguments[1]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sqlite_column_double" && node.arguments.size() == 2) {
+        write("basic_runtime::func_sqlite_column_double(");
+        node.arguments[0]->accept(*this);
+        write(", ");
+        node.arguments[1]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sqlite_column_text" && node.arguments.size() == 2) {
+        write("basic_runtime::func_sqlite_column_text(");
+        node.arguments[0]->accept(*this);
+        write(", ");
+        node.arguments[1]->accept(*this);
+        write(")");
+        return;
+    }
+    
+    // Utility functions
+    if (node.name == "sqlite_changes" && node.arguments.size() == 1) {
+        write("basic_runtime::func_sqlite_changes(");
+        node.arguments[0]->accept(*this);
+        write(")");
+        return;
+    }
+    if (node.name == "sqlite_version" && node.arguments.size() == 0) {
+        write("basic_runtime::func_sqlite_version()");
+        return;
+    }
+#endif // SQLITE3_SUPPORT_ENABLED
     
     // String conversion functions
     if (node.name == "str" && node.arguments.size() == 1) {

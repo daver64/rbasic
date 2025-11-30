@@ -61,6 +61,21 @@ bool compileToExecutable(const std::string& cppFile, const std::string& outputFi
     try {
         CommandBuilder builder;
         
+        // Collect conditional compilation flags
+        std::vector<std::string> conditionalFlags;
+#ifdef SDL2_SUPPORT_ENABLED
+        conditionalFlags.push_back("-DSDL2_SUPPORT_ENABLED");
+#endif
+#ifdef SQLITE3_SUPPORT_ENABLED
+        conditionalFlags.push_back("-DSQLITE3_SUPPORT_ENABLED");
+#endif
+#ifdef SDL2_GFX_AVAILABLE
+        conditionalFlags.push_back("-DSDL2_GFX_AVAILABLE");
+#endif
+#ifdef RPI_SUPPORT_ENABLED
+        conditionalFlags.push_back("-DRPI_SUPPORT_ENABLED");
+#endif
+        
 #ifdef _WIN32
         // Windows: Check for bundled MinGW64 first, fallback to MSVC
         std::filesystem::path executablePath = std::filesystem::path(exePath).parent_path();
@@ -71,8 +86,11 @@ bool compileToExecutable(const std::string& cppFile, const std::string& outputFi
         if (useMingw) {
             // Use bundled MinGW64 compiler
             std::string mingwCompiler = mingwPath.string();
+            std::vector<std::string> flags = {"-std=c++17", "-O2", "-static-libgcc", "-static-libstdc++", "-mconsole", "-fopenmp", "-I", "include"};
+            flags.insert(flags.end(), conditionalFlags.begin(), conditionalFlags.end());
+            
             builder.compiler(mingwCompiler)
-                   .compileFlags({"-std=c++17", "-O2", "-static-libgcc", "-static-libstdc++", "-mconsole", "-fopenmp", "-I", "include"})
+                   .compileFlags(flags)
                    .input(cppFile)
                    .output(outputFile + ".exe")
                    .library("runtime\\librbasic_runtime.a")
@@ -81,8 +99,14 @@ bool compileToExecutable(const std::string& cppFile, const std::string& outputFi
             std::cout << "Compiling with bundled MinGW64 (OpenMP enabled)..." << std::endl;
         } else {
             // Fallback to Microsoft Visual C++ compiler
+            std::vector<std::string> flags = {"/EHsc", "/std:c++17", "/openmp", "/I", "include"};
+            // Convert -D to /D for MSVC
+            for (const auto& flag : conditionalFlags) {
+                flags.push_back("/D" + flag.substr(2)); // Change -D to /D
+            }
+            
             builder.compiler("cl")
-                   .compileFlags({"/EHsc", "/std:c++17", "/openmp", "/I", "include"})
+                   .compileFlags(flags)
                    .input(cppFile)
                    .output(outputFile)
                    .library("runtime\\Release\\rbasic_runtime.lib")
@@ -93,12 +117,27 @@ bool compileToExecutable(const std::string& cppFile, const std::string& outputFi
 #else
         (void)exePath; // Suppress unused parameter warning on non-Windows
         // Linux/Unix: Use g++ compiler
+        std::vector<std::string> flags = {"-std=c++17", "-O2", "-fopenmp", "-I", "include"};
+        flags.insert(flags.end(), conditionalFlags.begin(), conditionalFlags.end());
+        
+        std::vector<std::string> linkFlags = {"-lstdc++fs", "-lgomp"};
+#ifdef SDL2_SUPPORT_ENABLED
+        linkFlags.push_back("-lSDL2");
+#ifdef SDL2_GFX_AVAILABLE
+        linkFlags.push_back("-lSDL2_gfx");
+#endif
+        linkFlags.push_back("-lSDL2_image");
+#endif
+#ifdef SQLITE3_SUPPORT_ENABLED
+        linkFlags.push_back("-lsqlite3");
+#endif
+        
         builder.compiler("g++")
-               .compileFlags({"-std=c++17", "-O2", "-fopenmp", "-I", "include"})
+               .compileFlags(flags)
                .input(cppFile)
                .output(outputFile)
                .library("runtime/librbasic_runtime.a")
-               .linkFlags({"-lstdc++fs", "-lgomp"});  // Link with filesystem and OpenMP libraries
+               .linkFlags(linkFlags);
         
         std::cout << "Compiling with g++ (OpenMP enabled)..." << std::endl;
 #endif
